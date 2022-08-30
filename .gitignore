@@ -1,2 +1,7 @@
 rmsc.Rproj
+.Rproj.user
+.quarto
 _book
+stan-progress.txt
+convertchapter.r
+.Rhistory
