@@ -1,0 +1,637 @@
+```{r include=FALSE}
+require(Hmisc)
+getRs('reptools.r')
+getRs('qbookfun.r')
+hookaddcap()
+options(qproject='rms', prType='html')
+knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
+```
+
+
+# Describing, Resampling, Validating, and Simplifying the Model {#sec-val}
+
+
+## Describing the Fitted Model {#sec-val-describe-model}
+`r mrg(sound("v-1"))`
+
+### Interpreting Effects
+
+* Regression coefficients if 1 d.f. per factor, no interaction `r ipacue()`
+* **Not** standardized regression coefficients
+* Many programs print meaningless estimates such as effect of
+        increasing age$^2$ by one unit, holding age constant
+* Need to account for nonlinearity, interaction, and use meaningful
+        ranges
+* For monotonic relationships, estimate $X\hat{\beta}$ at
+        quartiles of continuous variables, separately for various
+        levels of interacting factors
+* Subtract estimates, anti-log, e.g., to get inter-quartile-range  `r ipacue()`
+        odds or hazards ratios.  Base C.L. on s.e. of difference. See  @fig-coxcase-summary.
+* Partial effect plot: Plot effect of each predictor on $X\beta$ or some transformation.  See  @fig-coxcase-plot.
+        See also @kar09vis.
+* Nomogram.  See  @fig-coxcase-nomogram
+* Use regression tree to approximate the full model
+
+
+
+### Indexes of Model Performance {#sec-val-index}
+`r mrg(sound("v-2"))`
+
+#### Error Measures
+
+* Central tendency of prediction errors `r ipacue()`
+    + Mean absolute prediction error: mean $|Y - \hat{Y}|$
+    + Mean squared prediction error
+       - Binary $Y$: Brier score (quadratic proper scoring rule)
+    + Logarithmic proper scoring rule (avg. log-likelihood)
+
+* Discrimination measures  `r ipacue()`
+    + Pure discrimination: rank correlation of $(\hat{Y}, Y)$
+       - Spearman $\rho$, Kendall $\tau$, Somers' $D_{xy}$
+       - $Y$ binary $\rightarrow$ $D_{xy} = 2\times (C -
+      \frac{1}{2})$ <br> $C$ = concordance probability = area under
+      receiver operating characteristic curve $\propto$
+      Wilcoxon-Mann-Whitney statistic
+    + Mostly discrimination: $R^{2}$
+
+       - $R^{2}_{\mathrm{adj}}$---overfitting corrected if model pre-specified
+    + Brier score can be decomposed into discrimination and
+    calibration components
+    + Discrimination measures based on variation in $\hat{Y}$
+    
+       - regression sum of squares
+       - $g$--index
+
+
+* Calibration measures  `r ipacue()`
+    + calibration--in--the--large: average $\hat{Y}$ vs. average $Y$
+    + high-resolution calibration curve (calibration--in--the--small).  See @fig-titanic-calibrate.
+    + calibration slope and intercept
+    + maximum absolute calibration error
+    + mean absolute calibration error
+    + 0.9 quantile of calibration error
+
+
+See @cal16cal for a nice discussion of
+different levels of calibration stringency and their relationship to
+likelihood of errors in decision making.
+
+**$g$--Index**
+`r mrg(sound("v-3"))`
+
+* Based on Gini's mean difference `r ipacue()`
+    + mean over all possible $i \neq j$ of $|Z_{i} - Z_{j}|$
+    + interpretable, robust, highly efficient measure of variation
+
+* $g =$ Gini's mean difference of $X_{i}\hat{\beta} = \hat{Y}$
+* Example: $Y=$ systolic blood pressure; $g = 11$mmHg is typical
+  difference in $\hat{Y}$
+* Independent of censoring etc.
+* For models in which anti-log of difference in $\hat{Y}$  `r ipacue()`
+  represent meaningful ratios (odds ratios, hazard ratios, ratio of
+  medians):<br> $g_{r} = \exp(g)$
+* For models in which $\hat{Y}$ can be turned into a probability
+  estimate (e.g., logistic regression):<br> $g_{p} =$ Gini's mean
+  difference of $\hat{P}$
+* These $g$--indexes represent e.g. "typical" odds ratios, "typical"
+  risk differences
+* Can define partial $g$
+
+
+
+## The Bootstrap {#sec-val-boot}
+`r mrg(sound("v-4"))`
+
+* If know population model, use simulation or analytic derivations `r ipacue()`
+    to study behavior of statistical estimator
+* Suppose $Y$ has a cumulative dist. fctn. $F(y) = \Pr\{Y \leq y\}$
+* We have sample of size $n$ from $F(y)$, <br>
+        $Y_{1}, Y_{2}, \ldots, Y_{n}$
+* Steps:
+   1. Repeatedly simulate sample of size $n$ from $F$
+   1. Compute statistic of interest
+   1. Study behavior over $B$ repetitions
+
+* Example: 1000 samples, 1000 sample medians, compute their sample
+  variance  `r ipacue()` 
+* $F$ unknown $\rightarrow$ estimate by empirical dist. fctn.
+$$
+F_{n}(y) = \frac{1}{n}\sum_{i=1}^{n} [Y_{i} \leq y].
+$$
+* Example: sample of size $n=30$ from a normal distribution with
+  mean 100 and SD 10
+
+```{r cdf-ecdf,cap='Empirical and population cumulative distribution function'}
+#| label: fig-val-cdf
+spar()
+set.seed(6)
+x <- rnorm(30, 100, 20)
+xs <- seq(50, 150, length=150)
+cdf <- pnorm(xs, 100, 20)
+plot(xs, cdf, type='l', ylim=c(0,1),
+     xlab=expression(x),
+     ylab=expression(paste("Pr(", X <= x, ")")))
+lines(ecdf(x), cex=.5)
+```
+
+
+* $F_{n}$ corresponds to density function placing probability  `r ipacue()`
+  $\frac{1}{n}$ at each observed data point ($\frac{k}{n}$ if
+  point duplicated $k$ times)
+* Pretend that $F \equiv F_{n}$
+* Sampling from $F_{n} \equiv$ sampling with replacement from
+  observed data $Y_{1},\ldots,Y_{n}$
+* Large $n$ $\rightarrow$ selects $1-e^{-1} \approx 0.632$ of original data points
+  in each bootstrap sample at least once
+* Some observations not selected, others selected more than once
+* Efron's _bootstrap_ $\rightarrow$  `r ipacue()`
+  general-purpose technique for estimating properties of estimators
+  without assuming or knowing distribution of data $F$
+* Take $B$ samples of size $n$ with replacement, choose $B$  `r ipacue()`
+  so that summary measure of individual statistics $\approx$
+  summary if $B=\infty$
+* Bootstrap based on distribution of
+_observed_ differences between a resampled parameter estimate
+and the original estimate telling us about the distribution of
+_unobservable_ differences between the original estimate and the
+unknown parameter
+
+Example: Data $(1,5,6,7,8,9)$, obtain 0.80 confidence interval for  `r ipacue()` 
+    population median, and estimate of population expected value
+    of sample median (only to estimate the bias in the original
+    estimate of the median).
+
+<!--  In 1st edition used .Random.seed <- c(1,11,4,9,61,2,29,53,34,4,16,3)--->
+
+```{r boot, h=3, w=6, cap='Estimating properties of sample median using the bootstrap'}
+#| label: fig-val-boot
+spar(ps=9, mfrow=c(1,2))
+options(digits=3)
+y <- c(2,5,6,7,8,9,10,11,12,13,14,19,20,21)
+y <- c(1,5,6,7,8,9)
+set.seed(17)
+n   <- length(y)
+n2  <- n/2
+n21 <- n2+1
+B   <- 400
+M <- double(B)
+plot(0, 0, xlim=c(0,B), ylim=c(3,9),
+     xlab="Bootstrap Samples Used",
+     ylab="Mean and 0.1, 0.9 Quantiles", type="n")
+for(i in 1:B) {
+  s <- sample(1:n, n, replace=T)
+  x <- sort(y[s])
+  m <- .5*(x[n2]+x[n21])
+  M[i] <- m
+  if(i <= 20) {
+    w <- as.character(x)
+    cat(w, "& &", sprintf('%.1f',m),
+        if(i < 20) "<br><br>\n" else "<br><br> <br>hline\n",
+        file='~/doc/rms/validate/tab.tex', append=i > 1)
+  }
+  points(i, mean(M[1:i]), pch=46)
+  if(i>=10)	{
+    q <- quantile(M[1:i], c(.1,.9))
+    points(i, q[1], pch=46, col='blue')
+    points(i, q[2], pch=46, col='blue')
+  }
+}
+table(M)
+hist(M, nclass=length(unique(M)), xlab="", main="")
+```
+
+First 20 samples:
+
+| Bootstrap Sample |  | Sample Median   |
+|-----|-----|-----|
+| 1 5 5 7 8 9 | | 6.0 |
+| 1 1 5 7 9 9 | | 6.0 |
+| 6 7 7 8 9 9 | | 7.5 |
+| 1 1 5 6 8 9 | | 5.5 |
+| 1 6 7 7 8 8 | | 7.0 |
+| 1 5 6 8 8 9 | | 7.0 |
+| 1 6 8 8 9 9 | | 8.0 |
+| 5 5 6 7 8 9 | | 6.5 |
+| 1 5 6 7 7 8 | | 6.5 |
+| 1 5 6 8 9 9 | | 7.0 |
+| 1 5 7 7 8 9 | | 7.0 |
+| 1 5 6 6 7 8 | | 6.0 |
+| 1 6 6 7 8 9 | | 6.5 |
+| 5 6 7 7 8 9 | | 7.0 |
+| 1 5 6 8 8 8 | | 7.0 |
+| 1 1 6 6 7 8 | | 6.0 |
+| 5 5 5 8 8 9 | | 6.5 |
+| 5 6 6 6 7 7 | | 6.0 |
+| 1 5 7 9 9 9 | | 8.0 |
+| 1 1 5 5 5 7 | | 5.0 |
+
+
+
+* Histogram tells us whether we can assume normality for the bootstrap `r ipacue()`
+        medians or need to use quantiles of medians to construct C.L.
+* Need high $B$ for quantiles, low for variance (but see @boo98mon)
+* See @efr20aut for useful information about bootstrap
+  confidence intervals and the latest `R` functions
+
+
+
+## Model Validation {#sec-val-validation}
+
+### Introduction
+`r mrg(sound("v-5"))`
+
+* External validation (best: another country at another time); `r ipacue()`
+  also validates sampling, measurements\footnote{But in many cases it
+    is better to combine data and include country or calendar time as
+    a predictor.}
+* Internal
+    + apparent (evaluate fit on same data used to create fit)
+    + data splitting
+    + cross-validation
+    + bootstrap: get overfitting-corrected accuracy index
+
+* Best way to make model fit data well is to discard much of the data  `r ipacue()`
+* Predictions on another dataset will be inaccurate
+* Need unbiased assessment of predictive accuracy
+
+
+**Working definition of external validation**: Validation of a
+prediction tool on a sample that was not available at publication
+time.
+
+**Alternate**: Validation of a prediction tool by an
+independent research team.
+
+One suggested hierarchy of the quality of various validation methods
+is as follows, ordered from worst to best.
+
+1. Attempting several validations (internal or external) and `r ipacue()`
+  reporting only the one that "worked"
+1. Reporting apparent performance on the training dataset (no validation)
+1. Reporting predictive accuracy on an undersized independent test sample
+1. Internal validation using data splitting where at least one of
+  the training and test samples is not huge and the investigator is
+  not aware of the arbitrariness of variable selection done on a
+  single sample
+1. Strong internal validation using 100 repeats of 10-fold  `r ipacue()`
+  cross-validation or several hundred bootstrap resamples, repeating
+  _all_ analysis steps involving $Y$ afresh at each re-sample and
+  the arbitrariness of selected "important variables" is reported
+  (if variable selection is used)
+1. External validation on a large test sample, done by the original
+  research team
+1. Re-analysis by an independent research team using strong
+  internal validation of the original dataset
+1. External validation using new test data, done by an independent
+  research team
+1. External validation using new test data generated using
+  different instruments/technology, done by an independent research team
+
+
+Some points to consider:
+
+* Unless both sample sizes are huge, external validation can be `r ipacue()`
+  low precision
+* External validation can be costly and slow and may result in
+  disappointment that would have been revealed earlier with rigorous
+  internal validation
+* External validation is sometimes _gamed_; researchers
+  disappointed in the validation sometimes ask for a "do over";
+  resampling validation is harder to game as long as all analytical
+  steps using $Y$ are repeated each time.
+* Instead of external validation to determine model applicability  `r ipacue()`
+  at a different time or place, and being disappointed if the model
+  does not work in that setting, consider building a
+  unified model containing time and place as predictors
+* When the model was fully pre-specified, external validation
+  tests _the model_
+* But when the model was fitted using machine learning, feature
+  screening, variable selection, or model selection, the model developed
+  using training data is usually only an example of a model, and the
+  test sample validation could be called an _example validation_
+* When resampling is used to repeat _all_ modeling steps for
+  each resample, rigorous internal validation tests the _process_
+  used to develop the model and happens to also provide a
+  high-precision estimate of the likely future performance of the
+  "final" model developed using that process, properly penalizing
+  for model uncertainty.
+* Resampling also reveals the volatility of the model selection process
+
+$\rightarrow$ See [BBR](http://hbiostat.org/bbr/reg.html#internal-vs.-external-model-validation)
+
+@col16sam estimate that a typical sample size
+needed for externally validating a time-to-event model is 200 events.
+
+
+### Which Quantities Should Be Used in Validation? {#sec-val-which}
+`r mrg(sound("v-6"))`
+
+* OLS: $R^2$ is one good measure for quantifying drop-off in `r ipacue()`
+  predictive ability
+* Example: $n=10, p=9$, apparent $R^{2}=1$ but $R^2$ will be close
+  to zero on new subjects
+* Example: $n=20, p=10$, apparent $R^{2}=.9$, $R^2$ on new data
+  0.7, $R^{2}_{adj} = 0.79$
+* Adjusted $R^2$ solves much of the bias problem assuming $p$ in
+  its formula is the largest number of parameters ever examined against $Y$
+* Few other adjusted indexes exist
+* Also need to validate models with phantom d.f.
+* Cross-validation or bootstrap can provide unbiased estimate of  `r ipacue()`
+  any index; bootstrap has higher precision
+* Two main types of quantities to validate
+   1. Calibration or reliability: ability to make unbiased estimates
+   of response ($\hat{Y}$ vs. $Y$)
+   1. Discrimination: ability to separate responses <br>
+  OLS: $R^2$; $g$-index; binary logistic model: ROC area, equivalent
+  to rank correlation between predicted probability of event and 0/1 event
+
+* Unbiased validation nearly always necessary, to detect overfitting
+
+
+
+### Data-Splitting {#sec-val-split}
+`r mrg(sound("v-7"))`
+
+* Split data into _training_ and _test_ sets `r ipacue()`
+* Interesting to compare index of accuracy in training and test
+* Freeze parameters from training
+* Make sure you allow $R^{2} = 1-SSE/SST$ for test sample to be
+  $<0$
+* Don't compute ordinary $R^2$ on $X\hat{\beta}$ vs. $Y$; this
+  allows for linear recalibration $aX\hat{\beta} + b$ vs. $Y$
+* Test sample must be large enough to obtain very accurate
+    assessment of accuracy  `r ipacue()` 
+* Training sample is what's left
+* Example: overall sample $n=300$, training sample $n=200$,
+  develop model, freeze $\hat{\beta}$, predict on test sample
+  ($n=100$), $R^{2} = 1 -
+  \frac{\sum(Y_{i}-X_{i}\hat{\beta})^{2}}{\sum(Y_{i}-\bar{Y})^{2}}$.
+* Disadvantages of data splitting:  `r ipacue()`
+   1. Costly in $\downarrow n$ [@roe91pre; @bre92lit]
+   1. Requires _decision_ to split at beginning of analysis
+   1. Requires larger sample held out than cross-validation
+   1. Results vary if split again
+   1. Does not validate the final model (from recombined data)
+   1. Not helpful in getting CL corrected for var. selection
+   1. Nice summary of disadvantages: @ste18vala
+
+
+### Improvements on Data-Splitting: Resampling {#sec-val-resampling}
+`r mrg(sound("v-8"))`
+
+<!-- ?? TODO 3rd bullet ref pg:lrm-sw5p -->
+
+* No sacrifice in sample size `r ipacue()`
+* Work when modeling process automated
+* Bootstrap excellent for studying arbitrariness of variable
+  selection [@sau92boo]. 
+* Cross-validation solves many problems of data
+  splitting [@hou90pre; @sha93lin; @wu86jac; @efr83est]
+* Example of $\times$-validation:  `r ipacue()`
+   1. Split data at random into 10 tenths
+   1. Leave out $\frac{1}{10}$ of data at a time
+   1. Develop model on $\frac{9}{10}$, including any
+        variable selection, pre-testing, etc.
+   1. Freeze coefficients, evaluate on $\frac{1}{10}$
+   1. Average $R^2$ over 10 reps
+
+* Drawbacks:
+   1. Choice of number of groups and repetitions
+   1. Doesn't show full variability of var. selection
+   1. Does not validate full model
+   1. Lower precision than bootstrap
+   1. Need to do 50 repeats of 10-fold cross-validation to
+      ensure adequate precision
+
+
+* Randomization method  `r ipacue()`
+   1. Randomly permute $Y$
+   1. Optimism = performance of fitted model compared to
+        what expect by chance
+
+
+
+
+
+### Validation Using the Bootstrap {#sec-val-bootval}
+`r mrg(sound("v-9"))`
+
+* Estimate optimism of _final whole sample fit_ without `r ipacue()`
+  holding out data
+* From original $X$ and $Y$ select sample of size $n$ with replacement
+* Derive model from bootstrap sample
+* Apply to original sample
+* Simple bootstrap uses average of indexes computed on original
+  sample
+* Estimated optimism = difference in indexes
+* Repeat about $B=100$ times, get average expected optimism
+* Subtract average optimism from apparent index in final model
+* Example: $n=1000$, have developed a final model that is  `r ipacue()`
+  hopefully ready to publish.  Call estimates from this final model
+  $\hat{\beta}$.
+    + final model has apparent $R^2$ ($R^{2}_{app}$) =0.4
+    + how inflated is $R^{2}_{app}$?
+    + get resamples of size 1000 with replacement from original 1000
+    + for each resample compute $R^{2}_{boot}$ = apparent $R^2$ in
+    bootstrap sample
+    + freeze these coefficients (call them $\hat{\beta}_{boot}$),
+    apply to original (whole) sample $(X_{orig}, Y_{orig})$ to
+    get $R^{2}_{orig} = R^{2}(X_{orig}\hat{\beta}_{boot}, Y_{orig})$
+    + optimism = $R^{2}_{boot} - R^{2}_{orig}$
+    + average over $B=100$ optimisms to get $\overline{optimism}$
+    + $R^{2}_{overfitting~corrected} = R^{2}_{app} - \overline{optimism}$
+
+
+<!-- ?? TODO first bullet ref pg:lrm-sex-age-response-boot -->
+* Example: Chapter 8
+* Is estimating unconditional (not conditional on $X$) distribution  `r ipacue()`
+    of $R^2$, etc. [@far92cos, p. 217]
+* Conditional estimates would require assuming the model one is trying
+    to validate
+* Efron's "$.632$" method may perform better (reduce bias further)
+    for small $n$ [@efr83est], [@boot, p. 253], @efr97imp
+
+
+
+
+Bootstrap useful for assessing calibration in addition to discrimination:
+`r mrg(sound("v-10"))`
+
+* Fit $C(Y|X) = X\beta$ on bootstrap sample `r ipacue()`
+* Re-fit $C(Y|X) = \gamma_{0} + \gamma_{1}X\hat{\beta}$ on same data
+* $\hat{\gamma}_{0}=0, \hat{\gamma}_{1}=1$
+* Test data (original dataset): re-estimate $\gamma_{0}, \gamma_{1}$
+* $\hat{\gamma}_{1}<1$ if overfit,
+    $\hat{\gamma}_{0} > 0$  to compensate
+* $\hat{\gamma}_{1}$ quantifies overfitting and useful for improving
+    calibration [@spi86]
+* Use Efron's method to estimate optimism in $(0,1)$, estimate
+    $(\gamma_{0}, \gamma_{1})$ by subtracting optimism from $(0,1)$
+* See also @cop87cro and @hou90pre, p. 1318
+
+See @fre88imp for warnings about the bootstrap, and @efr83est
+for variations on the bootstrap to reduce bias.
+
+
+Use bootstrap to choose between full and reduced models: 
+`r mrg(sound("v-11"))`
+
+* Bootstrap estimate of accuracy for full model `r ipacue()`
+* Repeat, using chosen stopping rule for each re-sample
+* Full fit usually outperforms reduced model[@spi86]
+* Stepwise modeling often reduces optimism but this is not
+    offset by loss of information from deleting marginal var.
+
+
+| Method | Apparent Rank Correlation of Predicted vs. Observed | Over-optimism  | Bias-Corrected Correlation |
+|-----|-----|-----|-----|
+| Full Model | 0.50 | 0.06 | 0.44  |
+| Stepwise Model | 0.47 | 0.05 | 0.42   |
+
+
+In this example, stepwise modeling lost a possible $0.50 - 0.47 = 0.03$
+predictive discrimination.
+The full model fit will especially be an improvement when
+
+1. The stepwise selection deleted several variables which were `r ipacue()`
+  almost significant.
+1. These marginal variables have _some_ real predictive value,
+  even if it's slight.
+1. There is no small set of extremely dominant variables that would
+  be easily found by stepwise selection.
+
+
+
+Other issues:
+
+* See @hou90pre for many interesting ideas `r ipacue()`
+* @far92cos shows how bootstrap is used to
+    penalize for choosing transformations for $Y$, outlier and
+    influence checking, variable selection, etc. simultaneously
+* @bro88reg, p. 74 feels that "theoretical statisticians have been unable to analyze the
+    sampling properties of (usual multi-step modeling strategies) under
+    realistic conditions" and concludes that the modeling strategy must be
+    completely specified and then bootstrapped to get consistent estimates
+    of variances and other sampling properties
+* See @ble93inf and @cha95mod for more interesting
+    examples of problems resulting from data-driven analyses.
+
+
+
+
+## Bootstrapping Ranks of Predictors {#sec-val-bootrank}
+`r mrg(sound("v-12"))`
+
+* Order of importance of predictors not pre-specified `r ipacue()`
+* Researcher interested in determining "winners" and "losers"
+* Bootstrap useful in documenting the difficulty of this task
+* Get confidence limits of the rank of each predictor in the scale
+  of partial $\chi^2$ - d.f.
+* Example using OLS
+
+```{r bootrank,cap='Bootstrap percentile 0.95 confidence limits for ranks of predictors in an OLS model.  Ranking is on the basis of partial $\\chi^2$ minus d.f.  Point estimates are original ranks',scap='Bootstrap confidence limits for ranks of predictors'}
+#| label: fig-val-bootrank
+# Use the plot method for anova, with pl=FALSE to suppress actual
+# plotting of chi-square - d.f. for each bootstrap repetition.
+# Rank the negative of the adjusted chi-squares so that a rank of
+# 1 is assigned to the highest.  It is important to tell
+# plot.anova.rms not to sort the results, or every bootstrap
+# replication would have ranks of 1,2,3,... for the stats.
+require(rms)
+n <- 300
+set.seed(1)
+d <- data.frame(x1=runif(n), x2=runif(n), x3=runif(n), x4=runif(n),
+                x5=runif(n), x6=runif(n), x7=runif(n), x8=runif(n),
+             x9=runif(n), x10=runif(n), x11=runif(n), x12=runif(n))
+d$y <- with(d, 1*x1 + 2*x2 +  3*x3  +  4*x4  + 5*x5 + 6*x6 + 7*x7 +
+               8*x8 + 9*x9 + 10*x10 + 11*x11 + 12*x12 + 9*rnorm(n))
+
+f <- ols(y ~ x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12, data=d)
+B <- 1000
+ranks <- matrix(NA, nrow=B, ncol=12)
+rankvars <- function(fit)
+  rank(plot(anova(fit), sort='none', pl=FALSE))
+Rank <- rankvars(f)
+for(i in 1:B) {
+  j <- sample(1:n, n, TRUE)
+  bootfit <- update(f, data=d, subset=j)
+  ranks[i,] <- rankvars(bootfit)
+  }
+lim <- t(apply(ranks, 2, quantile, probs=c(.025,.975)))
+predictor <- factor(names(Rank), names(Rank))
+w <- data.frame(predictor, Rank, lower=lim[,1], upper=lim[,2])
+require(ggplot2)
+ggplot(w, aes(x=predictor, y=Rank)) + geom_point() + coord_flip() +
+  scale_y_continuous(breaks=1:12) +
+  geom_errorbar(aes(ymin=lim[,1], ymax=lim[,2]), width=0)
+```
+
+
+
+
+## Simplifying the Final Model by Approximating It {#sec-val-approx}
+`r mrg(sound("v-13"))`
+
+### Difficulties Using Full Models
+
+* Predictions are conditional on all variables, standard errors `r ipacue()`
+  $\uparrow$ when predict for a low-frequency category
+* Collinearity
+* Can average predictions over categories to marginalize,
+  $\downarrow$ s.e.
+
+
+
+### Approximating the Full Model
+
+* Full model is gold standard `r ipacue()`
+* Approximate it to any desired degree of accuracy
+* If approx. with a tree, best c-v tree will have 1 obs./node
+* Can use least squares to approx. model by predicting $\hat{Y} =
+  X\hat{\beta}$
+* When original model also fit using least squares, coef. of
+  approx. model against $\hat{Y} \equiv$ coef. of subset of
+  variables fitted against $Y$ (as in stepwise)
+* Model approximation still has some advantages  `r ipacue()`
+   1. Uses unbiased estimate of $\sigma$ from full fit
+   1. Stopping rule less arbitrary
+   1. Inheritance of shrinkage
+
+
+* If estimates from full model are $\hat{\beta}$ and approx.\
+  model is based on a subset $T$ of predictors $X$, coef. of approx.\
+  model are $W \hat{\beta}$, where <br> $W = (T'T)^{-1}T'X$
+* Variance matrix of reduced coef.: $W V W'$
+
+
+
+
+## How Do We Break Bad Habits? {#sec-val-habits}
+`r mrg(sound("v-14"))`
+
+* Insist on validation of predictive models and discoveries `r ipacue()`
+* Show collaborators that split-sample validation is not
+  appropriate unless the number of subjects is huge
+    + Split more than once and see volatile results
+    + Calculate a confidence interval for the predictive accuracy in
+   the test dataset and show that it is very wide
+
+* Run simulation study with no real associations and show that
+  associations are easy to find
+* Analyze the collaborator's data after randomly permuting the $Y$
+  vector and show some positive findings
+* Show that alternative explanations are easy to posit
+    + Importance of a risk factor may disappear if 5 "unimportant"
+   risk factors are added back to the model
+    + Omitted main effects can explain apparent interactions
+    + _Uniqueness analysis_: attempt to predict the predicted
+   values from a model derived by data torture from all of the
+   features not used in the model
+
+
+
+
+
+```{r echo=FALSE}
+saveCap('05')
+```

@@ -1,0 +1,81 @@
+project:
+  type: book
+
+book:
+  title: "Regression Modeling Strategies"
+  author:
+    - name: Frank E Harrell Jr
+      url: https://hbiostat.org
+      affiliation: Department of Biostatistics<br>School of Medicine<br>Vanderbilt University
+  date: last-modified
+  site-url: https://hbiostat.org/rms
+  url: https://hbiostat.org/rms
+
+  google-analytics: "G-P47K0XF3SM"
+
+  twitter-card:
+    creator: "f2harrell"
+    site: "f2harrell"
+		
+  chapters:
+    - index.qmd
+    - intro.qmd
+    - genreg.qmd
+    - missing.qmd
+    - multivar.qmd
+    - validate.qmd
+    - software.qmd
+    - long.qmd
+    - impred.qmd
+    - mle.qmd
+    - lrm.qmd
+    - lrcase1.qmd
+    - titanic.qmd
+    - ordinal.qmd
+    - ordcase.qmd
+    - cony.qmd
+    - areg.qmd
+    - surv.qmd
+    - parsurv.qmd
+    - psmcase.qmd
+    - cox.qmd
+    - coxcase.qmd
+    - markov.qmd
+    - figures.qmd
+    - references.qmd
+
+  page-footer:
+    background: light
+    left:
+      - text: "Copyright 2022, Frank E Harrell Jr"
+    right:
+      - text: "License"
+        href: https://www.gnu.org/licenses/gpl-3.0.en.html
+
+  navbar:
+    collapse-below: xl
+
+format:
+  html:
+    theme: journal
+    number-depth: 3
+    reference-location: margin
+    fig-cap-location: margin
+    code-tools: true
+    code-fold: show
+    code-block-bg: "#f1f3f5"
+    code-block-border-left: "#31BAE9"
+    css: h.css
+
+bibliography: harrelfe.bib
+csl: apa-annotated-bibliography.csl
+
+comments:
+  hypothesis:
+    theme: clean
+    openSidebar: false
+    enableExperimentalNewNoteButton: true
+
+execute:
+  warning: false
+  message: false

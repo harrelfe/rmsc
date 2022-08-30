@@ -1,0 +1,381 @@
+# R Software {#sec-r}
+`R` allows interaction spline functions, wide variety of
+predictor parameterizations, wide variety of models, unifying model
+formula language, model validation by resampling.
+
+`R` is comprehensive:
+
+* Easy to write `R` functions for new models $\rightarrow$ wide variety of modern 
+        regression models implemented (trees, nonparametric, ACE, AVAS,
+        survival models for multiple events)
+* Designs can be generated for any model $\rightarrow$ all handle "class" var,
+        interactions, nonlinear expansions
+* Single `R` objects (e.g., fit object)
+        can be self-documenting $\rightarrow$ automatic hypothesis
+        tests, predictions for new data
+* Superior graphics
+* Classes and generic functions
+
+
+
+## The `R` Modeling Language
+`R` statistical modeling language:
+
+```{r eval=FALSE}
+response ~ terms
+
+y ~ age + sex            # age + sex main effects
+y ~ age + sex + age:sex  # add second-order interaction
+y ~ age*sex              # second-order interaction +
+                         # all main effects
+y ~ (age + sex + pressure)^2
+                         # age+sex+pressure+age:sex+age:pressure...
+y ~ (age + sex + pressure)^2 - sex:pressure
+                         # all main effects and all 2nd order
+                         # interactions except sex:pressure
+y ~ (age + race)*sex     # age+race+sex+age:sex+race:sex
+y ~ treatment*(age*race + age*sex) # no interact. with race,sex
+sqrt(y) ~ sex*sqrt(age) + race
+# functions, with dummy variables generated if
+# race is an R factor (classification) variable
+y ~ sex + poly(age,2)    # poly generates orthogonal polynomials
+race.sex <- interaction(race,sex)
+y ~ age + race.sex       # for when you want dummy variables for
+                         # all combinations of the factors
+```
+
+The formula for a regression model is given to a modeling
+function, e.g.
+
+```{r eval=FALSE}
+lrm(y ~ rcs(x,4))
+```
+
+is read "use a logistic regression model to model y as a function of x, representing x by
+a restricted cubic spline with 4 default knots"^[`lrm` and`rcs` are in the `rms` package.].
+
+`update` function: re-fit model with changes in terms or data:
+
+```{r eval=FALSE}
+f  <- lrm(y ~ rcs(x,4) + x2 + x3)
+f2 <- update(f, subset=sex=="male")
+f3 <- update(f, .~.-x2)         # remove x2 from model
+f4 <- update(f, .~. + rcs(x5,5))# add rcs(x5,5) to model
+f5 <- update(f, y2 ~ .)         # same terms, new response var.
+```
+
+
+
+## User-Contributed Functions
+
+* `R` is high-level object-oriented language. 
+* `R` runs on all platforms, and can be run on chromebooks using [RStudio Server](https://www.rstudio.com/products/rstudio/#rstudio-server)
+* Multitude of user-contributed functions freely available
+* International community of users
+
+
+Some `R` functions:
+
+* See Venables and Ripley 
+* Hierarchical clustering: `hclust`
+* Principal components: `princomp, prcomp`
+* Canonical correlation: `cancor`
+* Nonparametric transform-both-sides additive models: <br> `ace, avas`
+* Parametric transform-both-sides additive models: <br> `areg`,
+  `areg.boot` (`Hmisc` package in `R`))
+* Rank correlation methods: <br> `rcorr`, `hoeffd`,
+  `spearman2` (`Hmisc`)
+* Variable clustering: `varclus` (`Hmisc`)
+* Single imputation: `transcan` (`Hmisc`)
+* Multiple imputation: `aregImpute` (`Hmisc`)
+* Restricted cubic splines: <br>
+    `rcspline.eval` (`Hmisc`)
+* Re-state restricted spline in simpler
+  form:<br> `rcspline.restate` (`Hmisc`)
+
+
+
+## The `rms` Package
+
+* `datadist` function to compute predictor distribution summaries 
+
+
+```{r eval=FALSE}
+y ~ sex + lsp(age,c(20,30,40,50,60)) +
+    sex %ia% lsp(age,c(20,30,40,50,60))
+```
+
+E.g. restrict age $\times$
+cholesterol interaction to be of form $AF(B) + BG(A)$:
+
+```{r eval=FALSE}
+y ~ lsp(age,30) + rcs(cholesterol,4) +
+    lsp(age,30) %ia% rcs(cholesterol,4)
+```
+
+Special fitting functions by Harrell to simplify
+procedures described in these notes:
+
+| Function | Purpose | Related `R` Functions|
+|-----|-------------------------------|---|
+| `ols`    | Ordinary least squares linear model | `lm`  |
+| `lrm`    | Binary and ordinal logistic regression model with options for penalize MLE| `glm` |
+| `orm`    | Ordinal semi-parametric regression model for continuous $Y$ and several link functions |`polr`,`lrm`  |
+| `psm`    | Accelerated failure time parametric survival models | `survreg` |
+| `cph`    | Cox proportional hazards regression | `coxph`  |
+| `bj`     | Buckley-James censored least squares model | `survreg`,`lm`  |
+| `Glm`   | `rms` version of `glm` | `glm`  |
+| `Gls`   | `rms` version of `gls` | `gls` (`nlme` package) |
+| `Rq`    | `rms` version of `rq`  | `rq` (`quantreg` package) |
+
+: `rms` Fitting Functions
+
+
+| Function | Purpose | Related `R` Functions |
+|-----|-----|
+| `asis` | No post-transformation (seldom used explicitly) | `I`  |
+| `rcs`    | Restricted cubic splines | `ns`  |
+| `pol`    | Polynomial using standard notation | `poly`  |
+| `lsp`    | Linear spline |  |
+| `catg` | Categorical predictor (seldom) | `factor`  |
+| `scored` | Ordinal categorical variables | `ordered`  |
+| `matrx`  | Keep variables as group for `anova` and `fastbw` | `matrix`  |
+| `strat`  | Non-modeled stratification factors (used for `cph` only) | `strata`  |
+
+: `rms` Transformation Functions
+
+
+Below notice that there are three graphic models implemented for
+depicting the effects of predictors in the fitted model: `lattice`
+graphics, a `ggplot` method using the `ggplot2` package (which
+has an option to convert the result to `plotly`), and a direct
+`plotly` method.  `plotly` is used to create somewhat
+interactive graphics with drill-down capability, and the `rms`
+package takes advantage of this capability.  `plotly` graphics are
+best used with RStudio Rmarkdown html output.
+
+| Function | Purpose | Related Functions |
+|----------|--------------------------------|-----|
+| `print`  | Print parameters and statistics of fit                    | |
+| `coef` | Fitted regression coefficients                              | |
+| `formula`    | Formula used in the fit                               | |
+| `specs`  | Detailed specifications of fit                            | |
+| `vcov`   | Fetch covariance matrix                              | |
+| `logLik` | Fetch maximized log-likelihood                       | |
+| `AIC`    | Fetch AIC with option to put on chi-square basis     | |
+| `lrtest` | Likelihood ratio test for two nested models          | |
+| univarLR | Compute all univariable LR $\chi^{2}$               | |
+| `robcov` | Robust covariance matrix estimates                        | |
+| `bootcov`    | Bootstrap covariance matrix estimates and bootstrap distribution of estimates   | |
+| `pentrace`   | Find optimum penalty factors by tracing effective AIC for a grid of penalties | |
+| `effective.df`| Print effective d.f. for each type of variable in model, for penalized fit or `pentrace` results | |
+| `summary`    | Summary of effects of predictors                      | |
+| `plot.summary` | Plot continuously shaded confidence bars for results of `summary`| |
+| `anova`  | Wald tests of most meaningful hypotheses                  | |
+| `plot.anova` | Graphical depiction of anova                          | |
+| `contrast`   | General contrasts, C.L., tests                        | |
+| `gendata` | Easily generate predictor combinations             | |
+| `predict`    | Obtain predicted values or design matrix | |
+| `Predict`    | Obtain predicted values and confidence limits easily varying a subset of predictors and others set at default values|  |
+| `plot.Predict` | Plot the result of `Predict` using `lattice`| |
+| `ggplot.Predict` | Plot the result of `Predict` using `ggplot2` | |
+| `plotp.Predict` | Plot the result of `Predict` using `plotly` | |
+| `fastbw` | Fast backward step-down variable selection | `step` |
+| `residuals` | (or `resid`) Residuals, influence stats from fit | |
+| `sensuc` | Sensitivity analysis for unmeasured confounder | |
+| `which.influence` | Which observations are overly influential |`residuals` |
+| `latex`  | $\LaTeX$ representation of fitted model | `Function`   |
+| `Function`| `R` function analytic representation of $X\hat{\beta}$ from a fitted regression model| `latex` |
+| `Hazard` | `R` function analytic representation of a fitted hazard function (for `psm`) | |
+| `Survival`   | `R` function analytic representation of fitted survival function (for `psm`, `cph`) | |
+| `Quantile`   | `R` function analytic representation of fitted function for quantiles of survival time (for `psm`, `cph`)  | |
+| `Mean`   | `R` function analytic representation of fitted function for mean survival time or for ordinal logistic | |
+| `nomogram`   | Draws a nomogram for the fitted model     | `latex`, `plot` |
+| `survest`    | Estimate survival probabilities (`psm`, `cph`) |`survfit`  |
+| `survplot`   | Plot survival curves (`psm`, `cph`) | `plot.survfit` |
+| `survplotp`  | Plot survival curves with `plotly` features | `survplot` |
+| `validate`   | Validate indexes of model fit using resampling | |
+| `val.prob`   | External validation of a probability model | `lrm` |
+| `val.surv`   | External validation of a survival model | `calibrate`  |
+| `calibrate` | Estimate calibration curve using resampling | `val.prob`  |
+| `vif`        | Variance inflation factors for fitted model |              |
+| `naresid`     | Bring elements corresponding to missing data back into predictions and residuals | |
+| `naprint`     | Print summary of missing values                      | |
+| `impute` | Impute missing values                 | `aregImpute`   |
+
+: `rms` After-fit Functions
+
+
+
+| Function | Purpose   |
+|-----|-----|
+| `blrm`         | Bayesian binary and ordinal logistic model  |
+| `stackMI`      | Bayesian posterior stacking for multiple imputation  |
+| `stanDx`       | Stan diagnostics on fit  |
+| `stanDxplot`   | Trace plots to check posterior sampling convergence  |
+| `PostF`        | Creates R function for computing posterior probabilities  |
+| `plot.rmsb`    | Plot posterior densities, intervals, point summaries |
+| `compareBmods` | Compare two models using LOO-cv  |
+| `HPDint`       | Compute highest posterior density interval |
+| `distSym`      | Compute meaure of symmetry of posterior distribution |
+
+: `rmsb`: Bayesian Regression Modeling Strategies Package, Focusing on Semiparametric Univariate and Longitudinal Models
+
+An extensive overview of Bayesian capabilities of the `rmsb` package
+may be found at [hbiostat.org/R/rmsb/blrm.html](https://hbiostat.org/R/rmsb/blrm.html).
+
+Global options `prType` and `grType` control printed and some
+graphical output, respectively as shown in example code below.  The
+default is plain output and static graphics.  If using `plotly`
+interactive graphics through `ggplot` or `plotp` or with
+`anova` or `summary` functions it is best to
+do so with RStudio `html` output
+or `html` notebooks.  If using `html` output you must be
+producing an `html` document or notebook.  When setting `grType`
+to use $\LaTeX$ or `html` it is highly recommended that you use the
+`knitr` package.
+
+
+Example:
+
+* `treat`: categorical variable with levels `"a","b","c"` 
+* `num.diseases`: ordinal variable, 0-4
+* `age`: continuous <br>
+    Restricted cubic spline
+* `cholesterol`: continuous <br> (3 missings; use median) <br>
+    `log(cholesterol+10)`
+* Allow `treat` $\times$ `cholesterol` interaction
+* Program to fit logistic model, test all effects in design,
+    estimate effects (e.g. inter-quartile range odds ratios), plot
+    estimated transformations
+
+
+```{r eval=FALSE}
+require(rms)                     # make new functions available
+options(prType='html')           # print, summary, anova LaTeX output
+                                 # others: 'html', 'plain'
+options(grType='plotly')         # plotly graphics for ggplot, anova, summary
+                                 # default is 'base' for static graphics
+ddist <- datadist(cholesterol, treat, num.diseases, age)
+# Could have used ddist <- datadist(data.frame.name)
+options(datadist="ddist")        # defines data dist. to rms
+cholesterol <- impute(cholesterol)
+fit <- lrm(y ~ treat + scored(num.diseases) + rcs(age) +
+                 log(cholesterol+10) + treat:log(cholesterol+10))
+fit    # outputs plain, LaTeX, or html markup
+describe(y ~ treat + scored(num.diseases) + rcs(age))
+# or use describe(formula(fit)) for all variables used in fit
+# describe function (in Hmisc) gets simple statistics on variables
+# fit <- robcov(fit)             # Would make all statistics that follow
+                                 # use a robust covariance matrix
+                                 # would need x=T, y=T in lrm()
+specs(fit)                       # Describe the design characteristics
+anova(fit)                       # plain, LaTex, or html
+anova(fit, treat, cholesterol)   # Test these 2 by themselves
+plot(anova(fit))                 # Summarize anova graphically
+summary(fit)                     # Estimate effects using default ranges
+                                 # prints plain, LaTeX, or html
+plot(summary(fit))               # Graphical display of effects with C.I.
+summary(fit, treat="b", age=60)  # Specify reference cell and adjustment val
+summary(fit, age=c(50,70))       # Estimate effect of increasing age from
+                                 # 50 to 70
+summary(fit, age=c(50,60,70))    # Increase age from 50 to 70, adjust to
+                                 # 60 when estimating effects of other
+                                 # factors
+# If had not defined datadist, would have to define ranges for all var.
+
+# Estimate and test treatment (b-a) effect averaged over 3 cholesterols
+contrast(fit, list(treat='b', cholesterol=c(150,200,250)),
+              list(treat='a', cholesterol=c(150,200,250)),
+         type='average')
+# See the help file for contrast.rms for several examples of
+# how to obtain joint tests of multiple contrasts and how to get
+# double differences (interaction contrasts)
+
+p <- Predict(fit, age=seq(20,80,length=100), treat, conf.int=FALSE)
+plot(p)                          # Plot relationship between age and log
+# or ggplot(p), plotp(p)         # odds, separate curve for each treat,
+                                 # no C.I.
+plot(p, ~ age | treat)           # Same but 2 panels
+ggplot(p, groups=FALSE)
+bplot(Predict(fit, age, cholesterol, np=50))
+                                 # 3-dimensional perspective plot for age,
+                                 # cholesterol, and log odds using default
+                                 # ranges for both variables
+plot(Predict(fit, num.diseases, fun=function(x) 1/(1+exp(-x)), conf.int=.9),
+     ylab="Prob")                # Plot estimated probabilities instead of
+                                 # log odds (or use ggplot())
+                                 # can also use plotp() for plotly
+# Again, if no datadist were defined, would have to tell plot all limits
+logit <- predict(fit, expand.grid(treat="b",num.dis=1:3,age=c(20,40,60),
+                 cholesterol=seq(100,300,length=10)))
+# Could also obtain list of predictor settings interactively}
+logit <- predict(fit, gendata(fit, nobs=12))
+
+# Since age doesn't interact with anything, we can quickly and
+# interactively try various transformations of age, taking the spline
+# function of age as the gold standard. We are seeking a linearizing
+# transformation.
+
+ag <- 10:80
+logit <- predict(fit, expand.grid(treat="a", num.dis=0, age=ag,
+                 cholesterol=median(cholesterol)), type="terms")[,"age"]
+# Note: if age interacted with anything, this would be the age
+#        "main effect" ignoring interaction terms
+# Could also use
+#    logit <- Predict(f, age=ag, ...)$yhat,
+# which allows evaluation of the shape for any level of interacting
+#  factors.  When age does not interact with anything, the result from
+# predict(f, ..., type="terms") would equal the result from
+# Predict if all other terms were ignored
+
+# Could also specify
+#    logit <- predict(fit, gendata(fit, age=ag, cholesterol=...))
+# Un-mentioned variables set to reference values
+
+plot(ag^.5, logit)               # try square root vs. spline transform.
+plot(ag^1.5, logit)              # try 1.5 power
+
+latex(fit)                       # invokes latex.lrm, creates fit.tex
+# Draw a nomogram for the model fit
+plot(nomogram(fit))
+
+# Compose R function to evaluate linear predictors analytically
+g <- Function(fit)
+g(treat='b', cholesterol=260, age=50)
+# Letting num.diseases default to reference value
+```
+
+To examine interactions in a simpler way, you may want to group age
+into tertiles:
+
+```{r eval=FALSE}
+age.tertile <- cut2(age, g=3)
+# For automatic ranges later, add age.tertile to datadist input
+fit <- lrm(y ~ age.tertile * rcs(cholesterol))
+```
+
+
+
+## Other Functions
+
+* `supsmu`: Friedman's "super smoother" 
+* `lowess`: Cleveland's scatterplot smoother
+* `glm`: generalized linear models (see `Glm`)
+* `gam`: Generalized additive models
+* `rpart`: Like original CART with surrogate splits for missings,
+    censored data extension (Atkinson \& Therneau)
+* `validate.rpart`: in `rms`; validates recursive
+  partitioning with respect to certain accuracy indexes
+* `loess`: multi-dimensional scatterplot smoother
+
+
+```{r eval=FALSE}
+f <- loess(y ~ age * pressure)
+plot(f)                           # cross-sectional plots
+ages <- seq(20,70,length=40)
+pressures <- seq(80,200,length=40)
+pred <- predict(f, expand.grid(age=ages, pressure=pressures))
+persp(ages, pressures, pred)      # 3-d plot
+```
+

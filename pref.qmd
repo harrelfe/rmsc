@@ -1,0 +1,49 @@
+\heading{Course Philosophy}
+`r mrg(sound("philosophy"))`
+
+* Modeling is the endeavor to transform data into information and information into either prediction or evidence about the data generating mechanism^[Thanks to Drew Levy for ideas that greatly improved this section.]
+* Models are usually the best descriptive statistics
+    + adjust for one variable while displaying the association with $Y$ and another variable
+    + descriptive statistics do not work in higher dimensions
+* Satisfaction of model assumptions improves precision and increases
+        statistical power
+    + Be aware of assumptions, especially those mattering the most
+* It is more productive to make a model fit step by step (e.g.,
+        transformation estimation) than to postulate a simple model
+        and find out what went wrong
+    + Model diagnostics are often not actionable
+    + Changing the model in reaction to observed patterns $\uparrow$ uncertainty but is reflected by an apparent $\downarrow$ in uncertainty
+* Graphical methods should be married to formal inference
+* Overfitting occurs frequently, so data reduction and model validation
+        are important
+* Software without multiple facilities for assessing and fixing model
+        fit may only seem to be user-friendly
+* Carefully fitting an improper model is better than badly fitting
+        (and overfitting) a well-chosen one
+    + E.g. small $N$ and overfitting vs. carefully formulated right hand side of model
+* Methods which work for all types of regression models are the
+        most valuable.
+* In most research projects the cost of data collection far
+        outweighs the cost of data analysis, so it is important to
+        use the most efficient and accurate modeling techniques, to
+        avoid categorizing continuous variables, and
+        to not remove data from the estimation sample just to be
+        able to validate the model.
+    + A $100 analysis can make a $1,000,000 study worthless.
+* The bootstrap is a breakthrough for statistical modeling and
+  model validation.
+* Bayesian modeling is ready for prime time.
+    + Can incorporate non-data knowledge
+    + Provides full exact inferential tools even when penalizing $\beta$
+    + Rational way to account for model uncertainty
+    + Direct inference: evidence for all possible values of $\beta$
+    + More accurate way of dealing with missing data
+* Using the data to guide the data analysis is almost as dangerous
+        as not doing so.
+* A good overall strategy is to decide how many degrees of
+  freedom (i.e., number of regression parameters) can be \"spent\",
+  where they should be spent, to spend them with no regrets.
+See the excellent text _Clinical Prediction Models_ by
+Steyerberg @cpm.
+
+

@@ -1,0 +1,168 @@
+```{r include=FALSE}
+require(Hmisc)
+options(qproject='rms')
+getRs('qbookfun.r')
+```
+
+<img src="logo.png" width=40%>
+
+```{mermaid}
+%%| column: screen-inset-right
+%%| fig-width: 8
+flowchart LR
+rms[Multivariable Model Development] --> est[Estimation] --> pred[Prediction] --> val[Validation]
+```
+
+# Preface {.unnumbered}
+
+`r mrg(sound("philosophy"))`
+
+
+All standard regression models have assumptions that
+must be verified for the model to have power to test hypotheses and
+for it to be able to predict accurately. Of the principal assumptions
+(linearity, additivity, distributional), this course will emphasize
+methods for assessing and satisfying the first two.  Practical but
+powerful tools are presented for validating model assumptions and
+presenting model results. This course provides methods for estimating
+the shape of the relationship between predictors and response using
+the widely applicable method of augmenting the design matrix using
+restricted cubic splines.  Even when assumptions are satisfied,
+overfitting can ruin a model's predictive ability for future
+observations.  Methods for data reduction will be introduced to deal
+with the common case where the number of potential predictors is large
+in comparison with the number of observations. Methods of model
+validation (bootstrap and cross-validation) will be covered, as will
+auxiliary topics such as modeling interaction surfaces,
+efficiently utilizing partial covariable data by using multiple
+imputation,
+variable selection, overly influential observations, collinearity, and
+shrinkage, and a brief introduction to the `R` `rms` package
+for handling these problems.
+The methods covered will apply to almost any regression model, including
+ordinary least squares, longitudinal models, logistic regression
+models, ordinal regression, quantile regression, longitudinal data
+analysis, and survival models.
+Statistical models will be contrasted with machine learning so that the student can make an informed choice of predictive tools.
+
+## Target Audience
+
+Statisticians and persons from other
+quantitative disciplines who are interested in multivariable
+regression analysis of univariate responses, in developing,
+validating, and graphically describing multivariable predictive models
+and in covariable adjustment in clinical trials.  The
+course will be of particular interest to applied statisticians and
+developers of applied statistics methodology, graduate students,
+clinical and pre-clinical biostatisticians, health services and
+outcomes researchers, econometricians, psychometricians, and
+quantitative epidemiologists. A good command of ordinary multiple
+regression is a prerequisite.
+
+## Learning Goals
+
+Students will
+
+* be able to fit multivariable regression models:
+   + accurately
+   + in a way the sample size will allow, without overfitting
+   + uncovering complex non--linear or non--additive relationships
+   + testing for and quantifying the association between one or
+        more predictors and the response, with possible adjustment
+        for other factors
+   + making maximum use of partial data rather than deleting observations
+      containing missing variables
+* be able to validate models for predictive accuracy
+  and to detect overfitting and understand problems caused by overfitting.
+* learn techniques of "safe data mining" in which
+  significance levels, confidence limits, and measures such as $R^2$
+  have the claimed properties.
+* learn how to interpret fitted models using both
+  parameter estimates and graphics
+* learn about the advantages of semiparametric ordinal models for 
+  continuous $Y$
+* learn about some of the differences between frequentist and
+  Bayesian approaches to statistical modeling
+* learn differences between machine learning and statistical
+  models, and how to determine the better approach depending on the
+  nature of the problem
+
+## Course Philosophy {#sec-philosophy}
+
+* Modeling is the endeavor to transform data into information and information into either prediction or evidence about the data generating mechanism^[Thanks to Drew Levy for ideas that greatly improved this section.]
+* Models are usually the best descriptive statistics
+    + adjust for one variable while displaying the association with $Y$ and another variable
+    + descriptive statistics do not work in higher dimensions
+* Satisfaction of model assumptions improves precision and increases
+        statistical power
+    + Be aware of assumptions, especially those mattering the most
+* It is more productive to make a model fit step by step (e.g.,
+        transformation estimation) than to postulate a simple model
+        and find out what went wrong
+    + Model diagnostics are often not actionable
+    + Changing the model in reaction to observed patterns $\uparrow$ uncertainty but is reflected by an apparent $\downarrow$ in uncertainty
+* Graphical methods should be married to formal inference
+* Overfitting occurs frequently, so data reduction and model validation
+        are important
+* Software without multiple facilities for assessing and fixing model
+        fit may only seem to be user-friendly
+* Carefully fitting an improper model is better than badly fitting
+        (and overfitting) a well-chosen one
+    + E.g. small $N$ and overfitting vs. carefully formulated right hand side of model
+* Methods which work for all types of regression models are the
+        most valuable.
+* In most research projects the cost of data collection far
+        outweighs the cost of data analysis, so it is important to
+        use the most efficient and accurate modeling techniques, to
+        avoid categorizing continuous variables, and
+        to not remove data from the estimation sample just to be
+        able to validate the model.
+    + A $100 analysis can make a $1,000,000 study worthless.
+* The bootstrap is a breakthrough for statistical modeling and
+  model validation.
+* Bayesian modeling is ready for prime time.
+    + Can incorporate non-data knowledge
+    + Provides full exact inferential tools even when penalizing $\beta$
+    + Rational way to account for model uncertainty
+    + Direct inference: evidence for all possible values of $\beta$
+    + More accurate way of dealing with missing data
+* Using the data to guide the data analysis is almost as dangerous
+        as not doing so.
+* A good overall strategy is to decide how many degrees of
+  freedom (i.e., number of regression parameters) can be \"spent\",
+  where they should be spent, to spend them with no regrets.
+See the excellent text _Clinical Prediction Models_ [@cpm]
+
+
+For information about adding annotations, comments, and questions inside the text click here: `r hypcomment`
+
+### Symbols Used in the Right Margin of the Text
+
+* <img src="movie.png" width="15px"> in the right margin is a
+  hyperlink to a YouTube video related to the subject.
+* <img src="discourse.png" width="15px"> is a hyperlink to the
+  discussion topic in `datamethods.org` devoted to the specific
+  topic.  You can go directly to the discussion
+  about chapter `n` by going to `datamethods.org/rmsn`.
+* An audio player symbol indicates that narration elaborating on the
+  notes is available for the section.  Red letters and
+numbers in the right margin are cues referred to within the audio
+recordings.
+* <span style="color:blue;">blog</span> in the right margin is a link to a blog entry
+that further discusses the topic.
+
+## Other Information
+
+* [Discussion board for the overall course](http://datamethods.org/rms)
+* [RMS main web site](https://hbiostat.org/rms)
+* Twitter: `#rmscourse`
+* [BBR course](https://hbiostat.org/bbrc)
+* Go directly to a YouTube video for RMS Session `n` by going to `bit.ly/yt-rmsn`
+* [Study questions](https://hbiostat.org/rms/qstudy.html)
+* [Datamethods discussion board](http://datamethods.org)
+* [Statistical papers written for clinical researchers](https://hbiostat.org/bib)
+* [Statistical Thinking blog](https://fharrell.com)
+* [Statistical Thinking News](https://paper.li/stn)
+* [Glossary of statistical terms](https://hbiostat.org/doc/glossary.pdf)
+* [R Workflow](https://hbiostat.org/rflow)
+

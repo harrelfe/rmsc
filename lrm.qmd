@@ -1,0 +1,1264 @@
+```{r include=FALSE}
+require(rms)
+options(qproject='rms', prType='html')
+getRs('reptools.r')
+getRs('qbookfun.r')
+hookaddcap()
+knitr::set_alias(w   = 'fig.width', h    = 'fig.height',
+                 cap = 'fig.cap',   scap ='fig.scap')
+```
+
+# Binary Logistic Regression
+`r ipacue()`
+
+* $Y=0, 1$ 
+`r mrg(sound("lrm-1"))`
+* Time of event not important
+* In $C(Y|X)$ $C$ is $\Pr(Y=1)$
+* $g(u)$ is $\frac{1}{1+e^{-u}} = \text{expit}(u)$
+
+
+
+## Model
+$$
+\Pr(Y=1|X) = [1+\exp(-X\beta)]^{-1}
+$$
+
+$$
+P = [1+\exp(-x)]^{-1} = \text{expit}(x)
+$$
+
+```{r lrm-fun,echo=FALSE,w=3.5,h=2.5,cap='Logistic function'}
+#| label: fig-lrm-fun
+## @knitr logistic-fun
+spar(bty='l')
+x <- seq(-4, 4, by=.05)
+p <- 1/(1 + exp(-x))
+plot(x, p, xlab="X", ylab="P", type="l")
+```
+
+`r ipacue()`
+
+* $O = \frac{P}{1-P}$
+* $P = \frac{O}{1+O}$
+* $X\beta = \log\frac{P}{1-P} = \text{logit}(P)$
+* $e^{X\beta} = O$
+
+
+
+### Model Assumptions and Interpretation of Parameters
+
+`r ipacue()`
+
+\begin{array}{ccc}
+\text{logit}(Y=1|X) &=& \text{logit}(P) = \log\frac{P}{1-P} \nonumber \\
+&=& X\beta ,
+\end{array}
+
+
+* Increase $X_{j}$ by $d$ $\rightarrow$
+increase odds $Y=1$ by $\exp(\beta_{j}d)$,
+increase log odds by $\beta_{j}d$.
+* If there is only one predictor $X$ and that predictor is
+  binary, the model can be written
+
+\begin{array}{ccc}
+\text{logit}(Y=1|X=0) &=& \beta_{0} \nonumber \\
+\text{logit}(Y=1|X=1) &=& \beta_{0}+\beta_{1} .
+\end{array}
+
+* One continuous predictor:
+$$
+\text{logit}(Y=1|X) = \beta_{0}+\beta_{1} X,
+$$
+* Two treatments (indicated by $X_{1}=0$ or $1$) and one
+  continuous covariable ($X_{2}$).
+$$
+\text{logit}(Y=1|X) = \beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2} ,
+$$
+
+
+\begin{array}{ccc}
+\text{logit}(Y=1|X_{1}=0, X_{2}) &=& \beta_{0}+\beta_{2}X_{2} \nonumber \\
+\text{logit}(Y=1|X_{1}=1, X_{2}) &=& \beta_{0}+\beta_{1}+\beta_{2}X_{2} .
+\end{array}
+
+
+
+
+### Odds Ratio, Risk Ratio, and Risk Difference
+`r mrg(sound("lrm-2"))`
+
+`r ipacue()`
+
+* Odds ratio capable of being constant
+* Ex: risk factor doubles odds of disease
+
+```{r echo=FALSE}
+require(Hmisc)
+require(kableExtra)
+d <- data.frame(p1=c(0.2, 0.5, 0.8, 0.9, 0.98))
+d <- upData(d, o1=p1/(1-p1), bl=rep('  ', 5), o2=2*o1, p2=round(o2/(1+o2), 3), print=FALSE)
+kbl(d, col.names=.q(Probability, Odds, '  ', Odds, Probability)) %>%
+  kable_classic(full_width=FALSE) %>%
+  add_header_above(c("Without Risk Factor" = 2, "  " = 1, "With Risk Factor" = 2))
+```
+
+```{r lrm-or-vs-diff,cap='Absolute benefit as a function of risk of the event in a control subject and the relative effect (odds ratio) of the risk factor.  The odds ratios are given for each curve.',scap='Absolute benefit as a function of risk in a control subject and the relative effect'}
+#| label: fig-lrm-or-vs-diff
+spar(bty='l')
+plot(0, 0, type="n", xlab="Risk for Subject Without Risk Factor",
+     ylab="Increase in Risk",
+     xlim=c(0,1), ylim=c(0,.6))
+i <- 0
+or <- c(1.1,1.25,1.5,1.75,2,3,4,5,10)
+for(h in or) {
+  i <- i + 1
+  p <- seq(.0001, .9999, length=200)
+  logit <- log(p/(1 - p))  # same as qlogis(p)
+  logit <- logit + log(h)  # modify by odds ratio
+  p2 <- 1/(1 + exp(-logit))# same as plogis(logit)
+  d <- p2 - p
+  lines(p, d, lty=i)
+  maxd <- max(d)
+  smax <- p[d==maxd]
+  text(smax, maxd + .02, format(h), cex=.6)
+}
+```
+
+
+Let $X_{1}$ be a binary risk factor and let <br> $A=\{X_{2},\ldots,X_{p}\}$  `r ipacue()` 
+be the other factors.
+Then the estimate of $\Pr(Y=1|X_{1}=1, A) -$
+$\Pr(Y=1|X_{1}=0, A)$ is
+
+\begin{array}{c}
+\frac{1}{1+\exp-[\hat{\beta_{0}}+\hat{\beta_{1}}+\hat{\beta_{2}}X_{2}+\ldots+\hat{\beta_{p}}X_{p}]}
+\nonumber \\
+-
+\frac{1}{1+\exp-[\hat{\beta_{0}}+\hat{\beta_{2}}X_{2}+\ldots +\hat{\beta_{p}}X_{p}]} \\
+=  \frac{1}{1+(\frac{1-\hat{R}}{\hat{R}}) \exp(-\hat{\beta}_{1})} -
+\hat{R}, \nonumber
+\end{array}
+
+where $R=\Pr(Y=1|X_{1}=0, A)$.
+
+* Risk ratio is $\frac{1+e^{-X_{2}\beta}}{1+e^{-X_{1}\beta}}$
+* Does not simplify like odds ratio, which is
+  $\frac{e^{X_{1}\beta}}{e^{X_{2}\beta}} = e^{(X_{1}-X_{2})\beta}$
+
+
+
+### Detailed Example {#sec-lrm-dex}
+
+`r mrg(sound("lrm-3"))`
+
+<br>
+
+
+|  |  | | | | | | | | | | | | | | | | | | | |
+|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
+| Age: Females | 37 | 39 | 39 | 42 | 47 | 48 | 48 | 52 | 53 | 55 | 56 | 57 | 58 | 58 | 60 | 64 | 65 | 68 | 68 | 70  |
+|  Response: |  0 |  0 |  0 |  0 |  0 |  0 | 1 | 0 | 0 | 0 | 0 |  0 | 0 | 1 | 0 | 0 | 1 | 1 | 1 | 1 |
+| Age: Males | 34 | 38 | 40 | 40 | 41 | 43 | 43 | 43 | 44 | 46 | 47 | 48 | 48 | 50 | 50 | 52 | 55 | 60 | 61 | 61  |
+| Response: | 1 | 1 | 0 | 0 | 0 | 1 | 1 | 1 | 0 | 0 | 1 | 1 | 1 | 0 | 1 | 1 | 1 | 1 | 1 | 1 |
+
+```{r w=5.5,h=4.5,cap='Data, subgroup proportions, and fitted logistic model, with 0.95 pointwise confidence bands',scap='Data, subgroup proportions, and fitted logistic model'}
+#| label: fig-lrm-lrmodel
+require(rms)
+options(prType='html')     # output format for certain rms functions
+getHdata(sex.age.response)
+d <- sex.age.response
+dd <- datadist(d); options(datadist='dd')
+f <- lrm(response ~ sex + age, data=d)
+fasr <- f   # Save for later
+w <- function(...)
+  with(d, {
+    m <- sex=='male'
+    f <- sex=='female'
+    lpoints(age[f], response[f], pch=1)
+    lpoints(age[m], response[m], pch=2)
+    af <- cut2(age, c(45,55), levels.mean=TRUE)
+    prop <- tapply(response, list(af, sex), mean,
+                   na.rm=TRUE)
+    agem <- as.numeric(row.names(prop))
+    lpoints(agem, prop[,'female'],
+            pch=4, cex=1.3, col='green')
+    lpoints(agem, prop[,'male'],
+            pch=5, cex=1.3, col='green')
+    x <- rep(62, 4); y <- seq(.25, .1, length=4)
+    lpoints(x, y, pch=c(1, 2, 4, 5),
+            col=rep(c('blue','green'),each=2))
+    ltext(x+5, y,
+          c('F Observed','M Observed',
+            'F Proportion','M Proportion'), cex=.8)
+  } )
+
+plot(Predict(f, age=seq(34, 70, length=200), sex, fun=plogis),
+     ylab='Pr(response)', ylim=c(-.02, 1.02), addpanel=w)
+```
+
+```{r results='asis'}
+ltx <- function(fit) {
+  w <- latex(fit, inline=TRUE, columns=54,
+             after='', digits=3,
+             before='$$X\\hat{\\beta}=$$')
+  cat(w, sep='\n')
+  }
+ltx(f)
+```
+
+
+<pre><tt>
+                 sex        response
+                 Frequency
+                 Row Pct      0        1    Total     Odds/Log
+
+                 F           14        6       20    6/14=.429
+                          70.00    30.00                 -.847
+
+                 M            6       14       20    14/6=2.33
+                          30.00    70.00                  .847
+
+                 Total       20       20       40
+
+                M:F odds ratio = (14/6)/(6/14) = 5.44, log=1.695
+</tt></pre>
+
+`r ipacue()` 
+
+
+| Statistic |    DF  |   Value  |    Prob  |
+|-|-|-|-|
+| Wald $\chi^2$             |  1 |   6.400 |   0.011  |
+| Likelihood Ratio $\chi^2$ |  1 |   6.583 |   0.010  |
+
+: sex $\times$ response
+
+
+
+| Parameter | Estimate | Std Err | Wald $\chi^{2}$ | P  |
+|-----|-----|-----|-----|-----|
+| $\beta_{0}$| -0.847 | 0.488 | 3.015 |  |
+| $\beta_{1}$|  1.695 | 0.690 | 6.030 | 0.014  |
+
+
+| | |
+|--|--|
+| Log likelihood ($\beta_{1}=0$) | -27.727  |
+| Log likelihood (max) | -24.435  |
+| LR $\chi^{2} (H_{0}:\beta_{1}=0)$ -2(-27.727- -24.435) = 6.584  |
+
+
+Next, consider the relationship between age and response, ignoring
+sex.
+
+<pre></tt>
+                 age        response
+                 Frequency
+                 Row Pct      0        1    Total     Odds/Log
+
+                 <45          8        5       13     5/8=.625
+                           61.5     38.4                  -.47
+
+                 45-54        6        6       12        6/6=1
+                           50.0     50.0                     0
+
+                 55+          6        9       15      9/6=1.5
+                           40.0     60.0                  .405
+
+                 Total       20       20       40
+
+                55+ : <45 odds ratio = (9/6)/(5/8) = 2.4, log=.875
+</tt></pre>
+
+`r ipacue()` 
+
+
+| Parameter | Estimate | Std Err | Wald $\chi^{2}$ | P  |
+|-----|-----|-----|-----|-----|
+| $\beta_{0}$ | -2.734 | 1.838 | 2.213 |        |
+| $\beta_{1}$ |  0.054 | 0.036 | 2.276 | 0.131  |
+
+
+The estimate of $\beta_{1}$ is in rough agreement with that obtained from  `r ipacue()` 
+the frequency table. The 55+:<45 log odds ratio is .875, and since
+the respective mean ages in the 55+ and <45 age groups are 61.1 and
+40.2, an estimate of the log odds ratio increase per year is
+.875/(61.1 - 40.2)=.875/20.9=.042.
+
+The likelihood ratio test for $H_{0}$: no association between age and
+response is obtained as follows:
+
+| | |
+|--|--|
+| Log likelihood ($\beta_{1}=0$) | -27.727  |
+| Log likelihood (max) | -26.511  |
+| LR $\chi^{2} (H_{0}:\beta_{1}=0)$ | -2(-27.727- -26.511) = 2.432  |
+
+(Compare 2.432 with the Wald statistic 2.28.)
+
+Next we consider the simultaneous association of age and sex with
+response. `r ipacue()` 
+
+<pre><tt>
+                                 sex=F
+
+                 age        response
+                 Frequency
+                 Row Pct      0        1    Total
+
+                 <45          4        0        4
+                          100.0      0.0
+
+                 45-54        4        1        5
+                           80.0     20.0
+
+                 55+          6        5       11
+                           54.6     45.4
+
+                 Total       14        6       20
+</tt></pre>
+
+`r ipacue()` 
+
+<pre><tt>
+                                 sex=M
+
+                 age        response
+                 Frequency
+                 Row Pct      0        1    Total
+
+                 <45          4        5        9
+                           44.4     55.6
+
+                 45-54        2        5        7
+                           28.6     71.4
+
+                 55+          0        4        4
+                            0.0    100.0
+
+                 Total        6       14       20
+</tt></pre>
+
+`r ipacue()` 
+
+A logistic model for relating sex and age simultaneously to
+response is given below.
+
+
+| Parameter | Estimate | Std Err | Wald $\chi^{2}$ | P  |
+|-----|-----|-----|-----|-----|
+| $\beta_{0}$ |  -9.843 | 3.676 | 7.171 |   |
+| $\beta_{1}$ (sex) | 3.490 | 1.199 | 8.469 | 0.004  |
+| $\beta_{2}$ (age) | 0.158 | 0.062 | 6.576 | 0.010  |
+
+
+
+Likelihood ratio tests are obtained from the information below.
+
+| | |
+|--|--|
+| Log likelihood ($\beta_{1}=0,\beta_{2}=0$) | -27.727  |
+| Log likelihood (max) | -19.458  |
+| Log likelihood ($\beta_{1}=0$) | -26.511  |
+| Log likelihood ($\beta_{2}=0$) | -24.435  |
+| LR $\chi^{2}$ ($H_{0}:\beta_{1}=\beta_{2}=0$) | -2(-27.727- -19.458)= 16.538  |
+| LR $\chi^{2}$ ($H_{0}:\beta_{1}=0$) sex$|$age | -2(-26.511- -19.458) = 14.106  |
+| LR $\chi^{2}$ ($H_{0}:\beta_{2}=0$) age$|$sex | -2(-24.435- -19.458) = 9.954 |
+
+
+The 14.1 should be compared with the Wald statistic of 8.47, and  `r ipacue()` 
+9.954 should be compared with 6.58.
+The fitted logistic model is plotted separately for females and
+males in  @fig-lrm-lrmodel .  The fitted model is
+
+$$\Pr(\text{Response=1}|\text{sex,age}) = \text{expit}(-9.84+3.49\times \text{sex} +.158\times \text{age})$$
+
+where as before sex=0 for females, 1 for males. For example, for
+a 40 year old female, the predicted logit is $-9.84+.158(40) = -3.52$.
+The predicted probability of a response is $\text{expit}(3.52)= .029$. For a 40 year old male, the predicted logit is $-9.84 + 3.49+.158(40) = -.03$, with a probability of .492.
+
+
+### Design Formulations
+`r mrg(sound("lrm-4"))`
+
+`r ipacue()`
+
+* Can do ANOVA using $k-1$ dummies for a $k$-level predictor
+* Can get same $\chi^2$ statistics as from a contingency table
+* Can go farther: covariable adjustment
+* Simultaneous comparison of multiple variables between two
+  groups: Turn problem backwards to predict group from all the
+  _dependent_ variables
+* This is more robust than a parametric multivariate test
+* Propensity scores for adjusting for nonrandom treatment  `r ipacue()`
+  selection: Predict treatment from all baseline variables
+* Adjusting for the predicted probability of getting a treatment
+  adjusts adequately for confounding from all of the variables
+* In a randomized study, using logistic model to adjust for
+  covariables, even with perfect balance, will improve the treatment
+  effect estimate
+
+
+
+## Estimation
+
+### Maximum Likelihood Estimates 
+`r mrg(sound("lrm-5"))`
+Like binomial case but $P$s vary; $\hat{\beta}$ computed by
+trial and error using an iterative maximization technique
+
+
+### Estimation of Odds Ratios and Probabilities
+
+$$\hat{P}_{i} = \text{expit}(X_{i}\hat{\beta})$$
+
+$$\text{expit}(X_{i}\hat{\beta}\pm zs)$$
+
+
+### Minimum Sample Size Requirement {#sec-lrm-n}
+
+`r ipacue()`
+
+* Simplest case: no covariates, only an intercept
+* Consider margin of error of 0.1 in estimating
+  $\theta = \Pr(Y=1)$ with 0.95 confidence
+* Worst case: $\theta = \frac{1}{2}$
+* Requires $n=96$ observations^[The general formula for the sample size required to achieve a margin of error of $\delta$ in estimating a true probability of $\theta$ at the 0.95 confidence level is $n = (\frac{1.96}{\delta})^{2} \times \theta(1 - \theta)$.  Set $\theta = \frac{1}{2}$ for the worst case.]
+* Single binary predictor with prevalence $\frac{1}{2}$: need
+  $n=96$ for each value of $X$
+* For margin of error of $\pm 0.05, n=384$ is required (if true probabilities near 0.5 are possible); $n=246$ required if true probabilities are only known not to be in $[0.2, 0.8]$.
+* Single continuous predictor $X$ having a normal distribution  `r ipacue()`
+  with mean zero and standard deviation $\sigma$, with true $P = \text{expit}(X)$ so that the expected number of events is
+  $\frac{n}{2}$.  Compute mean of $\max_{X \in [-1.5,1.5]} |P - \hat{P}|$ over 1000 simulations for varying $n$ and $\sigma$^[An average absolute error of 0.05 corresponds roughly to a 0.95 confidence interval margin of error of 0.1.]
+
+
+```{r lrm-simerr,w=5,h=4,cap='Simulated expected maximum error in estimating probabilities for $x \\in [-1.5, 1.5]$ with a single normally distributed $X$ with mean zero',scap='Average maximum error with continuous predictor'}
+#| label: fig-lrm-simerr
+require(rms)
+getRs('hashCheck.r')  # also defines runifChanged
+
+g <- function() {
+set.seed(12)
+sigmas  <- c(.5, .75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4)
+ns      <- seq(25, 300, by=25)
+nsim    <- 1000
+xs      <- seq(-1.5, 1.5, length=200)
+pactual <- plogis(xs)
+
+dn <- list(sigma=format(sigmas), n=format(ns))
+maxerr <- N1 <- array(NA, c(length(sigmas), length(ns)), dn)
+
+i <- 0
+for(s in sigmas) {
+  i <- i + 1
+  j <- 0
+  for(n in ns) {
+    j <- j + 1
+    n1 <- maxe <- 0
+    for(k in 1:nsim) {
+      x <- rnorm(n, 0, s)
+      P <- plogis(x)
+      y <- ifelse(runif(n) <= P, 1, 0)
+      n1 <- n1 + sum(y)
+      beta <- lrm.fit(x, y)$coefficients
+      phat <- plogis(beta[1] + beta[2] * xs)
+      maxe <- maxe + max(abs(phat - pactual))
+    }
+    n1   <- n1/nsim
+    maxe <- maxe/nsim
+    maxerr[i,j] <- maxe
+    N1[i,j] <- n1
+  }
+}
+maxerr
+}
+
+maxerr <- runifChanged(g)
+maxe   <- reShape(maxerr)
+xYplot(maxerr ~ n, groups=sigma, data=maxe,
+       ylab=expression(paste('Average Maximum  ',
+           abs(hat(P) - P))),
+       type='l', lty=rep(1:2, 5), label.curve=FALSE,
+       abline=list(h=c(.15, .1, .05), col=gray(.85)))
+Key(.8, .68, other=list(cex=.7,
+               title=expression(~~~~~~~~~~~sigma)))
+```
+
+
+
+## Test Statistics
+`r mrg(sound("lrm-6"))`
+
+`r ipacue()`
+
+* Likelihood ratio test best
+* Score test second best (score $\chi^{2} \equiv$ Pearson $\chi^2$)
+* Wald test may misbehave but is quick
+
+
+
+## Residuals
+
+`r ipacue()` 
+Partial residuals (to check predictor transformations)
+
+$$r_{ij} = \hat{\beta}_{j}X_{ij} + \frac{Y_{i} - \hat{P}_{i}}{\hat{P}_{i}(1-\hat{P}_{i})}$$
+
+
+## Assessment of Model Fit
+
+`r ipacue()` 
+
+$$\text{logit}(Y=1|X) = \beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2}$$
+
+```{r lrm-assumptions,echo=FALSE,cap='Logistic regression assumptions for one binary and one continuous predictor'}
+#| label: fig-lrm-assumptions
+spar()
+plot(0:1, 0:1, xlab=expression(X[2]), ylab='logit(Y=1)',
+     axes=FALSE,  type='n')
+axis(1, at=0:1, labels=rep('',2))
+axis(2, at=0:1, labels=rep('',2))
+lines(c(.05, .8), c(.05, .5))
+lines(c(.05, .8), c(.30, .75))
+text(.9, .5, expression(X[1]==0), adj=.5)
+text(.9, .75,expression(X[1]==1), adj=.5)
+```
+
+
+```{r lrm-emp-age-sex}
+#| label: lrm-emp-age-sex
+getHdata(acath)
+acath$sex <- factor(acath$sex, 0:1, c('male','female'))
+dd <- datadist(acath); options(datadist='dd')
+f <- lrm(sigdz ~ rcs(age, 4) * sex, data=acath)
+kn <- specs(f)$how.modeled['age','Parameters']
+kn <- setdiff(strsplit(kn, ' ')[[1]], '')
+kn[length(kn)] <- paste('and', kn[length(kn)])
+kn <- paste(kn, collapse=', ')
+```
+
+```{r lrm-emp-age-sex-pl}
+#| fig-cap: "Logit proportions of significant coronary artery disease by sex and deciles of age for n=3504 patients, with spline fits (smooth curves). Spline fits are for $k=4$ knots at age=36, 48, 56, and 68 years, and interaction between age and sex is allowed.  Shaded bands are pointwise 0.95 confidence limits for predicted log odds.  Smooth nonparametric estimates are shown as dotted curves. Data courtesy of the Duke Cardiovascular Disease Databank."
+#| fig-scap: "Logit proportions of significant CAD by sex and age"
+#| label: fig-lrm-emp-age-sex-pl
+w <- function(...)
+  with(acath, {
+    plsmo(age, sigdz, group=sex, fun=qlogis, lty='dotted',
+          add=TRUE, grid=TRUE)
+    af <- cut2(age, g=10, levels.mean=TRUE)
+    prop <- qlogis(tapply(sigdz, list(af, sex), mean,
+                          na.rm=TRUE))
+    agem <- as.numeric(row.names(prop))
+    lpoints(agem, prop[,'female'], pch=4, col='green')
+    lpoints(agem, prop[,'male'],   pch=2, col='green')
+  } )
+plot(Predict(f, age, sex), ylim=c(-2,4), addpanel=w,
+     label.curve=list(offset=unit(0.5, 'cm')))
+```
+
+`r ipacue()`
+
+* Can verify by plotting stratified proportions
+* $\hat{P}$ =  number of events divided by stratum size
+* $\hat{O} = \frac{\hat{P}}{1-\hat{P}}$
+* Plot $\log \hat{O}$ (scale on which linearity is assumed)
+* Stratified estimates are noisy
+* 1 or 2 $X$s $\rightarrow$ nonparametric smoother
+* `plsmo` function makes it easy to use loess to compute logits
+  of nonparametric estimates (`fun=qlogis`)
+* General: restricted cubic spline expansion of one or more predictors  `r ipacue()`
+
+\begin{array}{ccc}
+\text{logit}(Y=1|X) &=& \hat{\beta}_{0}+\hat{\beta}_{1}X_{1}+\hat{\beta}_{2}X_{2}+\hat{\beta}_{3}X_{2}'+\hat{\beta}_{4}X_{2}'' \nonumber \\
+&=& \hat{\beta}_{0}+\hat{\beta}_{1}X_{1}+f(X_{2}) ,
+\end{array}
+
+
+\begin{array}{ccc}
+\text{logit}(Y=1|X) &=& \beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2}+\beta_{3}X_{2}'+\beta_{4}X_{2}'' \nonumber \\
+&& +\beta_{5}X_{1}X_{2}+\beta_{6}X_{1}X_{2}'+\beta_{7}X_{1}X_{2}''
+\end{array}
+
+<!--  Get LR chi-square components needed for table--->
+
+`r ipacue()` 
+
+```{r lrm-lrtest,eval=TRUE}
+lr <- function(formula)
+  {
+    f <- lrm(formula, data=acath)
+    stats <- f$stats[c('Model L.R.', 'd.f.')]
+    cat('L.R. Chi-square:', round(stats[1],1),
+        '  d.f.:', stats[2],'\n')
+    f
+  }
+a <- lr(sigdz ~ sex + age)
+b <- lr(sigdz ~ sex * age)
+c <- lr(sigdz ~ sex + rcs(age,4))
+d <- lr(sigdz ~ sex * rcs(age,4))
+lrtest(a, b)
+lrtest(a, c)
+lrtest(a, d)
+lrtest(b, d)
+lrtest(c, d)
+```
+
+
+| Model / Hypothesis | Likelihood Ratio $\chi^2$ | d.f. | $P$ | Formula  |
+|-----|-----|-----|-----|-----|
+| a: sex, age (linear, no interaction) | 766.0 | 2 | |  |
+| b: sex, age, age $\times$ sex        | 768.2 | 3 | |  |
+| c: sex, spline in age                | 769.4 | 4 | |  |
+| d: sex, spline in age, interaction   | 782.5 | 7 | |  |
+| $H_{0}:$ no age $\times$ sex interaction given linearity | 2.2 | 1 | .14 | ($b-a$)  |
+| $H_{0}:$ age linear $|$ no interaction   | 3.4 | 2 | .18 | ($c-a$)  |
+| $H_{0}:$ age linear, no interaction    | 16.6 | 5 | .005 | ($d-a$)  |
+| $H_{0}:$ age linear, product form interaction  | 14.4 | 4 | .006 | ($d-b$)  |
+| $H_{0}:$ no interaction, allowing for nonlinearity in age  | 13.1 | 3 | .004 | ($d-c$)  |
+
+
+* Example of finding transform. of a single continuous predictor 
+`r mrg(sound("lrm-7"))`
+* Duration of symptoms vs. odds of severe coronary disease
+* Look at AIC to find best # knots for the money
+
+
+
+| k | Model $\chi^{2}$ | AIC   |
+|--:|-----:|-----:|
+| 0 | 99.23 | 97.23  |
+| 3 | 112.69 | 108.69  |
+| 4 | 121.30 | 115.30  |
+| 5 | 123.51 | 115.51  |
+| 6 | 124.41 | 114.41   |
+
+
+
+```{r lrm-dur,cap='Estimated relationship between duration of symptoms and the log odds of severe coronary artery disease for $k=5$. Knots are marked with arrows. Solid line is spline fit; dotted line is a nonparametric loess estimate.',scap='Duration of symptoms and severe CAD'}
+#| label: fig-lrm-dur
+dz <- subset(acath, sigdz==1)
+dd <- datadist(dz)
+f <- lrm(tvdlm ~ rcs(cad.dur, 5), data=dz)
+w <- function(...)
+  with(dz, {
+    plsmo(cad.dur, tvdlm, fun=qlogis, add=TRUE,
+          grid=TRUE, lty='dotted')
+    x <- cut2(cad.dur, g=15, levels.mean=TRUE)
+    prop <- qlogis(tapply(tvdlm, x, mean, na.rm=TRUE))
+    xm <- as.numeric(names(prop))
+    lpoints(xm, prop, pch=2, col='green')
+  } )
+plot(Predict(f, cad.dur), addpanel=w)
+```
+
+
+
+```{r lrm-problog,cap='Fitted linear logistic model in $\\log_{10}(\\text{duration + 1})$, with subgroup estimates using groups of 150 patients. Fitted equation is $\\Pr(\\text{tvdlm})$ = $\\text{expit}(-.9809+.7122 \\log_{10}(\\text{months}+1))$.',scap='Duration of symptoms and $\\log_{10}(\\text{months}+1$)'}
+#| label: fig-lrm-problog
+f <- lrm(tvdlm ~ log10(cad.dur + 1), data=dz)
+w <- function(...)
+  with(dz, {
+    x <- cut2(cad.dur, m=150, levels.mean=TRUE)
+    prop <- tapply(tvdlm, x, mean, na.rm=TRUE)
+    xm <- as.numeric(names(prop))
+    lpoints(xm, prop, pch=2, col='green')
+  } )
+plot(Predict(f, cad.dur, fun=plogis), ylab='P',
+     ylim=c(.2, .8), addpanel=w)
+```
+
+
+**Modeling Interaction Surfaces**
+
+`r ipacue()`
+
+* Sample of 2258 pts^[Many patients had missing cholesterol.] 
+`r mrg(sound("lrm-8"))`
+* Predict significant coronary disease
+* For now stratify age into tertiles to examine interactions simply
+* Model has 2 dummies for age, sex, age $\times$ sex, 4-knot restricted
+        cubic spline in cholesterol, age tertile $\times$ cholesterol
+
+
+```{r lrm-acath,results='asis'}
+acath <- transform(acath,
+                   cholesterol = choleste,
+                   age.tertile = cut2(age,g=3),
+                   sx = as.integer(acath$sex) - 1)
+# sx for loess, need to code as numeric
+dd <- datadist(acath); options(datadist='dd')
+
+# First model stratifies age into tertiles to get more
+# empirical estimates of age x cholesterol interaction
+
+f <- lrm(sigdz ~ age.tertile*(sex + rcs(cholesterol,4)),
+         data=acath)
+f
+ltx(f)
+```
+
+
+```{r lrm-cholxage,results='asis',cap='Log odds of significant coronary artery disease modeling age with two dummy variables'}
+#| label: fig-lrm-cholxage
+print(anova(f), caption='Crudely categorizing age into tertiles')
+yl <- c(-1,5)
+plot(Predict(f, cholesterol, age.tertile),
+     adj.subtitle=FALSE, ylim=yl)
+```
+
+
+* Now model age as continuous predictor  `r ipacue()`
+* Start with nonparametric surface using $Y=0/1$
+
+```{r lrm-iacholxage-loess,h=5,w=7,cap='Local regression fit for the logit of the probability of significant coronary disease vs. age and cholesterol for males, based on the `loess` function.',scap='Local regression fit for log odds of significant coronary disease vs. age and cholesterol'}
+#| label: fig-lrm-iacholxage-loess
+# Re-do model with continuous age
+f <- loess(sigdz ~ age * (sx + cholesterol), data=acath,
+           parametric="sx", drop.square="sx")
+ages  <- seq(25,   75, length=40)
+chols <- seq(100, 400, length=40)
+g <- expand.grid(cholesterol=chols, age=ages, sx=0)
+# drop sex dimension of grid since held to 1 value
+p <- drop(predict(f, g))
+p[p < 0.001] <- 0.001
+p[p > 0.999] <- 0.999
+zl <- c(-3, 6)
+wireframe(qlogis(p) ~ cholesterol*age,
+          xlab=list(rot=30), ylab=list(rot=-40),
+          zlab=list(label='log odds', rot=90), zlim=zl,
+          scales = list(arrows = FALSE), data=g)
+```
+
+* Next try parametric fit using linear spline in age, chol. (3  `r ipacue()`
+  knots each), all product terms.  For all the remaining 3-d plots we
+  limit plotting to points that are supported by at least 5 subjects
+  beyond those cholesterol/age combinations
+
+
+```{r lrm-iacholxage-lsp,results='asis',h=5,w=7,cap='Linear spline surface for males, with knots for age at 46, 52, 59 and knots for cholesterol at 196, 224, and 259 (quartiles).',scap='Linear spline surface for logit(significant disease) for males'}
+#| label: fig-lrm-iacholxage-lsp
+f <- lrm(sigdz ~ lsp(age,c(46,52,59)) *
+         (sex + lsp(cholesterol,c(196,224,259))),
+         data=acath)
+ltx(f)
+print(anova(f), caption='Linear spline surface')
+perim <- with(acath,
+              perimeter(cholesterol, age, xinc=20, n=5))
+zl <- c(-2, 4)
+bplot(Predict(f, cholesterol, age, np=40), perim=perim,
+      lfun=wireframe, zlim=zl, adj.subtitle=FALSE)
+```
+
+* Next try smooth spline surface, include all cross-products  `r ipacue()`
+
+```{r lrm-iacholxage-a,results='asis',h=5,w=7,cap='Restricted cubic spline surface in two variables, each with $k=4$ knots'}
+#| label: fig-lrm-iacholxage-a
+f <- lrm(sigdz ~ rcs(age,4)*(sex + rcs(cholesterol,4)),
+         data=acath, tol=1e-11)
+ltx(f)
+print(anova(f), caption='Cubic spline surface')
+bplot(Predict(f, cholesterol, age, np=40), perim=perim,
+      lfun=wireframe, zlim=zl, adj.subtitle=FALSE)
+```
+
+* Now restrict surface by excluding doubly nonlinear terms  `r ipacue()`
+
+```{r lrm-iacholxage-b,results='asis',h=5,w=7,cap='Restricted cubic spline fit with age $\\times$ spline(cholesterol) and cholesterol $\\times$ spline(age)'}
+#| label: fig-lrm-iacholxage-b
+f <- lrm(sigdz ~ sex*rcs(age,4) + rcs(cholesterol,4) +
+         rcs(age,4) %ia% rcs(cholesterol,4), data=acath)
+print(anova(f),
+      caption='Singly nonlinear cubic spline surface')
+bplot(Predict(f, cholesterol, age, np=40), perim=perim,
+      lfun=wireframe, zlim=zl, adj.subtitle=FALSE)
+ltx(f)
+```
+
+* Finally restrict the interaction to be a simple product  `r ipacue()`
+
+```{r lrm-iacholxage-c,results='asis',h=5,w=7,cap='Spline fit with nonlinear effects of cholesterol and age and a simple product interaction'}
+#| label: fig-lrm-iacholxage-c
+f <- lrm(sigdz ~ rcs(age,4)*sex + rcs(cholesterol,4) +
+         age %ia% cholesterol, data=acath)
+print(anova(f), caption='Linear interaction surface')
+bplot(Predict(f, cholesterol, age, np=40), perim=perim,
+      lfun=wireframe, zlim=zl, adj.subtitle=FALSE)
+f.linia <- f  # save linear interaction fit for later
+ltx(f)
+```
+
+The Wald test for age $\times$ cholesterol interaction yields
+$\chi^{2}=7.99$ with 1 d.f., p=.005.
+* See how well this simple interaction model compares with  `r ipacue()`
+        initial model using 2 dummies for age
+* Request predictions to be made at mean age within tertiles
+
+```{r lrm-cholxage-model,cap='Predictions from linear interaction model with mean age in tertiles indicated.'}
+#| label: fig-lrm-cholxage-model
+# Make estimates of cholesterol effects for mean age in
+# tertiles corresponding to initial analysis
+mean.age <-
+  with(acath,
+       as.vector(tapply(age, age.tertile, mean, na.rm=TRUE)))
+plot(Predict(f, cholesterol, age=round(mean.age,2),
+             sex="male"),
+     adj.subtitle=FALSE, ylim=yl) #3 curves
+```
+
+
+* Using residuals for "duration of symptoms" example 
+`r mrg(sound("lrm-9"))`
+
+
+```{r lrm-dur-partial-resid,h=4,w=6.5,cap='Partial residuals for duration and $\\log_{10}$(duration+1).  Data density shown at top of each plot.',scap='Partial residuals for binary logistic model'}
+#| label: fig-lrm-dur-partial-resid
+spar(mfrow=c(1,2), ps=10)
+f <- lrm(tvdlm ~ cad.dur, data=dz, x=TRUE, y=TRUE)
+resid(f, "partial", pl="loess", xlim=c(0,250), ylim=c(-3,3))
+scat1d(dz$cad.dur)
+log.cad.dur <- log10(dz$cad.dur + 1)
+f <- lrm(tvdlm ~ log.cad.dur, data=dz, x=TRUE, y=TRUE)
+resid(f, "partial", pl="loess", ylim=c(-3,3))
+scat1d(log.cad.dur)
+```
+
+
+* Relative merits of strat., nonparametric, splines for checking fit  `r ipacue()`
+
+
+| Method | Choice Required  | Assumes Additivity | Uses Ordering of $X$ | Low Variance     | Good Resolution on $X$ |
+|-----|-----|-----|-----|-----|-----|
+| Stratification      | Intervals |   |   |                               |     |
+| Smoother on $X_{1}$ stratifying on $X_{2}$ | Bandwidth |   | × (not on $X_2$) | × (if min. strat.) | × ($X_1$)  |
+| Smooth partial residual plot      | Bandwidth | × | × | × | ×  |
+| Spline model for all $X$x            | Knots | × | × | ×                             | ×  |
+
+
+* Hosmer-Lemeshow test is a commonly used test of goodness-of-fit  `r ipacue()`
+  of a binary logistic model <br> Compares proportion of events with
+  mean predicted probability within deciles of $\hat{P}$
+    + Arbitrary (number of groups, how to form groups)
+    + Low power (too many d.f.)
+    + Does not reveal the culprits
+
+* A new omnibus test based of SSE has more power and requires no
+  grouping; still does not lead to corrective action.
+* Any omnibus test lacks power against specific alternatives such
+  as nonlinearity or interaction
+
+
+
+## Collinearity
+
+
+## Overly Influential Observations
+
+
+## Quantifying Predictive Ability
+`r mrg(sound("lrm-10"))`
+
+`r ipacue()`
+
+* Generalized Nagelkerke $R^2$: equals ordinary $R^2$ in normal case:
+$$
+R^{2}_{\rm N} = \frac{1 - \exp(-{\rm LR}/n)}{1 - \exp(-L^{0}/n)},
+$$
+* 4 versions of Maddala-Cox-Snell $R^2$: [hbiostat.org/bib/r2.html](https://hbiostat.org/bib/r2.html)
+    + Perhaps best: $R^{2}_{p,m} = 1 - \exp(-({\rm LR} - p) / m)$
+    + $m$ is the effective sample size based on approximate
+    variance of a log odds ratio in a proportional odds ordinal
+    logistic model
+    + If $Y$ has $k$ distinct values with proportions $p_{1}, p_{2}, \ldots, p_{k}$, <br> $m=n \times (1 - \sum_{i=1}^{k}p_{i}^{3})$
+    + For binary $Y$ with proportion $Y=1$ of $p$,<br> $m=n\times 3p(1-p)$
+
+* With perfect prediction in the case where there are 50 $X=0$ and
+  50 $X=1$ with $Y=X$, $R^{2}_{N}=1, R^{2}_{n,0}=0.75, R^{2}_{m,0}=0.84$
+
+* Brier score (calibration + discrimination):
+$$
+B = \frac{1}{n} \sum_{i=1}^{n} (\hat{P}_{i} - Y_{i})^{2},
+$$
+* $c$ = "concordance probability" = ROC area
+    + Related to Wilcoxon-Mann-Whitney stat and Somers' $D_{xy}$
+ $$
+ D_{xy} = 2 (c-.5) .
+ $$
+    + Good pure index of predictive discrimination for a single
+   model
+    + Not useful for comparing two
+   models [@coo07use; @pen08eva]^[But see @pen12nov.]
+
+* "Coefficient of discrimination" [@tju09coe]:  average  `r ipacue()`
+  $\hat{P}$ when $Y=1$ minus average $\hat{P}$ when $Y=0$
+    + Has many advantages.  Tjur shows how it ties in with sum of
+   squares--based $R^{2}$ measures.
+
+* "Percent classified correctly" has lots of problems  `r ipacue()`
+    + improper scoring rule; optimizing it will lead to incorrect
+   model
+    + arbitrary, insensitive, uses a strange loss (utility function)
+
+
+
+
+## Validating the Fitted Model
+`r mrg(sound("lrm-11"))`
+
+`r ipacue()`
+
+* Possible indexes [@aus19int]
+    + Accuracy of $\hat{P}$: calibration <br>
+   Plot $\text{expit}(X_{new}\hat{\beta}_{old})$ against estimated
+   $\Pr(Y=1)$ on new data
+    + Discrimination: $C$ or $D_{xy}$
+    + $R^2$ or $B$
+
+* Use bootstrap to estimate calibration equation  `r ipacue()`
+$$
+P_{c} = \Pr(Y=1 | X\hat{\beta}) = \text{expit}(\gamma_{0} + \gamma_{1} X\hat{\beta})
+$$
+$$
+E_{max}(a,b) = \max_{a \leq \hat{P} \leq b} |\hat{P} - \hat{P}_{c}| ,
+$$
+* Bootstrap validation of age-sex-response data, 150 samples
+* 2 predictors forced into every model
+
+
+```{r lrm-sex-age-response-boot,results='asis'}
+d  <- sex.age.response
+dd <- datadist(d); options(datadist='dd')
+f  <- lrm(response ~ sex + age, data=d, x=TRUE, y=TRUE)
+set.seed(3)  # for reproducibility
+v1  <- validate(f, B=150)
+ap1 <- round(v1[,'index.orig'], 2)
+bc1 <- round(v1[,'index.corrected'], 2)
+html(v1,
+    caption='Bootstrap Validation, 2 Predictors Without Stepdown',
+    digits=2)
+```
+
+
+* Allow for step-down at each re-sample  `r ipacue()`
+* Use individual tests at $\alpha=0.10$
+* Both age and sex selected in 137 of 150, neither in 3 samples
+
+```{r lrm-sex-age-response-bootsw,results='asis'}
+v2 <- validate(f, B=150, bw=TRUE,
+               rule='p', sls=.1, type='individual')
+ap2 <- round(v2[,'index.orig'], 2)
+bc2 <- round(v2[,'index.corrected'], 2)
+html(v2,
+      caption='Bootstrap Validation, 2 Predictors with Stepdown',
+      digits=2, B=15)
+```
+
+
+
+* Try adding 5 noise candidate variables  `r ipacue()`
+
+```{r}
+set.seed(133)
+n  <- nrow(d)
+x1 <- runif(n)
+x2 <- runif(n)
+x3 <- runif(n)
+x4 <- runif(n)
+x5 <- runif(n)
+f  <- lrm(response ~ age + sex + x1 + x2 + x3 + x4 + x5,
+          data=d, x=TRUE, y=TRUE)
+v3 <- validate(f, B=150, bw=TRUE,
+               rule='p', sls=.1, type='individual')
+ap3 <- round(v3[,'index.orig'], 2)
+bc3 <- round(v3[,'index.corrected'], 2)
+k <- attr(v3, 'kept')
+# Compute number of x1-x5 selected
+nx <- apply(k[,3:7], 1, sum)
+# Get selections of age and sex
+v <- colnames(k)
+as <- apply(k[,1:2], 1,
+            function(x) paste(v[1:2][x], collapse=', '))
+```
+
+```{r lrm-sex-age-response-bootsw5,results='asis'}
+kabl(table(paste(as, ' ', nx, 'Xs')))
+html(v3,
+ caption='Bootstrap Validation with 5 Noise Variables and Stepdown',
+ digits=2, B=15)
+```
+
+
+* Repeat but force age and sex to be in all models  `r ipacue()`
+
+```{r}
+v4 <- validate(f, B=150, bw=TRUE, rule='p', sls=.1,
+               type='individual', force=1:2)
+ap4 <- round(v4[,'index.orig'], 2)
+bc4 <- round(v4[,'index.corrected'], 2)
+```
+
+```{r lrm-sex-age-response-bootsw52,results='asis'}
+html(v4,
+     caption='Bootstrap Validation with 5 Noise Variables and Stepdown, Forced Inclusion of age and sex',
+     digits=2, B=15)
+```
+
+
+## Describing the Fitted Model
+`r mrg(sound("lrm-12"))`
+
+```{r lrm-cholxage-confbar,results='asis',top=2,bot=1,cap='Odds ratios and confidence bars, using quartiles of age and cholesterol for assessing their effects on the odds of coronary disease.',scap='Effects of predictors on odds of coronary disease'}
+#| label: fig-lrm-cholxage-confbar
+s <- summary(f.linia)
+s
+plot(s)
+```
+
+```{r echo=FALSE}
+#| label: fig-lrm-abm-age
+#| fig-cap: "Linear spline fit for probability of bacterial vs. viral meningitis as a function of age at onset [@spa89].  Points are simple proportions by age quantile groups."
+#|fig-scap: "Linear spline fit for age at presentation with meningitis"
+knitr::include_graphics('abm-age.png')
+```
+
+```{r echo=FALSE}
+#| label: fig-lrm-vfib
+#| fig-cap: "(A) Relationship between myocardium at risk and ventricular fibrillation, based on the individual best fit equations for animals anesthetized with pentobarbital and $\\alpha$-chloralose.  The amount of myocardium at risk at which 0.5 of the animals are expected to fibrillate $(\\text{MAR}_{50})$ is shown for each anesthetic group. (B) Relationship between myocardium at risk and ventricular fibrillation, based on equations derived from the single slope estimate.  Note that the $\\text{MAR}_{50}$ describes the overall relationship between myocardium at risk and outcome when either the individual best fit slope or the single slope estimate is used.  The shift of the curve to the right during $\\alpha$-chloralose anesthesia is well described by the shift in $\\text{MAR}_{50}$. Test for interaction had P=0.10 [@wen84ven].  Reprinted by permission, NRC Research Press."
+#| fig-scap: "Fitted logistic models in two variables, with and without interaction"
+knitr::include_graphics('vfib.png')
+```
+
+```{r echo=FALSE}
+#| label: fig-lrm-cad-nomo
+#| fig-cap: 'A nomogram for estimating the likelihood of significant coronary artery disease (CAD) in women.  ECG = electrocardiographic; MI = myocardial infarction [@pry83].  Reprinted from American Journal of Medicine, Vol 75, Pryor DB et al., "Estimating the likelihood of significant coronary artery disease", p. 778, Copyright 1983, with permission from Excerpta Medica, Inc.'
+#| fig-scap: "Nomogram for predicting $\\Pr(\\text{CAD})$"
+knitr::include_graphics('cad-nomo.png')
+```
+
+```{r echo=FALSE}
+#| label: fig-lrm-abm-nomo
+#| fig-cap: "Nomogram for estimating probability of bacterial (ABM) vs. viral (AVM) meningitis.  Step 1, place ruler on reading lines for patient's age and month of presentation and mark intersection with line A; step 2, place ruler on values for glucose ratio and total polymorphonuclear leukocyte (PMN) count in cerebro-spinal fluid and mark intersection with line B; step 3, use ruler to join marks on lines A and B, then read off the probability of ABM vs. AVM [@spa89]."
+#| fig-scap: "Nomogram for predicting $\\Pr($, Bacterial meningitis$)$"
+knitr::include_graphics('abm-nomo.png')
+```
+
+```{r lrm-iacholxage-3-nomogram,w=6.5,h=7,cap='Nomogram relating age, sex, and cholesterol to the log odds and to the probability of significant coronary artery disease.  Select one axis corresponding to sex and to age $\\in \\{30,40,50,60,70\\}$. There was linear interaction between age and sex and between age and cholesterol.  0.70 and 0.90 confidence intervals are shown (0.90 in gray).  Note that for the `Linear Predictor` scale there are various lengths of confidence intervals near the same value of $X\\hat{\\beta}$, demonstrating that the standard error of $X\\hat{\\beta}$ depends on the individual $X$ values.  Also note that confidence intervals corresponding to smaller patient groups (e.g., females) are wider.',scap='Nomogram for CAD using age, sex, cholesterol'}
+#|label: fig-lrm-iacholxage-3-nomogram
+# Draw a nomogram that shows examples of confidence intervals
+nom <- nomogram(f.linia, cholesterol=seq(150, 400, by=50),
+                interact=list(age=seq(30, 70, by=10)),
+                lp.at=seq(-2, 3.5, by=.5),
+                conf.int=TRUE, conf.lp="all",
+                fun=function(x)1/(1+exp(-x)),  # or plogis
+                funlabel="Probability of CAD",
+                fun.at=c(seq(.1, .9, by=.1), .95, .99)
+                )
+plot(nom, col.grid = gray(c(0.8, 0.95)),
+     varname.label=FALSE, ia.space=1, xfrac=.46, lmgp=.2)
+```
+
+
+
+## Bayesian Logistic Model Example
+Re-analyze data in Section @sec-lrm-dex using the `R` `rmsb`
+package.  See
+[hbiostat.org/doc/rms/lrm-brms.pdf](https://hbiostat.org/doc/rms/lrm-brms.pdf)
+for a parallel analysis using the `brms` package.
+
+The `rmsb` package relies on the Stan Bayesian modeling system [@rstan; @stan17].
+
+```{r lrm-bayes2-setup}
+dd <- datadist(sex.age.response)
+options(datadist = 'dd')
+require(rmsb)
+
+# Frequentist model
+flrm <- lrm(response ~ sex + age, data=sex.age.response)
+
+# Bayesian model
+# Distribute chains across all available cpu cores:
+options(mc.cores=parallel::detectCores())
+
+# Fit a model with all flat priors
+set.seed(8)
+ff <- blrm(response ~ sex + age, data=sex.age.response, iter=5000)
+# Elapsed time 2.2s
+kabl(round(rbind(MLE =coef(flrm), Mode  =coef(ff, 'mode'),
+                 Mean=coef(ff),   Median=coef(ff, 'median')), 3))
+```
+
+The frequentist model was fitted using `lrm` and the Bayesian model
+is fitted using the `rmsb` `blrm` function. For the Bayesian model, the
+intercept prior is non-informative (`iprior=1`), and Gaussian priors with
+SD=100 are used for the two slopes.  Posterior modes from
+this fit are in close agreement with the maximum likelihood estimates (MLE)
+from the frequentist model fit.
+
+For `blrm` a complication arises in specifying non-default priors for regression coefficients.
+This is due to the QR decomposition being used on the design matrix to
+remove MCMC sampling problems with collinearities.  By default, priors
+correspond to the re-mixed, scaled, and centered covariates.  To keep
+predictors in raw form (and risk some posterior sampling problems),
+use the `keepsep` argument as done below on both predictors.  Then
+Gaussian priors are used.  The `age` and `sex` parameters were given mean zero
+priors with standard deviations computed to achieve specified tail
+prior probabilities. Four MCMC chains with 5000 iterations were used
+with a warm-up of 2500 iterations each, resulting in 10000 retained draws from
+the posterior distribution.
+
+```{r results='asis'}
+# Set priors
+# Solve for SD such that sex effect has only a 0.025 chance of
+# being above 5 (or being below -5)
+
+s1 <- 5 / qnorm(0.975)
+
+# Solve for SD such that 10-year age effect has only 0.025 chance
+# of being above 20
+
+s2 <- (20 / qnorm(0.975)) / 10   # divide by 10 since ratio on 10b scale
+
+# Full model
+set.seed(11)
+f <- blrm(response ~ sex + age, data=sex.age.response,
+          priorsd=c(s1, s2), iprior=1, keepsep='age|sex', iter=5000)
+# Elapsed time 1.7s
+f
+```
+
+MCMC sampling diagnostics are below.  No apparent problems.
+
+
+```{r lrm-bayes2-dx,h=6,w=6}
+stanDx(f)
+stanDxplot(f)
+```
+
+
+The model summaries for the frequentist and Bayesian models are shown
+below, with posterior means computed as Bayesian "point estimates."
+The parameter estimates are similar for the two approaches.  The
+frequentist 0.95 confidence interval for the `age` parameter is
+0.037 - 0.279 while the Bayesian 0.95 credible interval is 0.047 -
+0.263. Similarly, the 0.95 confidence interval for `sex` is 1.14 -
+5.84 and the corresponding Bayesian 0.95 credible interval is 1.23 -
+5.19.  The results made sense in view of the use of skeptical priors
+when the sample size is small.
+
+
+```{r lrm-bayes2-bin_fits,results='asis'}
+# Frequentist model output
+flrm
+
+summary(flrm, age=20:21)
+
+# Bayesian model output
+summary(f, age=20:21)   # posterior means
+summary(f, age=20:21, posterior.summary='median')   # post. medians
+# Note that mean vs median doesn't affect HPD intervals, only pt estimates
+```
+
+The figure shows the posterior draws for the `age` and `sex` parameters as well as the trace of the 4 MCMC chains for each parameter and the bivariate posterior distribution. The posterior distributions of each parameter are roughly round shaped and the overlap between chains in the trace plots indicates good convergence. The bivariate density plot indicates moderate correlation between the age and sex parameters.
+
+Create a 0.95 bivariate credible
+interval for the joint distribution of age and sex.  Any number of intervals could be drawn, as any region that
+covers 0.95 of the posterior density could be accurately be called a
+0.95 credible interval.  Commonly used: maximum a-posteriori probability (MAP) interval, which seeks to
+find the region that holds 0.95 of the density, while also having the
+smallest area. In a 1-dimensional setting, this would translate into
+having the shortest interval length, and therefore the most precise
+estimate. The figure below shows the point estimate
+as well as the corresponding MAP interval.
+
+
+```{r lrm-bayes2-post_plt,w=5,h=4,fig.show='asis'}
+# display posterior densities for age and sex parameters
+plot(f)
+plot(f, bivar=TRUE)   # MAP region
+plot(f, bivar=TRUE, bivarmethod='kernel')
+```
+
+
+In the above figure, the point estimate does
+not appear quite at the point of highest density. This is because
+`blrm` estimates (by default) the posterior mean, rather than the posterior
+mode.  You have the full posterior density, so you can
+calculate whatever you'd like if you don't want the mean.
+
+
+A plot of the partial effects on the probability scale from the
+Bayesian model reveals the same pattern as  @fig-lrm-lrmodel .
+
+
+```{r lrm-bayes2-margeff, w=5}
+# Partial effects plot
+ggplot(Predict(f, age, sex, fun=plogis, funint=FALSE), ylab='P(Y=1)')
+```
+
+
+
+```{r lrm-bayes2-biv}
+# Frequentist
+# variance-covariance for sex and age parameters
+v <- vcov(flrm)[2:3,2:3]
+
+# Sampling based parameter estimate correlation coefficient
+f_cc <- v[1,2] / sqrt(v[1,1] * v[2,2])
+
+# Bayesian
+# Linear correlation between params from posterior 
+draws <- f$draws[, c('sex=male', 'age')]
+b_cc <- cor(draws)[1,2]
+```
+
+
+Using the code in the block above, we calculate the frequentist
+sampling-based parameter estimate correlation coefficient is
+`r round(f_cc, 2)` while the linear correlation between the
+posterior draws for the `age` and `sex` parameters is
+`r round(b_cc, 2)`. Both models indicate a comparable amount of
+correlation between the parameters, though in difference senses
+(sampling data vs. sampling posterior distribution of parameters).
+
+
+```{r lrm-bayes2-postprobs}
+P <- PostF(f, pr=TRUE)
+(p1 <- P(b1 > 0))   # post prob(sex has positive association with Y)
+(p2 <- P(b2 > 0))
+(p3 <- P(b1 > 0 & b2 > 0))
+(p4 <- P(b1 > 0 | b2 > 0))
+```
+
+
+The posterior probability that sex has a positive relationship with
+hospital death is estimated as $\Pr(\beta_{sex} > 0)=`r p1`$ 
+while the posterior probability that age has a positive relationship
+with hospital death is $\Pr(\beta_{age} > 0)=`r p2`$ and the
+probability of both events is $\Pr(\beta_{sex} > 0 \cap 
+\beta_{age} > 0) = `r p3`$. Even using somewhat skeptical priors
+centered around 0, male gender and increasing age are highly likely to
+be associated with the response.
+
+As seen above, the MCMC algorithm used by `blrm` provides us with
+samples from the joint posterior distribution of $\beta_{age}$ and
+$\beta_{sex}$. Unlike frequentist intervals which require the
+log-likelihood to be approximately quadratic in form, there are no
+such restrictions placed on the posterior distribution, as it will
+always be proportional to the product of the likelihood density and
+the prior, regardless of the likelihood function that is used. In this
+specific example, we notice that the bivariate density is somewhat
+skewed --- a characteristic that would likely lead to unequal tail
+coverage probabilities if a symmetric confidence interval is used.
+
+
+```{r lrm-bayes2-bidens}
+ggplot(as.data.frame(draws), aes(x=`sex=male`, y = age)) + 
+  geom_hex() + 
+  theme(legend.position="none")
+```
+
+
+```{r echo=FALSE}
+saveCap('10')
+```

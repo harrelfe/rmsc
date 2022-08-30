@@ -1,0 +1,829 @@
+```{r include=FALSE}
+require(Hmisc)
+options(qproject='rms', prType='html')
+getRs('reptools.r')
+getRs('hashCheck.r')   # defines runifChanged function
+getRs('qbookfun.r')
+hookaddcap()
+knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
+```
+
+`r hba <- '$\\text{HbA}_{1c}$'`
+
+# Regression Models for Continuous $Y$ and Case Study in Ordinal Regression {#sec-cony}
+
+`r mrg(sound("ord-cont-1"))`
+
+This chapter concerns univariate continuous $Y$.  There are many
+multivariable models for predicting such response variables.
+
+ `r ipacue()`
+
+* linear models with assumed normal residuals, fitted with ordinary least squares
+* generalized linear models and other parametric models based on
+  special distributions such as the gamma
+* generalized additive models (GAMs)
+* generalization of GAMs to also nonparametrically transform $Y$
+* quantile regression (see Section @sec-cony-quantile-regression)
+* other robust regression models that, like quantile regression, use
+  an objective different from minimizing the sum of squared errors [@VR]
+* semiparametric models based on the ranks of $Y$, such as the Cox
+  proportional hazards model
+  and the proportional odds ordinal logistic model
+* cumulative probability models (often called _cumulative link models_) which are semiparametric models from a wider class of
+  families than the logistic
+
+Semiparametric models that treat $Y$ as ordinal but not  `r ipacue()` 
+interval-scaled have many advantages including robustness and freedom
+of distributional assumptions for $Y$ conditional on any given set of
+predictors.
+<!-- Semiparametric models assume only a connection between--->
+<!-- the distribution of $Y | X_{1}$ and $Y | X_{2}$.--->
+Advantages are demonstrated in a case study of a cumulative
+probability ordinal model.  Some of the results are compared to quantile
+regression and OLS.  Many of the methods used in the case study also apply to
+ordinary linear models.
+
+## Dataset and Descriptive Statistics
+
+`r mrg(sound("ord-cont-2"))`
+
+* Diabetes Mellitus (DM) type II (adult onset diabetes) is strongly `r ipacue()`
+  associated with obesity
+* Primary laboratory test for diabetes: glycosylated hemoglobin
+  (`r hba`), also called glycated hemoglobin, glycohemoglobin, or
+  hemoglobin $A_{1c}$.
+* `r hba` reflects average blood glucose for the preceding 60 to 90 days
+* `r hba` $> 7.0$ usually taken as a positive diagnosis of diabetes
+* Goal of analysis:
+    + better understand effects of body size measurements on risk of DM
+    + enhance screening for DM
+
+* Best way to develop a model for DM screening is **not** to  `r ipacue()`
+  fit binary logistic model with `r hba` > 7 as the response variable
+    + All cutpoints are arbitrary; no justification for any putative cut
+    + `r hba` 2=6.9, 7.1=10
+    + Larger standard errors of $\hat{\beta}$, lower power, wider
+    confidence bands
+    + Better: predict continuous `r hba` using continuous response
+    model, then convert to probability `r hba` exceeds any cutoff or
+    estimate 0.9 quantile of `r hba`
+
+* Data: U.S. National Health and Nutrition Examination Survey
+  (NHANES)  `r ipacue()` 
+  from National Center for Health Statistics/CDC:
+  [www.cdc.gov/nchs/nhanes.htm](http://www.cdc.gov/nchs/nhanes.htm) [@nhanes2010]
+* age $\geq 80$ coded as 80 by CDC
+* Subset with age $\geq 21$, neither diagnosed nor treated for DM
+
+
+```{r desc,results='asis'}
+require(rms)
+options(prType='html')   # for print, summary, anova
+getHdata(nhgh)
+w <- subset(nhgh, age >= 21 & dx==0 & tx==0, select=-c(dx,tx))
+html(describe(w))
+dd <- datadist(w); options(datadist='dd')
+```
+
+## The Linear Model {#sec-cony-linear-model}
+
+`r mrg(sound("ord-cont-3"))`
+The most popular multivariable model for analyzing a univariate
+continuous $Y$ is the the linear model
+$$
+E(Y | X) = X \beta,
+$$
+where $\beta$ is estimated using ordinary least squares, that is, by
+solving for $\hat{\beta}$ to minimize $\sum (Y_{i} - X \hat{\beta})^{2}$.
+
+* To compute $P$-values and confidence limits using parametric `r ipacue()`
+  methods (and for least squares estimates to coincide with maximum
+  likelihood estimates)
+  we would have to assume that $Y | X$ is normal with mean $X \beta$ and
+  constant variance $\sigma^2$ ^[The latter assumption may be dispensed with if we use a robust Huber-White or bootstrap covariance matrix estimate.  Normality may sometimes be dispensed with by using bootstrap confidence intervals, but this would not fix inefficiency problems with OLS when residuals are non-normal.]
+<!-- * Don't assume linearity; expand $X$s into rcs with no. knots--->
+<!--   figured by predictive potential; use default knit locations--->
+<!--   (selected quantiles of continuous predictors' marginal distributions)--->
+
+
+### Checking Assumptions of OLS and Other Models
+ 
+* First see if `gh` would make a Gaussian residuals model fit `r ipacue()`
+* Use ordinary regression on 4 key variables to collapse into one
+   variable (predicted mean from OLS model)
+* Stratify predicted mean into 6 quantile groups
+* Apply the normal inverse ECDF of `gh` to these strata
+   and check for normality and constant $\sigma^2$
+* ECDF is for $\Pr[Y \leq y | X]$ but for ordinal modeling we
+   want to state models in terms of $\Pr[Y \ge y | X]$ so take 1 -
+   ECDF before inverse transforming
+
+
+```{r lookdist,w=5.5,h=5.5,cap='Examination of normality and constant variance assumption, and assumptions for various ordinal models',scap='Examining normality and ordinal model assumptions'}
+#| label: fig-cony-lookdist
+f <- ols(gh ~ rcs(age,5) + sex + re + rcs(bmi, 3), data=w)
+pgh <- fitted(f)
+p <- function(fun, row, col) {
+  f <- substitute(fun); g <- function(F) eval(f)
+  z <- Ecdf(~ gh, groups=cut2(pgh, g=6),
+            fun=function(F) g(1 - F),
+            ylab=as.expression(f), xlim=c(4.5, 7.75), data=w,
+            label.curve=FALSE)
+  print(z, split=c(col, row, 2, 2), more=row < 2 | col < 2)
+}
+p(log(F/(1-F)),   1, 1)
+p(qnorm(F),       1, 2)
+p(-log(-log(F)),  2, 1)
+p(log(-log(1-F)), 2, 2)
+# Get slopes of pgh for some cutoffs of Y
+# Use glm complementary log-log link on Prob(Y < cutoff) to
+# get log-log link on Prob(Y >= cutoff)
+r <- NULL
+for(link in c('logit','probit','cloglog'))
+  for(k in c(5, 5.5, 6)) {
+    co <- coef(glm(gh < k ~ pgh, data=w, family=binomial(link)))
+    r <- rbind(r, data.frame(link=link, cutoff=k,
+                             slope=round(co[2],2)))
+}
+print(r, row.names=FALSE)
+```
+
+* Upper right curves are not linear, implying that a normal `r ipacue()`
+  conditional distribution cannot work for `gh`^[They are not parallel either.]
+* There is non-parallelism for the logit model
+* Other graphs will be used to guide selection of an ordinal model below
+
+
+## Quantile Regression {#sec-cony-quantile-regression}
+
+`r mrg(sound("ord-cont-4"))`
+
+* Ruled out OLS and semiparametric proportional odds model `r ipacue()`
+* Quantile regression [@koeqr; @koe78reg] is a
+  different approach to modeling $Y$
+* No distributional assumptions other than continuity of $Y$
+* All the usual right hand side assumptions
+* When there is a single
+  predictor that is categorical, quantile regression coincides with
+  ordinary sample quantiles stratified by that predictor
+* Is transformation invariant - pre-transforming $Y$ not important
+
+Let $\rho_{\tau}(y) = y(\tau - [y < 0])$.  The $\tau^{\mathrm th}$
+sample  `r ipacue()` 
+quantile is the minimizer $q$ of
+$\sum_{i-1}^{n}\rho_{\tau}(y_{i}-q)$.  For a conditional
+$\tau^{\mathrm th}$ quantile of $Y | X$ the corresponding quantile regression estimator
+$\hat{\beta}_{\tau}$ minimizes $\sum_{i=1}^{n}\rho_{\tau}(Y_{i}-X\beta)$.
+Quantile regression is not as efficient at
+estimating quantiles as is ordinary least squares at estimating the
+mean, if the latter's assumptions hold.
+Koenker's `quantreg` package in `R` [@quantreg] implements
+quantile regression, and the `rms` package's `Rq` function
+provides a front-end that gives rise to various graphics and inference tools.
+If we model the median `gh` as a function of covariates, only the
+$X\beta$ structure need be correct.  Other quantiles (e.g.,
+$90^\text{th}$ percentile) can be directly modeled but standard errors will
+be much larger as it is more difficult to precisely estimate outer quantiles.
+
+## Ordinal Regression Models for Continuous $Y$
+
+`r mrg(sound("ord-cont-5"))`
+
+* Advantages of semiparametric models (e.g., quantile regression `r ipacue()`
+  and cumulative probability ordinal models
+* For ordinal cumulative probability models, there is no
+  distributional assumption for $Y$ given a setting of $X$
+* Assume only a connection between distributions of $Y$ for
+  different $X$
+* Applying an increasing 1--1 transformation to $Y$ results in no change to
+  regression coefficient estimates^[For symmetric distributions applying a decreasing transformation will negate the coefficients.  For asymmetric distributions (e.g., Gumbel), reversing the order of $Y$ will do more than change signs.]
+* Regression coefficient estimates are completely robust to
+  extreme $Y$ values^[Only an estimate of mean $Y$ from these $\hat{\beta}$s is non-robust.]
+* Estimates of quantiles of $Y$ are exactly
+  transformation-preserving, e.g., estimate of median of $\log Y$ is
+  exactly the log of the estimate of median $Y$
+* @man10ord developed an ordinal model for
+  continuous $Y$ which they incorrectly labeled semi-parametric and is
+  actually a lower-dimensional flexible parametric model that instead
+  of having intercepts has a spline function of $y$.
+
+----
+
+
+For a general continuous distribution  `r ipacue()`  function $F(y)$, an ordinal
+regression model based on cumulative probabilities may be stated as
+follows^[It is more traditional to state the model in terms of $\Pr[Y \leq y | X]$ but we use $\Pr[Y \geq y | X]$ so that higher predicted values are associated with higher $Y$.].  Let the ordered
+unique values of $Y$ be denoted by $y_{1}, y_{2}, \dots, y_{k}$ and
+let the intercepts associated with $y_{1}, \dots, y_{k}$ be
+$\alpha_{1}, \alpha_{2}, \dots, \alpha_{k}$, where $\alpha_{1} =
+\infty$ because $\Pr[Y \geq y_{1}] = 1$.  Let $\alpha_{y} =
+\alpha_{i}, i:y_{i}=y$.  Then
+$$
+\Pr[Y \geq y_{i} | X] = F(\alpha_{i} + X\beta) = F(\alpha_{y_{i}} + X\beta)
+$$
+For the OLS fully parametric case, the model may
+be restated
+
+\begin{array}{c}
+\Pr[Y \geq y | X] = \Pr[\frac{Y-X\beta}{\sigma} \geq
+  \frac{y-X\beta}{\sigma}]\\ = 1-\Phi(\frac{y-X\beta}{\sigma}) = \Phi(\frac{-y}{\sigma}+\frac{X\beta}{\sigma})
+\end{array}
+so that to within an additive constant ^[$\hat{\alpha_{y}}$ are unchanged if a constant is added to all $y$.} $\alpha_{y} = \frac{-y}{\sigma}$ (intercepts $\alpha$ are
+linear in $y$ whereas they are arbitrarily descending in the ordinal model), and
+$\sigma$ is absorbed in $\beta$ to put the OLS model into the new notation.
+The general ordinal regression model assumes that for fixed $X_{1}, X_{2}$,
+
+\begin{array}{c}
+F^{-1}(\Pr[Y \geq y | X_{2}]) - F^{-1}(\Pr[Y \geq y | X_{1}])\\
+= (X_{2} - X_{1})\beta
+\end{array}
+independent of the $\alpha$s (parallelism assumption).  If $F = [1 +
+  \exp(-y)]^{-1}$, this is the proportional odds assumption.
+
+Common choices of $F$, implemented in the `rms` `orm` function,
+are shown in Table @tbl-cony-ormdist.  `r ipacue()`
+
+| Distribution | $F$ | Inverse (Link Function) | Link Name | Connection |
+|-----|-----|-----|-----|-----|
+| Logistic | $[1 + \exp(-y)]^{-1}$ | $\log(\frac{y}{1-y})$ | logit | $\frac{P_{2}}{1-P_{2}} = \frac{P_{1}}{1-P_{1}} \exp(\Delta)$ |
+| Gaussian | $\Phi(y)$            | $\Phi^{-1}(y)$ | probit | $P_{2}=\Phi(\Phi^{-1}(P_{1})+\Delta)$ |
+| Gumbel maximum value| $\exp(-\exp(-y))$ | $\log(-\log(y))$ | $\log-\log$ | $P_{2}=P_{1}^{\exp(\Delta)}$ |
+| Gumbel minimum value| $1 - \exp(-\exp(y))$ | $\log(-\log(1 - y))$ | complementary $\log-\log$ | $1-P_{2}=(1-P_{1})^{\exp(\Delta)}$ |
+| Cauchy | $\frac{1}{\pi}\tan^{-1}(y) + \frac{1}{2}$ | $\tan[\pi(y - \frac{1}{2})]$ | cauchit |
+
+: Distribution families used in ordinal cumulative probability models. $\Phi$
+  denotes the Gaussian cumulative distribution function.  For the
+  Connection column, $P_{1}=\Pr[Y \geq y | X_{1}], P_{2}=\Pr[Y
+    \geq y | X_{2}], \Delta=(X_{2}-X_{1})\beta$.  The connection
+  specifies the only distributional assumption if the model is
+  fitted semiparametrically, i.e, contains
+  an intercept for every unique $Y$ value less one.  For parametric
+  models, $P_{1}$ must be specified absolutely instead of just
+  requiring a relationship between $P_{1}$ and $P_{2}$.  For example,
+  the traditional Gaussian parametric model specifies that
+  $\Pr[Y \geq y | X] = 1 - \Phi(\frac{y - X\beta}{\sigma})
+  = \Phi(\frac{-y + X\beta}{\sigma})$. {#tbl-cony-ormdist}
+
+The Gumbel maximum value distribution is also called the extreme value
+type I distribution.  This distribution
+($\log-\log$ link) also represents a continuous time proportional
+hazards model.  The hazard
+ratio when $X$ changes from $X_{1}$ to $X_{2}$ is $\exp(-(X_{2} -
+X_{1}) \beta)$.
+The mean of $Y | X$ is easily estimated by computing  `r ipacue()` 
+$$
+\sum_{i=1}^{k} y_{i} \hat{\Pr}[Y = y_{i} | X]
+$$
+and the $q^\text{th}$ quantile of $Y | X$ is $y$ such that <br>
+$F^{-1}(1 - q) - X\hat{\beta} = \hat{\alpha}_{y}$.^[The intercepts have to be shifted to the left one position in solving this equation because the quantile is such that $\Pr[Y \leq y] = q$ whereas the model is stated in terms of $\Pr[Y \geq y]$.]
+The `orm` function in the `rms` package takes advantage of the
+information matrix being of a sparse tri-band diagonal form for the
+intercept parameters.  This makes the computations efficient even for
+hundreds of intercepts (i.e., unique values of $Y$).  `orm` is made
+to handle continuous $Y$.
+Ordinal regression has nice properties in addition to those listed
+above, allowing for
+
+* estimation of quantiles as efficiently as quantile `r ipacue()`
+  regression if the parallel slopes assumptions hold
+* efficient estimation of  mean $Y$
+* direct estimation of $\Pr[Y\geq y | X]$
+* arbitrary clumping of values of $Y$, while still
+  estimating $\beta$ and mean $Y$ efficiently^[But it is not sensible to estimate quantiles of $Y$ when there are heavy ties in $Y$ in the area containing the quantile.]
+* solutions for $\hat{\beta}$ using ordinary Newton-Raphson or
+  other popular optimization techniques
+* being based on a standard likelihood function, penalized
+  estimation can be straightforward
+* Wald, score, and likelihood ratio $\chi^2$ tests that are more
+  powerful than tests from quantile regression
+
+To summarize how assumptions of parametric models  `r ipacue()`  compare to
+assumptions of semiparametric models, consider the ordinary linear
+model or its special case the equal variance
+two-sample $t$-test, vs. the probit or logit (proportional odds)
+ordinal model or their special cases the Van der Waerden
+(normal-scores) two-sample test or the Wilcoxon test.  All the
+assumptions of the linear model other than independence of residuals
+are captured in the following (written in traditional $Y\leq y$ form):
+
+\begin{array}{c}
+F(y|X) = \Pr[Y \leq y|X] = \Phi(\frac{y-X\beta}{\sigma})\\
+\Phi^{-1}(F(y|X)) = \frac{y-X\beta}{\sigma}
+\end{array}
+
+```{r lmassump,h=3.5,w=8,left=2,cap='Assumptions of the linear model (left panel) and semiparametric ordinal probit or logit (proportional odds) models (right panel).  Ordinal models do not assume any shape for the distribution of $Y$ for a given $X$; they only assume parallelism.',scap='Assumptions of linear vs. semiparametric models'}
+#| label: fig-cony-lmassump
+spar(mfrow=c(1,2), left=2)
+pinv <- expression(paste(Phi^{-1},  '(F(y', '|', 'X))'))
+plot(0, 0, xlim=c(0, 1), ylim=c(-2, 2), type='n', axes=FALSE,
+     xlab=expression(y), ylab='')
+mtext(pinv, side=2, line=1)
+axis(1, labels=FALSE, lwd.ticks=0)
+axis(2, labels=FALSE, lwd.ticks=0)
+abline(a=-1.5, b=1)
+abline(a=0, b=1)
+arrows(.5, -1.5+.5, .5, 0+.5, code=3, length=.1)
+text(.525, .5*(-1.5+.5+.5), expression(-Delta*X*beta/sigma), adj=0)
+g <- function(x) -2.2606955+11.125231*x-37.772783*x^2+56.776436*x^3-
+  26.861103*x^4
+x <- seq(0, .9, length=150)
+pinv <- expression(atop(paste(Phi^{-1},  '(F(y', '|', 'X))'),
+    paste(logit, '(F(y', '|', 'X))')))
+plot(0, 0, xlim=c(0, 1), ylim=c(-2, 2), type='n', axes=FALSE,
+     xlab=expression(y), ylab='')
+mtext(pinv, side=2, line=1)
+axis(1, labels=FALSE, lwd.ticks=FALSE)
+axis(2, labels=FALSE, lwd.ticks=FALSE)
+lines(x, g(x))
+lines(x, g(x)+1.5)
+arrows(.5, g(.5), .5, g(.5)+1.5, code=3, length=.1)
+text(.525, .5*(g(.55) + g(.55)+1.5), expression(-Delta*X*beta), adj=0)
+```
+On the other hand, ordinal models assume the following:
+$$
+\Pr[Y \leq y|X] = F(g(y)-X\beta),
+$$
+where $g$ is unknown and may be discontinuous.
+From this point we revert back to $Y\geq y$ notation so that $Y$
+increases as $X\beta$ increases.
+
+**Global Modeling Implications**
+
+* Ordinal regression invariant to choice of transformation of $Y$ `r ipacue()`
+* $Y$ needs to be ordinal
+* Difference in two ordinal variables is not necessarily ordinal
+* $\rightarrow$ Never analyze differences in regression
+* $Y$=final value, adjust for baseline values as covariates
+
+
+## Ordinal Regression Applied to `r hba`
+
+`r mrg(sound("ord-cont-6"))`
+
+* In  @fig-cony-lookdist, logit inverse curves are not `r ipacue()`
+  parallel so proportional odds assumption does not hold
+* log-log link yields highest degree of parallelism and most
+  constant regression coefficients across cutoffs of `gh` so use this
+  link in an ordinal regression model (linearity of the curves is not required)
+
+
+### Checking Fit for Various Models Using Age
+
+`r ipacue()` 
+
+Another way to examine model fit is to flexibly fit the single most
+important predictor (age) using a variety of methods, and comparing
+predictions to sample quantiles and means based on overlapping subsets
+on age, each subset being subjects having age $< 5$ years away from
+the point being predicted by the models.  Here we predict the 0.5,
+0.75, and 0.9 quantiles and the mean.  For quantiles we can compare to
+quantile regression(discussed below) and for means we compare to OLS.
+
+
+```{r comparemany,h=6.5,w=6.75,cap='Three estimated quantiles and estimated mean using 6 methods, compared against caliper-matched sample quantiles/means (circles).  Numbers are mean absolute differences between predicted and sample quantities using overlapping intervals of age and caliper matching.  QR:quantile regression.',scap='Six methods for estimating quantiles or means.'}
+#| label: fig-cony-comparemany
+require(data.table)
+estimands  <- .q(q2, q3, p90, mean)
+links      <- .q(logistic, probit, loglog, cloglog)
+estimators <- c(.q(empirical, ols, QR), links)
+ages       <- 25 : 75
+nage       <- length(ages)
+yhat       <- numeric(length(ages))
+fmt <- function(x) format(round(x, 3), nsmall=3)
+
+r   <- expand.grid(estimand=estimands, estimator=estimators, age=ages, 
+                   y=NA_real_, stringsAsFactors=FALSE)
+setDT(r)
+# Discard irrelevant methods for estimands
+r   <- r[! (estimand == 'mean' & estimator == 'QR') &
+         ! (estimand %in% .q(q2, q3, p90) & estimator == 'ols'), ]
+# Find all used combinations
+rc  <- r[age == 25]
+rc[, age := NULL]
+
+mod  <- gh ~ rcs(age,6)
+
+# Compute estimates for all relevant combinations of estimands & estimators
+
+for(eor in rc[, unique(estimator)]) {
+  if(eor == 'empirical') {
+    emp <- matrix(NA, nrow=nage, ncol=4,
+                  dimnames=list(NULL, .q(mean, q2, q3, p90)))
+    for(j in 1 : length(ages)) {
+    s <- which(abs(w$age - ages[j]) < 5)
+    y <- w$gh[s]
+    a <- quantile(y, probs=c(0.5, 0.75, 0.90))
+    emp[j, ] <- c(mean(y), a)
+    }
+  }
+  else if(eor == 'ols')   fit <- ols(mod, data=w)
+  else if(eor %in% links) fit <- orm(mod, data=w, family=eor)
+  
+  for(eand in rc[estimator == eor, unique(estimand)]) {
+    qa <- switch(eand, q2=0.5, q3=0.75, p90=0.90)
+    yhat <- if(eor == 'ols') Predict(fit, age=ages, conf.int=FALSE)$yhat
+    else if(eor == 'empirical') emp[, eand] 
+    else if(eor == 'QR') {
+      fit <- Rq(mod, data=w, tau=qa)
+      Predict(fit, age=ages, conf.int=FALSE)$yhat
+      }
+    else {
+      fun <- switch(eand,
+                    mean = Mean(fit),
+                    Quantile(fit))
+      fu <- if(eand == 'mean') fun
+      else function(x) fun(qa, x) 
+      Predict(fit, age=ages, fun=fu, conf.int=FALSE)$yhat
+    }
+   r[estimand == eand & estimator == eor, y := yhat]
+  }
+}
+
+# Compute age-specific differences between estimates and empirical
+# estimates, then compute mean absolute differences across all ages
+
+dif <- r[estimator != 'empirical']
+
+for(eor in rc[, setdiff(unique(estimator), 'empirical')]) 
+  for(eand in rc[estimator == eor, unique(estimand)])
+    dif[estimator == eor         & estimand == eand]$y <-
+      r[estimator == eor         & estimand == eand]$y -
+      r[estimator == 'empirical' & estimand == eand]$y
+mad  <- dif[, .(ad = mean(abs(y))), by=.(estimand, estimator)] 
+mad2 <- mad[, .(value = paste(fmt(ad), collapse='\n'),
+                label = paste(estimator, collapse='\n'),
+                x     = if(estimand == 'p90') 60  else 25,
+                y     = if(estimand == 'p90') 5.5 else 6.2),
+            by=.(estimand)]
+
+ggplot() + geom_line(aes(x=age, y=y, col=estimator),
+                     data=r[estimator != 'empirical']) + 
+  geom_point(aes(x=age, y=y, alpha=I(0.35)),
+             data=r[estimator == 'empirical']) +
+  facet_wrap(~ estimand) +
+  geom_text(aes(x=x,    y=y, label=label, hjust='left', size=I(3)), data=mad2) +
+  geom_text(aes(x=x+10, y=y, label=value, hjust='left', size=I(3)), data=mad2) +
+  guides(color=guide_legend(title='')) +
+  theme(legend.position='bottom')
+```
+
+`r ipacue()`
+
+It can be seen in  @fig-cony-comparemany that models
+dedicated to a specific task (quantile regression for quantiles and
+OLS for means) were best for those tasks.
+Although the log-log ordinal cumulative probability model did not
+estimate the median as accurately as some other methods, it does well
+for the 0.75 and 0.9 quantiles and is the best compromise overall because
+of its ability to also directly predict the mean as well as quantities
+such as $\Pr[\text{HbA}_{1c} > 7 | X]$.
+For here on we focus on the log-log ordinal model.
+Going back to the bottom left of  `r ipacue()` 
+@fig-cony-lookdist, let's look at quantile groups
+of predicted `r hba` by OLS and plot predicted distributions of actual
+`r hba` against empirical distributions.
+
+```{r predobs,w=5.5,h=5,cap='Observed (dashed lines, open circles) and predicted (solid lines, closed circles) exceedance probability distributions from a model using 6-tiles of OLS-predicted $\\text{HbA}_{1c}$.  Key shows quantile group intervals of predicted mean $\\text{HbA}_{1c}$.',scap='Observed and predicted distributions'}
+#| label: fig-cony-predobs
+w$pghg <- cut2(pgh, g=6)
+f  <- orm(gh ~ pghg, family=loglog, data=w)
+lp <- predict(f, newdata=data.frame(pghg=levels(w$pghg)))
+ep <- ExProb(f)  # Exceedance prob. functn. generator in rms
+z  <- ep(lp)
+j  <- order(w$pghg)  # puts in order of lp (levels of pghg)
+plot(z, xlim=c(4, 7.5), data=w[j,c('pghg', 'gh')]) 
+```
+
+Agreement between predicted and observed exceedance probability
+distributions is excellent in  @fig-cony-predobs.
+To return to the  `r ipacue()`  initial look at a linear model with assumed Gaussian
+residuals, fit a probit ordinal model and compare the estimated
+intercepts to the linear relationship with `gh` that is assumed by
+the normal distribution.
+
+```{r lookprobit,cap='Estimated intercepts from probit model'}
+#| label: fig-cony-lookprobit
+spar(bty='l')
+f <- orm(gh ~ rcs(age,6), family=probit, data=w)
+g <- ols(gh ~ rcs(age,6), data=w)
+s <- g$stats['Sigma']
+yu <- f$yunique[-1]
+r <- quantile(w$gh, c(.005, .995))
+alphas <- coef(f)[1:num.intercepts(f)]
+plot(-yu / s, alphas, type='l', xlim=rev(- r / s), 
+     xlab=expression(-y/hat(sigma)), ylab=expression(alpha[y]))
+```
+
+@fig-cony-lookprobit depicts a significant
+departure from that implied by Gaussian residuals.
+
+### Examination of BMI
+
+`r mrg(sound("ord-cont-7"))`
+Using the log-log model, we first check the adequacy of BMI as a
+summary of height and weight for estimating median `gh`.
+
+* Adjust for age (without assuming linearity) in every case `r ipacue()`
+* Look at ratio of coefficients of log height and log weight
+* Use AIC to judge whether BMI is an adequate summary of height
+    and weight
+
+
+```{r htwtcoef,results='asis'}
+f <- orm(gh ~ rcs(age,5) + log(ht) + log(wt),
+         family=loglog, data=w)
+f
+```
+
+```{r aichtwt}
+aic <- NULL
+for(mod in list(gh ~ rcs(age,5) + rcs(log(bmi),5),
+                gh ~ rcs(age,5) + rcs(log(ht),5) + rcs(log(wt),5),
+                gh ~ rcs(age,5) + rcs(log(ht),4) * rcs(log(wt),4)))
+  aic <- c(aic, AIC(orm(mod, family=loglog, data=w)))
+print(aic)
+```
+
+The ratio of the coefficient of log height  `r ipacue()`  to the coefficient of log
+weight is `r round(coef(f)['ht']/coef(f)['wt'],1)`, which is
+between what BMI uses and the more dimensionally reasonable
+weight / height$^{3}$.  By AIC, a spline interaction
+surface between height and weight does slightly better than BMI in
+predicting `r hba`, but a nonlinear function of BMI is barely worse.  It
+will require other body size measures to displace BMI as a predictor.
+As an aside, compare this model fit to that from the Cox proportional
+hazards model.
+The Cox model uses a conditioning argument to obtain a partial
+likelihood free of the intercepts $\alpha$ (and requires a second
+step to estimate these log discrete hazard components) whereas we are
+using a full marginal likelihood of the ranks of $Y$ [@kal73].
+
+```{r coxhtwtcoef,results='asis'}
+print(cph(Surv(gh) ~ rcs(age,5) + log(ht) + log(wt), data=w))
+```
+
+Back up and look at all body size measures, and examine their
+redundancies.  `r ipacue()` 
+
+```{r redun,h=6,w=6,cap='Variable clustering for all potential predictors'}
+#| label: fig-cony-redun
+v <- varclus(~ wt + ht + bmi + leg + arml + armc + waist +
+             tri + sub + age + sex + re, data=w)
+plot(v)   
+# Omit wt so it won't be removed before bmi
+redun(~ ht + bmi + leg + arml + armc + waist + tri + sub,
+      data=w, r2=.75)
+```
+
+Six size measures adequately capture the entire set.  Height and BMI
+are removed.
+An advantage of removing height  `r ipacue()`  is that it is age-dependent in
+the elderly:
+
+```{r htchange,cap="Estimated median height as a smooth function of age, allowing age to interact with sex, from a proportional odds model",scap="Median height vs. age"}
+#| label: fig-cony-htchange
+f <- orm(ht ~ rcs(age,4)*sex, data=w)  # Prop. odds model
+qu <- Quantile(f); med <- function(x) qu(.5, x)
+ggplot(Predict(f, age, sex, fun=med, conf.int=FALSE),
+       ylab='Predicted Median Height, cm')
+```
+
+**But** also see a change in leg length:
+
+```{r legchange,cap="Estimated median upper leg length as a smooth function of age, allowing age to interact with sex, from a proportional odds model",scap="Median leg length vs. age"}
+#| label: fig-cony-legchange
+f <- orm(leg ~ rcs(age,4)*sex, data=w)
+qu <- Quantile(f); med <- function(x) qu(.5, x)
+ggplot(Predict(f, age, sex, fun=med, conf.int=FALSE),
+       ylab='Predicted Median Upper Leg Length, cm')
+```
+
+Next allocate d.f. according to generalized Spearman  `r ipacue()`  
+`r mrg(sound("ord-cont-8"))`
+$\rho^{2}$ ^[Competition between collinear size measures hurts interpretation of partial tests of association in a saturated additive model.].
+
+```{r allocadf,h=3.5, w=4,cap='Generalized squared rank correlations'}
+#| label: fig-cony-allocadf
+spar(top=1, ps=9)
+s <- spearman2(gh ~ age + sex + re + wt + leg + arml + armc +
+               waist + tri + sub, data=w, p=2)
+plot(s)
+```
+
+Parameters will be allocated in descending order of $\rho^2$.  But
+note that subscapular skinfold has a large number of `NA`s and
+other predictors also have `NA`s.  Suboptimal casewise deletion
+will be used until the final model is fitted.
+Because there are many competing  `r ipacue()`  body measures, we use backwards
+stepdown to arrive at a set of predictors.  The bootstrap will be used
+to penalize predictive ability for variable selection.  First the full
+model is fit using
+casewise deletion, then we do a composite test to assess whether any
+of the frequently-missing predictors is important.
+
+```{r fitfullcasewise,results='asis'}
+f <- orm(gh ~ rcs(age,5) + sex + re + rcs(wt,3) + rcs(leg,3) + arml +
+         rcs(armc,3) + rcs(waist,4) + tri + rcs(sub,3),
+         family=loglog, data=w, x=TRUE, y=TRUE)
+print(f, coefs=FALSE)
+## Composite test:
+anova(f, leg, arml, armc, waist, tri, sub)
+```
+
+<!-- s <- f$stats--->
+<!-- cat(sprintf('{<br>tszs$n=%g, p=%g, g=%g, <br>rho=%g$}',--->
+<!--             s['Obs'], s['d.f.'], round(s['g'],3),--->
+<!--             round(s['rho'], 3)), '\n')--->
+The model yields Spearman $\rho=`r round(f$stats['rho'],3)`$, the
+rank correlation between predicted and observed `r hba`.
+Show predicted mean and median `r hba`  `r ipacue()`  as a function of age, adjusting
+other variables to median/mode.  Compare the estimate of the median
+with that from quantile regression (discussed below).
+
+```{r casewisemeanmed,h=4,w=5,cap='Estimated mean and 0.5 and 0.9 quantiles from the log-log ordinal model using casewise deletion, along with predictions of 0.5 and 0.9 quantiles from quantile regression (QR).  Age is varied and other predictors are held constant to medians/modes.',scap='Estimated mean and quantiles from casewise deletion model.'}
+#| label: fig-cony-casewisemeanmed
+M      <- Mean(f)
+qu     <- Quantile(f)
+med    <- function(x) qu(.5, x)
+p90    <- function(x) qu(.9, x)
+fq     <- Rq(formula(f), data=w)
+fq90   <- Rq(formula(f), data=w, tau=.9)
+pmean  <- Predict(f,    age, fun=M,   conf.int=FALSE)
+pmed   <- Predict(f,    age, fun=med, conf.int=FALSE)
+p90    <- Predict(f,    age, fun=p90, conf.int=FALSE)
+pmedqr <- Predict(fq,   age, conf.int=FALSE)
+p90qr  <- Predict(fq90, age, conf.int=FALSE)
+z <- rbind('orm mean'=pmean, 'orm median'=pmed, 'orm P90'=p90,
+           'QR median'=pmedqr, 'QR P90'=p90qr)
+ggplot(z, groups='.set.',
+       adj.subtitle=FALSE, legend.label=FALSE)
+```
+
+Next do fast backward step-down  `r ipacue()`  in an attempt to get a model without so much competition among variables.  The stepwise selection will be penalized for in the model validation. 
+`r mrg(sound("ord-cont-9"))`
+
+```{r prbw}
+print(fastbw(f, rule='p'), estimates=FALSE)
+```
+
+Validate the model,  `r ipacue()`  properly penalizing for variable selection
+
+```{r valbworm}
+g <- function() {
+  set.seed(13)  # so can reproduce results
+  validate(f, B=100, bw=TRUE, estimates=FALSE, rule='p')
+}
+v <- runifChanged(g)
+```
+
+```{r prval,results='asis'}
+# Show number of variables selected in first 30 boots
+html(v)
+```
+
+Next fit the reduced model.  Use multiple imputation to impute missing
+ `r ipacue()`  predictors.
+Do an ANOVA for the reduced model,  `r ipacue()`  taking imputation into account.
+
+
+```{r sanova,results='asis'}
+h <- function() {
+  a <- aregImpute(~ gh + wt + ht + bmi + leg + arml + armc + waist +
+                  tri + sub + age +re, data=w, n.impute=5, pr=FALSE)
+  fit.mult.impute(gh ~ rcs(age,5) + re + rcs(leg,3) +
+                       rcs(waist,4) + tri + rcs(sub,4),
+                  orm, a, family=loglog, data=w, pr=FALSE)
+}
+g <- runifChanged(h)
+g
+an <- anova(g)
+print(an, caption='ANOVA for reduced model after multiple imputation, with addition of a combined effect for four size variables')
+b  <- anova(g, leg, waist, tri, sub)
+# Add new lines to the plot with combined effect of 4 size var.
+s <- rbind(an, size=b['TOTAL', ])
+class(s) <- 'anova.rms'
+```
+
+```{r sanovaplot,cap="ANOVA for reduced model after multiple imputation"}
+#| label: fig-cony-sanova
+spar(top=1)
+plot(s)
+```
+
+`r ipacue()`
+
+`r mrg(sound("ord-cont-10"))`
+
+```{r peffects,cap='Partial effects (log hazard or log-log cumulative probability scale) of all predictors in reduced model, after multiple imputation',scap='Partial effects after multiple imputation',w=6.75,h=4.5}
+#| label: fig-cony-peffects
+ggplot(Predict(g), abbrev=TRUE, ylab=NULL)   
+```
+
+`r ipacue()`
+
+```{r mpeffects,cap='Partial effects (mean scale) of all predictors in reduced model, after multiple imputation',scap='Partial effects (means) after multiple imputation',w=6.75,h=4.5}
+#| label: fig-cony-mpeffects
+M <- Mean(g)
+ggplot(Predict(g, fun=M), abbrev=TRUE, ylab=NULL)   
+```
+
+Compare the estimated age  `r ipacue()`  partial effects and confidence intervals
+with
+those from a model using casewise deletion, and with bootstrap
+nonparametric confidence intervals (also with casewise deletion).
+
+```{r cfmissmeth}
+h <- function() {
+  gc <- orm(gh ~ rcs(age,5) + re + rcs(leg,3) +
+            rcs(waist,4) + tri + rcs(sub,4),
+            family=loglog, data=w, x=TRUE, y=TRUE)
+  gb <- bootcov(gc, B=300)
+  list(gc=gc, gb=gb)
+}
+gbc <- runifChanged(h)
+gc  <- gbc$gc
+gb  <- gbc$gb
+```
+
+```{r peffects2,cap='Partial effect for age from multiple imputation and casewise deletion (center lines with the green line depicting all non-multiple-imputation methods) with symmetric Wald 0.95 confidence bands using casewise deletion, basic bootstrap confidence bands using casewise deletion, percentile bootstrap confidence bands using casewise deletion, and symmetric Wald confidence bands accounting for multiple imputation.',scap='Partial effect for age with bootstrap and Wald confidence bands',w=5,h=4}
+#| label: fig-cony-peffects2
+pgc     <- Predict(gc, age)
+bootclb <- Predict(gb, age, boot.type='basic')
+bootclp <- Predict(gb, age, boot.type='percentile')
+multimp <- Predict(g,  age)
+p <- rbind('casewise deletion'    = pgc,
+           'basic bootstrap'      = bootclb,
+           'percentile bootstrap' = bootclp,
+           'multiple imputation'  = multimp)[, .q(age, yhat, lower, upper, .set.)]
+m <- melt(p, id.vars=c('age', '.set.'))
+
+ggplot(m, aes(x=age, y=value, color=.set.,
+              group=paste(variable, .set.))) + geom_line() +
+  guides(color=guide_legend(title='')) +
+  theme(legend.position='bottom') +
+  ylab(expression(X * hat(beta)))
+```
+
+In OLS  `r ipacue()`  the mean equals the median and both are linearly related to any
+other quantiles.   Semiparametric models are not this restrictive:
+
+`r mrg(sound("ord-cont-11"))`
+
+```{r meanvs,cap='Predicted mean `r hba` vs. predicted median and 0.9 quantile along with their marginal distributions',scap='Predicted mean, median, and 0.9 quantile of `r hba`',w=4.5,h=3.5}
+#| label: fig-cony-meanvs
+M  <- Mean(g)
+qu <- Quantile(g)
+med <- function(lp) qu(.5, lp)
+q90 <- function(lp) qu(.9, lp)
+lp  <- predict(g)
+lpr <- quantile(predict(g), c(.002, .998), na.rm=TRUE)
+lps <- seq(lpr[1], lpr[2], length=200)
+pmn <- M(lps)
+pme <- med(lps)
+p90 <- q90(lps)
+plot(pmn, pme,   
+     xlab=expression(paste('Predicted Mean ',  HbA["1c"])),
+     ylab='Median and 0.9 Quantile', type='l',
+     xlim=c(4.75, 8.0), ylim=c(4.75, 8.0), bty='n')
+box(col=gray(.8))
+lines(pmn, p90, col='blue')
+abline(a=0, b=1, col=gray(.8))
+text(6.5, 5.5, 'Median')
+text(5.5, 6.3, '0.9', col='blue')
+nint <- 350
+scat1d(M(lp),   nint=nint)
+scat1d(med(lp), side=2, nint=nint)
+scat1d(q90(lp), side=4, col='blue', nint=nint)
+```
+
+Draw a nomogram  `r ipacue()`  to compute 7 different predicted values for each
+subject.
+
+```{r nomogram,cap='Nomogram for predicting median, mean, and 0.9 quantile of glycohemoglobin, along with the estimated probability that $\\text{HbA}_{1c} \\ge 6.5, 7$, or $7.5$, all from the log-log ordinal model',scap='Nomogram of log-log ordinal model for $\\text{HbA}_{1c}$',w=6.75,h=6.25}
+#| label: fig-cony-nomogram
+spar(ps=9)
+g      <- Newlevels(g, list(re=abbreviate(levels(w$re))))
+exprob <- ExProb(g)
+nom <-
+  nomogram(g, fun=list(Mean=M,
+                'Median Glycohemoglobin' = med,
+                '0.9 Quantile'           = q90,
+                'Prob(HbA1c >= 6.5)'=
+                     function(x) exprob(x, y=6.5),
+                'Prob(HbA1c >= 7.0)'=
+                     function(x) exprob(x, y=7),
+                'Prob(HbA1c >= 7.5)'=
+                     function(x) exprob(x, y=7.5)),
+           fun.at=list(seq(5, 8, by=.5),
+             c(5,5.25,5.5,5.75,6,6.25),
+             c(5.5,6,6.5,7,8,10,12,14),
+             c(.01,.05,.1,.2,.3,.4),
+             c(.01,.05,.1,.2,.3,.4),
+             c(.01,.05,.1,.2,.3,.4)))
+plot(nom, lmgp=.28)   
+```
+
+```{r echo=FALSE}
+saveCap('15')
+```

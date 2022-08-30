@@ -1,0 +1,324 @@
+```{r include=FALSE}
+require(Hmisc)
+options(qproject='rms')
+getRs('qbookfun.r')
+```
+
+# Introduction {#sec-intro}
+
+`r mrg(movie("https://youtu.be/IiJ6pMs2BiA"))`
+
+## Hypothesis Testing, Estimation, and Prediction
+
+Even when only testing $H_{0}$ a model based approach has advantages:
+
+* Permutation and rank tests not as useful for estimation `r ipacue()`
+* Cannot readily be extended to cluster sampling or repeated measurements
+* Models generalize tests
+    + 2-sample $t$-test, ANOVA $\rightarrow$ <br> multiple linear regression
+    + Wilcoxon, Kruskal-Wallis, Spearman $\rightarrow$ <br> proportional odds
+            ordinal logistic model
+    + log-rank $\rightarrow$ Cox
+
+* Models not only allow for multiplicity adjustment but for
+        shrinkage of estimates
+    + Statisticians comfortable with $P$-value adjustment
+            but fail to recognize that the difference between the most
+            different treatments is badly biased
+
+
+
+
+Statistical estimation is usually model-based
+
+* Relative effect of increasing cholesterol from 200 to 250 `r ipacue()`
+        mg/dl on hazard of death, holding other risk factors constant
+* Adjustment depends on how other risk factors relate to hazard
+* Usually interested in adjusted (partial) effects, not unadjusted
+  (marginal or crude) effects
+
+
+
+## Examples of Uses of Predictive Multivariable Modeling
+
+* Financial performance, consumer purchasing, loan pay-back `r ipacue()`
+* Ecology
+* Product life
+* Employment discrimination
+* Medicine, epidemiology, health services research
+* Probability of diagnosis, time course of a disease
+* Checking that a previously developed summary index (e.g., BMI)
+  adequately summarizes its component variables
+* Developing new summary indexes by how variables predict an outcome
+* Comparing non-randomized treatments
+* Getting the correct estimate of relative effects in randomized
+        studies requires covariable adjustment if model is nonlinear
+    + Crude odds ratios biased towards 1.0 if sample
+          heterogeneous
+
+* Estimating absolute treatment effect (e.g., risk difference)
+    + Use e.g. difference in two predicted probabilities
+
+* Cost-effectiveness ratios
+    + incremental cost / incremental _ABSOLUTE_ benefit
+    + most studies use avg. cost difference / avg. benefit, which
+    may apply to no one
+
+
+
+
+## Misunderstandings about Prediction vs. Classification
+
+`r mrg(sound("classification"), blogl("classification", "Classification vs. Prediction"))`
+
+* Many analysts desire to develop "classifiers" instead of `r ipacue()`
+  predictions
+* Outside of, for example, visual or sound pattern recognition,
+  classification represents a premature decision
+* See [this blog](http://fharrell.com/post/classification) for details
+* Suppose that
+ 
+1. response variable is binary
+1. the two levels represent a sharp dichotomy with no gray zone
+   (e.g., complete success vs. total failure with no possibility of a
+   partial success)
+1. one is forced to assign (classify) future observations to only
+   these two choices
+1. the cost of misclassification is the same for every future
+   observation, and the ratio of the cost of a false positive to the
+   cost of a false negative equals the (often hidden) ratio implied by
+   the analyst's classification rule
+
+* Then classification is **still sub-optimal** for driving
+  the development of a predictive instrument as well as for hypothesis
+  testing and estimation
+* Classification and its associated classification accuracy
+ measure---the proportion classified "correctly"---are very sensitive to
+ the relative frequencies of the outcome variable.  If a classifier is
+ applied to another dataset with a different outcome prevalence, the
+ classifier may no longer apply.
+* Far better is to use the full information in the data to
+  develop a probability model, then develop classification rules on
+  the basis of estimated  probabilities
+    + $\uparrow$ power, $\uparrow$ precision, $\uparrow$ decision making
+
+* Classification is more problematic if response variable is ordinal or
+  continuous or the groups are not truly distinct (e.g., disease or no
+  disease when severity of disease is on a continuum); dichotomizing
+  it up front for the analysis is not appropriate
+    + _minimum_ loss of information (when dichotomization is at
+   the median) is large
+    + may require the sample size to increase many--fold to compensate
+   for loss of information @fed09con
+
+* Two-group classification represents artificial forced choice
+    + best option may be "no choice, get more data"
+
+* Unlike prediction (e.g., of absolute risk), classification
+  implicitly uses utility (loss; cost of false positive or false
+  negative) functions
+`r mrg(movie("https://youtu.be/1yYrDVN_AYc"))`
+* Hidden problems:
+    + Utility function depends on variables not
+   collected (subjects' preferences) that are available only at the
+   decision point
+    + Assumes every subject has the same utility function
+    + Assumes this function coincides with the analyst's
+
+* Formal decision analysis uses
+    + optimum predictions using all available data
+    + subject-specific utilities, which are often based on variables
+   not predictive of the outcome
+
+* ROC analysis is misleading except for the special case
+  of mass one-time group decision making with unknowable
+  utilities^[To make an optimal decision you need to know all relevant data about an individual (used to estimate the probability of an outcome), and the utility (cost, loss function) of making each decision. Sensitivity and specificity do not provide this information. For example, if one estimated that the probability of a disease given age, sex, and symptoms is 0.1 and the "cost"of a false positive equaled the "cost" of a false negative, one would act as if the person does not have the disease.  Given other utilities, one would make different decisions.  If the utilities are unknown, one gives the best estimate of the probability of the outcome to the decision maker and let her incorporate her own unspoken utilities in making an optimum decision for her. <br><br>Besides the fact that cutoffs do not apply to individuals, only to groups, individual decision making does not utilize sensitivity and specificity.  For an individual we can compute $\textrm{Prob}(Y=1 | X=x)$; we don't care about $\textrm{Prob}(Y=1 | X>c)$, and an individual having $X=x$ would be quite puzzled if she were given $\textrm{Prob}(X>c | \textrm{future unknown Y})$ when she already knows $X=x$ so $X$ is no longer a random variable. <br><br>Even when group decision making is needed, sensitivity and specificity can be bypassed.  For mass marketing, for example, one can rank order individuals by the estimated probability of buying the product, to create a lift curve.  This is then used to target the $k$ most likely buyers where $k$ is chosen to meet total program cost constraints.]
+
+See @vic08dec, @bri08ski, @gai05cri, @bor07sta, @fan07amn, @gne07str.
+
+Accuracy score used to drive model building should be a continuous score
+that utilizes all of the information in the
+data.
+`r mrg(movie("https://youtu.be/FDTwEZ3KcyA"))`
+
+In summary:
+
+* Classification is a forced choice --- a decision. `r ipacue()`
+* Decisions require knowledge of the cost or utility of making an
+  incorrect decision.
+* Predictions are made without knowledge of utilities.
+* A prediction can lead to better decisions than classification.
+  For example suppose that one has an estimate of the risk of an
+  event, $\hat{P}$.  One might make a decision if $\hat{P} < 0.10$ or
+  $\hat{P} > 0.90$ in some situations, even without knowledge of
+  utilities.  If on the other hand $\hat{P} = 0.6$ or the confidence
+  interval for $P$ is wide, one might
+    + make no decision and instead opt to collect more data
+    + make a tentative decision that is revisited later
+    + make a decision using other considerations such as the
+    infusion of new resources that allow targeting a larger number of
+    potential customers in a marketing campaign
+
+
+
+
+**The Dichotomizing Motorist**
+
+* The speed limit is 60. `r ipacue()`
+* I am going faster than the speed limit.
+* Will I be caught?
+
+An answer by a dichotomizer:
+
+* Are you going faster than 70? `r ipacue()`
+
+An answer from a better dichotomizer:
+
+* If you are among other cars, are you going faster than 73? `r ipacue()`
+* If you are exposed are your going faster than 67?
+
+Better:
+
+* How fast are you going and are you exposed? `r ipacue()`
+
+
+Analogy to most medical diagnosis research in which +/- diagnosis
+is a false dichotomy of an underlying disease severity:
+
+
+* The speed limit is moderately high. `r ipacue()`
+* I am going fairly fast.
+* Will I be caught?
+
+
+
+## Planning for Modeling
+`r mrg(sound("planning"))`
+`r ipacue()`
+
+* Chance that predictive model will be used (@rei06tra)
+* Response definition, follow-up
+* Variable definitions
+* Observer variability
+* Missing data
+* Preference for continuous variables
+* Subjects
+* Sites
+<!-- * See @lau97cli--->
+
+
+What can keep a sample of data from being appropriate for modeling:
+
+
+1. Most important predictor or response variables not collected `r ipacue()`
+1. Subjects in the dataset are ill-defined or not representative of
+  the population to which inferences are needed
+1. Data collection sites do not represent the population of sites
+1. Key variables missing in large numbers of subjects
+1. Data not missing at random
+1. No operational definitions for key variables and/or measurement
+  errors severe
+1. No observer variability studies done
+
+
+What else can go wrong in modeling?
+
+1. The process generating the data is not stable. `r ipacue()`
+1. The model is misspecified with regard to nonlinearities or
+  interactions, or there are predictors missing.
+1. The model is misspecified in terms of the transformation of the
+  response variable or the model's distributional assumptions.
+1. The model contains discontinuities (e.g., by categorizing
+  continuous predictors or fitting regression shapes with sudden
+  changes) that can be gamed by users.
+1. Correlations among subjects are not specified, or the
+  correlation structure is misspecified, resulting in inefficient
+  parameter estimates and overconfident inference.
+1. The model is overfitted, resulting in predictions that are too
+  extreme or positive associations that are false.
+1. The user of the model relies on predictions obtained by
+  extrapolating to combinations of
+  predictor values well outside the range of the dataset used to
+  develop the model.
+1. Accurate and discriminating predictions can lead to behavior
+  changes that make future predictions inaccurate.
+
+
+@iez94ris lists these dimensions to capture, for patient
+outcome studies:
+
+
+1. age `r ipacue()`
+1. sex
+1. acute clinical stability
+1. principal diagnosis
+1. severity of principal diagnosis
+1. extent and severity of comorbidities
+1. physical functional status
+1. psychological, cognitive, and psychosocial functioning
+1. cultural, ethnic, and socioeconomic attributes and behaviors
+1. health status and quality of life
+1. patient attitudes and preferences for outcomes
+
+
+
+General aspects to capture in the predictors:
+
+1. baseline measurement of response variable `r ipacue()`
+1. current status
+1. trajectory as of time zero, or past levels of a key variable
+1. variables explaining much of the variation in the response
+1. more subtle predictors whose distributions strongly differ
+  between levels of the key variable of interest in an observational study
+
+
+
+## Choice of the Model
+
+* In biostatistics and epidemiology and most other areas we `r ipacue()`
+  usually choose model empirically
+* Model must use data efficiently
+* Should model overall structure (e.g., acute vs. chronic)
+* Robust models are better
+* Should have correct mathematical structure (e.g., constraints
+        on probabilities)
+
+
+
+## Model uncertainty / Data-driven Model Specification
+
+`r mrg(sound("uncertainty"))`
+
+* Standard errors, C.L., $P$-values, $R^2$ wrong if computed as `r ipacue()`
+        if the model pre-specified
+* Stepwise variable selection is widely used and abused
+* Bootstrap can be used to repeat all analysis steps to properly
+        penalize variances, etc.
+
+* @ye98mea: "generalized degrees of freedom" (GDF) for any
+        "data mining" or model selection procedure based on least
+        squares
+    + Example: 20 candidate predictors, $n=22$, forward
+      stepwise, best 5-variable model:  GDF=14.1
+    + Example: CART, 10 candidate predictors, $n=100$, 19 nodes:
+            GDF=76
+
+* See @luo06tun for an approach involving adding noise to
+    $Y$ to improve variable selection
+* Another example: $t$-test to compare two means
+    + Basic test assumes equal variance and normal data
+      distribution
+    + Typically examine the two sample distributions to
+      decide whether to transform $Y$ or switch to a different test
+    + Examine the two SDs to decide whether to use the standard
+      test or switch to a Welch $t$-test
+    + Final confidence interval for mean difference is conditional
+      on the final choices being correct
+    + Ignores model uncertainty
+    + Confidence interval will not have the claimed coverage
+    + Get proper coverage by adding parameters for what you
+      don't know
+      
+       - Bayesian $t$-test: parameters for variance ratio and for
+        d.f. of a $t$-distribution for the raw data (allows heavy
+        tails)

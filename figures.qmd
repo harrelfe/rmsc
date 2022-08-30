@@ -1,0 +1,8 @@
+# List of Figures {.unnumbered}
+
+```{r echo=FALSE}
+require(Hmisc)
+getRs('reptools.r')
+printCap(book=TRUE)
+```
+

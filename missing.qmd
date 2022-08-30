@@ -1,0 +1,459 @@
+```{r include=FALSE}
+require(Hmisc)
+getRs('reptools.r')
+getRs('qbookfun.r')
+hookaddcap()
+options(qproject='rms', prType='html')
+knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
+```
+
+# Missing Data {#sec-missing-data}
+
+## Types of Missing Data
+`r mrg(sound("missing-1"))`
+
+* Missing completely at random (MCAR) `r ipacue()`
+* Missing at random (MAR)^["Although missing at random (MAR) is a non-testable assumption, it has been pointed out in the literature that we can get very close to MAR if we include enough variables in the imputation models" @har07mul.]
+* Informative missing (non-ignorable non-response)
+
+See @car21mis, @sch02mis, @don06rev, @har07mul, @all01mis, @whi11mul, @buu12fle for an
+introduction to missing data and imputation concepts.
+
+## Prelude to Modeling
+
+* Quantify extent of missing data `r ipacue()`
+* Characterize types of subjects with missing data
+* Find sets of variables missing on same subjects
+
+
+## Missing Values for Different Types of Response Variables
+
+* Serial data with subjects dropping out (not covered in this `r ipacue()`
+  course^[@twi13mul found instability in using multiple imputation of longitudinal data, and advantages of using instead full likelihood models.]
+<!-- TODO twi13mul is epub--->
+* $Y$=time to event, follow-up curtailed: covered under survival
+  analysis^[@whi09imp provide a method for multiply imputing missing covariate values using censored survival time data.]
+* Often discard observations with completely missing $Y$ but sometimes wasteful^[$Y$ is so valuable that if one is only missing a $Y$ value, imputation is not worthwhile, and imputation of $Y$ is not advised if MCAR or MAR.]
+* Characterize missings in $Y$ before dropping obs.
+
+
+## Problems With Simple Alternatives to Imputation
+Deletion of records---
+
+* Badly biases parameter estimates when the probability of a `r ipacue()`
+  case being incomplete is related to $Y$ and not just
+  $X$ [@littlerubin].
+* Deletion because of a subset of $X$ being missing
+        always results in inefficient estimates
+* Deletion of records with missing $Y$ can result in
+        biases [@cra95com] but is the preferred approach
+        under MCAR^[Multiple imputation of $Y$ in that case does not improve the analysis and assumes the imputation model is correct.]
+* @hip07reg found advantages to a "use
+  all variables to impute all variables then drop observations with
+  missing $Y$" approach (but see @sul15bia)
+* @lee12rec suggest that observations missing
+	on both $Y$ and on a predictor of major interest are not helpful
+* Only discard obs. when
+    + MCAR can be justified
+    + Rarely missing predictor of overriding importance that can't be
+   imputed from other data
+    + Fraction of obs. with missings small and $n$ is large
+
+* No advantage of deletion except savings of analyst time
+* Making up missing data better than throwing away real data
+* See @kno10unp
+
+
+Adding extra categories of categorical predictors---
+
+* Including missing data but adding a category `missing' causes `r ipacue()`
+        serious biases [@all01mis; @jon96ind; @vac98mis]
+* Problem acute when values missing because subject too sick
+* Difficult to interpret
+* Fails even under MCAR [@jon96ind; @all01mis; @don06rev; @hei06imp; @kno10unp]
+* May be OK if values are "missing" because of "not
+  applicable"^[E.g. you have a measure of marital happiness, dichotomized as high or low, but your sample contains some unmarried people.  OK to have a 3-category variable with values high, low, and unmarried---Paul Allison, IMPUTE list, 4Jul09.]
+
+Likewise, serious problems are caused by setting missing continuous
+predictors to a constant (e.g., zero) and adding an indicator variable
+to try to estimate the effect of missing values.
+
+Two examples from @don06rev using binary logistic
+regression, $N=500$.
+
+
+Results of 1000 Simulations With $\beta_{1}=1.0$ with MAR
+  and Two Types of Imputation `r ipacue()` 
+
+
+| Imputation | $\hat{\beta}_{1}$ | S.E. | Coverage of  |
+|-----|-----|-----|-----|
+| Method     |                  |      | 0.90 C.I.   |
+| Single     | 0.989            | 0.09 | 0.64  |
+| Multiple   | 0.989            | 0.14 | 0.90   |
+
+
+Now consider a simulation with $\beta_{1}=1, \beta_{2}=0$, $X_{2}$
+correlated with $X_{1} (r=0.75)$ but redundant in predicting $Y$, use
+missingness indicator when $X_{1}$ is MCAR in 0.4 of 500 subjects.
+This is also compared with grand mean fill-in imputation.
+
+
+Results of 1000 Simulations Adding a Third Predictor Indicating Missing for $X_{1}$} `r ipacue()` 
+
+
+| Imputation | $\hat{\beta}_{1}$ | $\hat{\beta}_{2}$  |
+|-----|-----|-----|
+| Method     |                  |                     |
+| Indicator  | 0.55             | 0.51               |
+| Overall mean| 0.55            |                     |
+
+
+In the incomplete observations the constant $X_{1}$ is uncorrelated
+with $X_{2}$.
+
+
+## Strategies for Developing an Imputation Model
+
+\textbf{The goal of imputation is to preserve the information and
+  meaning of the non-missing data.}
+`r mrg(sound("missing-2"))`
+
+\medskip
+
+There is a full Bayesian modeling alternative to all the methods
+presented below.  The Bayesian approach requires more effort but has
+several advantages [@erl16dea].
+
+
+
+Exactly how are missing values estimated?
+
+* Could ignore all other information --- random or grand mean `r ipacue()`
+  fill-in
+* Can use external info not used in response model (e.g., zip
+  code for income)
+* Need to utilize reason for non-response if possible
+* Use statistical model with sometimes-missing $X$ as response
+  variable
+* Model to estimate the missing values should include all
+  variables that are either `r ipacue()` 
+ 
+1. related to the missing data mechanism;
+1. have distributions that differ between subjects that have the
+   target variable missing and those that have it measured;
+1. associated with the sometimes-missing variable when it is not
+   missing; or
+1. included in the final response model [@bar04imp; @har07mul]
+
+* Ignoring imputation results in biased $\hat{V}(\hat{\beta})$
+* `transcan` function in Hmisc library: "optimal"
+  transformations of all variables to make residuals more stable and
+  to allow non-monotonic transformations
+* `aregImpute` function in Hmisc: good approximation to full
+  Bayesian multiple imputation procedure using the bootstrap
+* `transcan` and `aregImpute` use the following for fitting
+  imputation models: `r ipacue()` 
+  
+1. initialize `NA`s to median (mode for categoricals)
+1. expand all categorical predictors using dummy variables
+1. expand all continuous predictors using restricted cubic splines
+1. optionally optimally transform the variable being predicted by
+    expanding it with restricted cubic splines and using the first
+    canonical variate (multivariate regression) as the optimum
+    transformation (maximizing $R^2$)
+1. one-dimensional scoring of categorical variables being
+    predicted using canonical variates on dummy variables representing
+    the categories (Fisher's optimum scoring algorithm); when imputing
+    categories, solve for which category yields a score that is
+    closest to the predicted score
+
+* `aregImpute` and `transcan` work with `r ipacue()`
+  `fit.mult.impute` to make final analysis of response variable
+  relatively easy
+* Predictive mean matching [@littlerubin]: replace missing
+        value with observed value of subject having closest predicted
+        value to the predicted value of the subject with the `NA`.
+        Key considerations are how to
+   
+1. model the target when it is not `NA`
+1. match donors on predicted values
+1. avoid overuse of "good" donors to disallow excessive ties in
+     imputed data
+1. account for all uncertainties
+
+* Predictive model for each target uses any outcomes, all
+    predictors in the final model other than the target, plus
+    auxiliary variables not in the outcome model
+* No distributional assumptions; nicely handles target variables
+    with strange distributions [@vin14pre]
+* Predicted values need only be monotonically related to real
+    predictive values
+    + PMM can result in some donor observations being used repeatedly `r ipacue()`
+    + Causes lumpy distribution of imputed values
+    + Address by sampling from multinomial distribution,
+   probabilities = scaled distance of all predicted values to
+   predicted value ($y^{*}$) of observation needing imputing
+    + Tukey's tricube function is a good weighting function (used in
+   loess): $w_{i} = (1 - \min(d_{i}/s, 1)^{3})^{3}$, <br>
+   $d_{i} = |\hat{y_{i}} - y^{*}|$ <br>
+   $s = 0.2\times\textrm{mean} |\hat{y_{i}} - y^{*}|$ is a good default
+   scale factor <br>
+   scale so that $\sum w_{i} = 1$
+
+* Recursive partitioning with surrogate splits --- handles case
+  where a predictor of a variable needing imputation is missing
+  itself.  But there are problems [@pen18pro] even with completely
+  random missingness.
+* @whi11mul discusses an alternative method based on
+  choosing a donor observation at random from the $q$ closest matches
+  ($q=3$, for example)
+
+
+
+### Interactions
+
+* When interactions are in the outcome model, oddly enough it may `r ipacue()`
+  be better to treat interaction terms as "just another variable"
+  and do unconstrained imputation of them [@kim15eva]
+
+
+
+## Single Conditional Mean Imputation
+`r mrg(sound("missing-3"))`
+
+
+* Can fill-in using unconditional mean or median if number of `r ipacue()`
+  missings low and $X$ is unrelated to other $X$s
+* Otherwise, first approximation to good imputation uses other
+  $X$s to predict a missing $X$
+* This is a single "best guess" conditional mean
+* $\hat{X}_{j} =  Z \hat{\theta}, Z = X_{\bar j}$ plus possibly
+  auxiliary variables that precede $X_{j}$ in the causal chain that
+  are not intended to be in the outcome model.<br>
+Cannot include $Y$ in $Z$ without adding random errors to imputed
+values as done with multiple imputation (would steal info from $Y$)
+* Recursive partitioning can sometimes be helpful for nonparametrically
+  estimating conditional means
+
+
+
+## Predictive Mean Matching
+
+
+## Multiple Imputation
+
+* Single imputation could use a random draw from the conditional `r ipacue()`
+        distribution for an individual <br>
+        $\hat{X}_{j} = Z \hat{\theta} + \hat{\epsilon}, Z = [X\bar{j},
+        Y]$ plus auxiliary variables <br>
+        $\hat{\epsilon} = n(0, \hat{\sigma})$ or a random draw from the
+        calculated residuals
+    + bootstrap
+    + approximate Bayesian bootstrap [@rub91mul; @har07mul]: sample
+   with replacement from sample with replacement of residuals
+
+* Multiple imputations ($M$) with random draws
+    + Draw sample of $M$ residuals for each missing value to be imputed
+    + Average $M$ $\hat{\beta}$
+    + In general can provide least biased estimates of $\beta$
+    + Simple formula for imputation-corrected
+    var($\hat{\beta}$) <br> Function of average "apparent"
+    variances and between-imputation variances of
+    $\hat{\beta}$
+    + Even when the $\chi^2$ distribution is a good approximation
+    when data have no missing values, the $t$ or $F$ distributions are
+    needed to have accurate $P$-values and confidence limits when
+    there are missings [@lip02deg; @rei07sma]
+    + **BUT** full multiple imputation needs to account for
+    uncertainty in the imputation models by refitting these models for
+    each of the $M$ draws
+    + `transcan` does not do that; `aregImpute` does
+
+* Note that multiple imputation can and should use the response
+  variable for imputing predictors [@moo06usi]
+* `aregImpute` algorithm [@moo06usi] `r ipacue()` 
+`r mrg(sound("missing-4"))`
+    + Takes all aspects of uncertainty into account using the
+   bootstrap
+    + Different bootstrap resamples used for each imputation by fitting
+   a flexible additive model on a sample with replacement
+   from the original data
+    + This model is used to predict all of the original missing and
+   non-missing values for the target variable for the current imputation
+    + Uses flexible parametric additive regression models to impute
+    + There is an option to allow target variables to be optimally
+ transformed, even non-mono\-ton\-ical\-ly (but this can overfit)
+    + By default uses predictive mean matching for imputation; no residuals
+   required (can also do more parametric regression imputation)
+    + By default uses weighted PMM; many other matching options
+    + Uses by default van~Buuren's "Type 1" matching \cite[Section
+   3.4.2]{buu12fle} to capture the right amount of uncertainty by
+   computing predicted values for missing values using a
+   regression fit on the bootstrap sample, and finding donor
+   observations by matching those predictions to predictions from potential
+   donors using the regression fit from the original sample
+   of complete observations
+    + When a predictor of the target variable is missing, it is first
+   imputed from its last imputation when it was a target variable
+    + First 3 iterations of process are ignored ("burn-in")
+    + Compares favorably to `R` `MICE` approach
+    + Example:
+    
+```{r eval=FALSE}
+a <- aregImpute(~ age + sex + bp + death + heart.attack.before.death,
+                data=mydata, n.impute=5)
+f <- fit.mult.impute(death ~ rcs(age,3) + sex +
+                     rcs(bp,5), lrm, a, data=mydata)
+```
+
+
+See @bar04imp for a nice review of multiple
+imputation with detailed comparison of results
+(point estimates and confidence limits for the effect of the
+sometimes-missing predictor) for various imputation methods.
+@bar06mul have a good overview of imputation
+methods and a comparison of bias and confidence interval coverage for
+the methods when applied to longitudinal data with a small number of subjects.
+@hor07muc have a good review of several
+  software packages for dealing with missing data, and a comparison of
+  them with `aregImpute`.  @har07mul provide a
+  nice overview of multiple imputation and discuss some of the
+  available software.  @whi10bia studied bias
+  of multiple imputation vs. complete-case analysis.
+  @whi11mul provide much practical guidance.
+
+**Caution**: Methods can generate imputations having very
+reasonable distributions but still not having the property that final
+response model regression coefficients have nominal confidence
+interval coverage.  It is worth checking that imputations generate the
+  correct collinearities among covariates.
+
+
+* With `MICE` and `aregImpute` we are using the chained `r ipacue()`
+  equation approach [@whi11mul] `r ipacue()` 
+* Chained equations handles a wide variety of target variables to
+  be imputed and allows for multiple variables to be missing on the
+  same subject
+* Iterative process cycles through all target
+variables to impute all missing values [@buu06ful]
+* Does not attempt to use the full Bayesian
+multivariate model for all target variables, making it more
+flexible and easy to use
+* Possible to create improper imputations, e.g., imputing
+  conflicting values for different target variables
+* However, simulation studies [@buu06ful] demonstrate
+very good performance of imputation based on chained equations
+
+
+
+## Diagnostics
+`r mrg(sound("missing-5"))` 
+
+* MCAR can be partially assessed by comparing distribution of `r ipacue()`
+  non-missing $Y$ for those subjects with complete $X$ vs. those
+  subjects having incomplete $X$ [@littlerubin]
+* Yucel and Zaslavsky [@yuc08usi; see also @he12dia]
+* Interested in reasonableness of imputed values for a
+  sometimes-missing predictor $X_{j}$
+* Duplicate entire dataset
+* In the duplicated observations set all non-missing values of
+  $X_{j}$ to missing; let $w$ denote this set of observations set to missing
+* Develop imputed values for the missing values of $X_{j}$
+* In the observations in $w$ compare the
+  distribution of imputed $X_{j}$ to the original values of $X_{j}$
+* @bon16gra present a variety of
+  useful diagnostics on the reasonableness of imputed values.
+
+<img src="missing-diagnostic.png" width="60%">
+
+
+## Summary and Rough Guidelines
+`r mrg(sound("missing-6"))` `r ipacue()` 
+
+| Method:                                 | Deletion      |   Single | Multiple |
+|-----------------------------------------|---------------|---|---|
+| Allows non-random missing               |               | x | x |
+| Reduces sample size                     | x             |   |   |
+| Apparent S.E. of $\hat{\beta}$ too low  |               | x |   |
+| Increases real S.E. of $\hat{\beta}$    | x             |   |   |
+| $\hat{\beta}$ biased                    | if not MCAR   | x |   |
+
+: Summary of methods for dealing with missing values {#tbl-na-meth-summary}
+
+The following contains crude guidelines.  Simulation studies are
+needed to refine the recommendations.  Here $f$ refers to
+the proportion of observations having _any_ variables missing.
+
+
+* **$f < 0.03$:** `r ipacue()`
+  It doesn't matter very much how you impute missings or whether
+  you adjust variance of regression coefficient estimates for
+  having imputed data in this case.  For
+  continuous variables imputing missings with the median
+  non-missing value is adequate; for categorical predictors the
+  most frequent category can be used.  Complete case analysis is
+  also an option here.  Multiple imputation may be needed to check
+  that the simple approach "worked."
+* **$f \geq 0.03$:**
+  Use multiple imputation with number of
+  imputations^[@whi11mul recommend choosing $M$ so that the key inferential statistics are very reproducible should the imputation analysis be repeated.  They suggest the use of $100f$ imputations.  See also [@buu12fle, section 2.7].  @hip16num finds that the number of imputations should be quadratically increasing with the fraction of missing information.]
+  equal to $\max(5, 100f)$.  Fewer imputations may be possible with
+  very large sample
+  sizes.  See [statisticalhorizons.com/how-many-imputations](https://statisticalhorizons.com/how-many-imputations).
+  Type 1 predictive mean matching is usually preferred, with
+  weighted selection of donors.  Account for imputation in estimating
+  the covariance matrix for final parameter estimates.  Use the $t$
+  distribution instead of the Gaussian distribution for tests and
+  confidence intervals, if possible, using the estimated d.f. for the
+  parameter estimates.
+* **Multiple predictors frequently missing:**  `r ipacue()`
+  More imputations may be required.  Perform a "sensitivity to
+  order" analysis by creating multiple imputations
+  using different orderings of sometimes missing variables.  It may be
+  beneficial to initially sort variables so that the one with the most
+  `NA`s will be imputed first.
+
+
+Reason for missings more important than number of missing values.
+
+Extreme amount of missing data does not prevent one from using
+multiple imputation, because alternatives are worse [@jan10mis; @mad19pro].
+
+
+### Effective Sample Size 
+It is useful to look look at examples of effective sample sizes in the presence of missing data.  If a sample of 1000 subjects contains various amounts and patterns of missings what size $n_c$ of a complete sample would have equivalent information for the intended purpose of the analysis?
+
+
+1. A new marker was collected on a random sample of 200 of the subjects and one wants to estimate the added predictive value due to the marker: $n_{c}=200$ `r ipacue()`
+1. Height is missing on 100 subjects but we want to study association between BMI and outcome.  Weight, sex, and waist circumference are available on all subjects: $n_{c}=980$
+1. Each of 10 predictors is randomly missing on $\frac{1}{10}$ of subjects, and the predictors are uncorrelated with each other and are each weakly related to the outcome: $n_{c}=500$
+1. Same as previous but the predictors can somewhat be predicted from non-missing predictors: $n_{c}=750$
+1. The outcome variable was not assessed on a random $\frac{1}{5}$ of subjects: $n_{c}=800$
+1. The outcome represents sensitive information, is missing on $\frac{1}{2}$ of subjects, and we don't know what made subjects respond to the question: $n_{c}=0$ (serious selection bias)
+1. One of the baseline variables was collected prospectively $\frac{1}{2}$ of the time and for the other subjects it was retrospectively estimated only for subjects ultimately suffering a stroke and we don't know which subjects had a stroke: $n_{c}=0$ (study not worth doing)
+1. The outcome variable was assessed by emailing the 1000 subjects, for which 800 responded, and we don't know what made subjects respond: $n_{c}=0$ (model will possibly be very biased---at least the intercept)
+
+
+
+
+## Bayesian Methods for Missing Data
+
+* Multiple imputation developed as an approximation to a full `r ipacue()`
+  Bayesian model
+* Full Bayesian model treats missings as unknown parameters and
+  provides exact inference and correct measures of uncertainty
+* See [this case study](https://github.com/paul-buerkner/brms/blob/master/vignettes/brms_missings.Rmd) for an example
+* The case study also shows how to do "posterior stacking" if
+  you want to avoid having to specify a full model for missings, and
+  instead use usual multiple imputations as described in this chapter
+    + Run a multiple imputation algorithm
+    + For each completed dataset run the Bayesian analysis and draw
+    thousands of samples from the posterior distribution of the parameters
+    + Pool all these posterior draws over all the multiple
+    imputations and do posterior inference as usual with no special
+    correction required
+    + Made easy by the `Hmisc` package `aregImpute` function
+    and the `rms` `stackMI` function as demonstrated in the
+    Titanic case study later in the notes.
+

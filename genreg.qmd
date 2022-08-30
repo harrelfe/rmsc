@@ -1,0 +1,1361 @@
+```{r include=FALSE}
+require(Hmisc)
+getRs('reptools.r')
+getRs('qbookfun.r')
+hookaddcap()
+options(qproject='rms', prType='html')
+knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
+```
+
+# General Aspects of Fitting Regression Models
+
+
+Regression modeling meets many analytic needs:
+`r mrg(sound("genreg-0"))` 
+
+* Prediction, capitalizing on efficient estimation methods such as maximum likelihood and the predominant additivity in a variety of problems
+    + E.g.: effects of age, smoking, and air quality add to predict lung capacity
+    + When effects are predominantly additive, or when there aren't too many interactions and one knows the likely interacting variables in advance, regression can beat machine learning techniques that assume interaction effects are likely to be as strong as main effects
+
+* Separate effects of variables (especially exposure and treatment)
+* Hypothesis testing
+* Deep understanding of uncertainties associated with all model components
+    + Simplest example: confidence interval for the slope of a predictor
+    + Confidence intervals for predicted values; simultaneous confidence intervals for a series of predicted values
+         
+       - E.g.: confidence band for $Y$ over a series of values of $X$
+
+
+
+**Alternative: Stratification**
+   
+* Cross-classify subjects on the basis of the $X$s, estimate a property of $Y$ for each stratum
+* Only handles a small number of $X$s
+* Does not handle continuous $X$
+
+
+**Alternative: Single Trees (recursive partitioning/CART)**
+   
+* Interpretable because they are over-simplified and usually wrong
+* Cannot separate effects
+* Finds spurious interactions
+* Require huge sample size
+* Do not handle continuous $X$ effectively; results in very heterogeneous nodes because of incomplete conditioning
+* Tree structure is unstable so insights are fragile
+
+
+**Alternative: Machine Learning**
+   
+* E.g. random forests, bagging, boosting, support vector
+     machines, neural networks, deep learning
+* Allows for high-order interactions and does not require pre-specification of interaction terms
+* Almost automatic; can save analyst time and do the analysis in one step (long computing time)
+* Uninterpretable black box
+* Effects of individual predictors are not separable
+* Interaction effects (e.g., differential treatment effect = precision medicine = personalized medicine) not available
+* Because of not using prior information about dominance of additivity, can require 200 events per candidate predictor when $Y$ is binary (@plo14mod)
+    + Logistic regression may require 20 events per candidate predictor
+    + Can create a demand for "big data" where additive statistical models can work on moderate-size data
+    + See
+        [this article](https://hbr.org/2016/12/why-youre-not-getting-value-from-your-data-science) in _Harvard Business Review_ for more about
+        regression vs. complex methods
+
+
+
+
+
+## Notation for Multivariable Regression Models
+`r mrg(sound("genreg-1"))`
+
+* Weighted sum of a set of independent or predictor variables `r ipacue()`
+* Interpret parameters and state assumptions by linearizing
+        model with respect to regression coefficients
+* Analysis of variance setups, interaction effects, nonlinear
+        effects
+* Examining the 2 regression assumptions
+
+| Symbol | Meaning |
+|--------|---------|
+| $Y$ | response (dependent) variable  |
+| $X$ | $X_{1},X_{2},\ldots,X_{p}$ -- list of predictors  |
+| $\beta$ | $\beta_{0},\beta_{1},\ldots,\beta_{p}$ -- regression coefficients  |
+| $\beta_0$ | intercept parameter(optional)  |
+| $\beta_{1},\ldots,\beta_{p}$ | weights or regression coefficients  |
+| $X\beta$ | $\beta_{0}+\beta_{1}X_{1}+\ldots+\beta_{p}X_{p}, X_{0}=1$   |
+
+Model: connection between $X$ and $Y$  `r ipacue()` <br>
+$C(Y|X)$ : property of distribution of $Y$ given $X$, e.g. <br>
+$C(Y|X) = {\rm E}(Y|X)$ or  $\Pr(Y=1|X)$.
+
+
+## Model Formulations {#sec-gen.regression.model}
+
+General regression model
+$$C(Y|X) = g(X) .$$
+
+General linear regression model
+$$C(Y|X) = g(X\beta) .$$
+Examples
+ `r ipacue()`
+
+\begin{array}{ccc}
+C(Y|X) =& E(Y|X) =& X\beta, \\
+Y|X &\sim N(X\beta,\sigma^{2}) & \\
+C(Y|X) =& \Pr(Y=1|X) =& (1+\exp(-X\beta))^{-1} \\
+\end{array}
+
+Linearize: $h(C(Y|X))=X\beta,
+h(u)=g^{-1}(u)$ <br>
+Example:  `r ipacue()` 
+
+\begin{array}{ccc}
+C(Y|X)=\Pr(Y=1|X)&=&(1+\exp(-X\beta))^{-1} \\
+h(u)=\mathrm{logit}(u)&=&\log(\frac{u}{1-u}) \\
+h(C(Y|X)) &=& C'(Y|X)\ {\rm (link)}
+\end{array}
+
+General linear regression model: <br> $C'(Y|X)=X\beta$.
+
+
+## Interpreting Model Parameters 
+Suppose that $X_{j}$ is linear and doesn't interact with other
+$X$'s^[Note that it is not necessary to "hold constant" all other variables to be able to interpret the effect of one predictor.  It is sufficient to hold constant the weighted sum of all the variables other than $X_{j}$.  And in many cases it is not physically possible to hold other variables constant while varying one, e.g., when a model contains $X$ and $X^{2}$ (David Hoaglin, personal communication).].
+ `r ipacue()`
+
+\begin{array}{ccc}
+C'(Y|X) &=& X\beta = \beta_{0}+\beta_{1}X_{1}+\ldots+\beta_{p}X_{p} \\
+\beta_{j} &=& C'(Y|X_{1}, X_{2}, \ldots, X_{j}+1, \ldots, X_{p}) \\
+ &-& C'(Y|X_{1}, X_{2}, \ldots, X_{j}, \ldots, X_{p})
+\end{array}
+
+Drop $'$ from $C'$ and assume $C(Y|X)$ is property of $Y$ that is
+linearly related to weighted sum of $X$'s.
+
+
+### Nominal Predictors
+Nominal (polytomous) factor with $k$ levels : $k-1$ indicator variables.
+E.g. $T=J,K,L,M$:
+ `r ipacue()`
+
+\begin{array}{ccc}
+C(Y|T=J) &=& \beta_{0} \nonumber\\
+C(Y|T=K) &=& \beta_{0}+\beta_{1}\\
+C(Y|T=L) &=& \beta_{0}+\beta_{2}\nonumber\\
+C(Y|T=M) &=& \beta_{0}+\beta_{3}\nonumber .
+\end{array}
+
+$$C(Y|T) = X\beta= \beta_{0}+\beta_{1} X_{1}+\beta_{2} X_{2}+\beta_{3} X_{3},$$
+
+where
+
+\begin{array}{ccc}
+X_{1} = 1 & {\rm if} \ \ T=K, & 0 \ \ {\rm otherwise} \nonumber\\
+X_{2} = 1 & {\rm if} \ \ T=L, & 0 \ \ {\rm otherwise} \\
+X_{3} = 1 & {\rm if} \ \ T=M, & 0 \ \ {\rm otherwise} \nonumber.
+\end{array}
+
+The test for any differences in the property $C(Y)$ between
+treatments is $H_{0}:\beta_{1}=\beta_{2}=\beta_{3}=0$.
+
+
+### Interactions
+
+`r ipacue()`  
+$X_{1}$ and $X_{2}$, effect of $X_{1}$ on $Y$ depends on level of $X_{2}$.
+_One_ way to describe interaction is to add $X_{3}=X_{1}X_{2}$ to model:
+$$C(Y|X) = \beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2}+\beta_{3}X_{1}X_{2} .$$
+
+\begin{array}{ccc}
+C(Y|X_{1}+1, X_{2})&-&C(Y|X_{1}, X_{2})\nonumber\\
+&=&\beta_{0}+\beta_{1} (X_{1}+1)+\beta_{2}X_{2}\nonumber\\
+&+&\beta_{3} (X_{1}+1)X_{2}\\
+&-&[\beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2}+\beta_{3}X_{1}X_{2}]\nonumber\\
+&=&\beta_{1}+\beta_{3}X_{2} .\nonumber
+\end{array}
+
+One-unit increase in $X_{2}$ on $C(Y|X)$ :
+$\beta_{2}+\beta_{3} X_{1}$.
+
+Worse interactions:
+
+If $X_{1}$ is binary, the interaction may take the form of a difference in shape (and/or distribution) of $X_{2}$ vs. $C(Y)$
+depending on whether $X_{1}=0$ or $X_{1}=1$ (e.g. logarithm vs. square root).
+
+[This paper](http://yiqingxu.org/papers/english/2018_HMX_interaction/main.pdf) describes how interaction effects can be misleading.
+
+
+### Example: Inference for a Simple Model
+`r mrg(sound("genreg-2"))`
+Postulate the model $C(Y|age,sex) = \beta_{0}+\beta_{1} age + \beta_{2}
+[sex=f] + \beta_{3} age [sex=f]$ where $[sex=f]$ is an indicator indicator
+variable for sex=female, i.e., the reference cell is
+sex=male^[You can also think of the last part of the model as being $\beta_{3} X_{3}$, where $X_{3} = age \times [sex=f]$.].
+
+Model assumes
+
+1. age is linearly related to $C(Y)$ for males, `r ipacue()`
+1. age is linearly related to $C(Y)$ for females, and
+1. interaction between age and sex is simple
+1. whatever distribution, variance, and independence assumptions are
+        appropriate for the model being considered.
+
+Interpretations of parameters: `r ipacue()` 
+
+| Parameter | Meaning |
+|-----|-----|
+| $\beta_{0}$ |   $C(Y | age=0, sex=m)$  |
+| $\beta_{1}$ |   $C(Y | age=x+1, sex=m) - C(Y | age=x, sex=m)$  |
+| $\beta_{2}$ |   $C(Y | age=0, sex=f) - C(Y | age=0, sex=m)$  |
+| $\beta_{3}$ |   $C(Y | age=x+1, sex=f) - C(Y | age=x, sex=f) -$  |
+|         |   $[C(Y | age=x+1, sex=m) - C(Y | age=x, sex=m)]$   |
+
+$\beta_{3}$ is the difference in slopes (female -- male).
+
+When a high-order effect such as an interaction effect is in the
+model, be sure to interpret low-order effects by finding out what
+makes the interaction effect ignorable.  In our example, the
+interaction effect is zero when age=0 or sex is male.
+
+Hypotheses that are usually inappropriate:
+
+1. $H_{0}: \beta_{1}=0$: This tests whether age is associated with $Y$ for `r ipacue()`
+        males
+1. $H_{0}: \beta_{2}=0$: This tests whether sex is associated with $Y$ for
+        zero year olds
+
+
+More useful hypotheses follow.  For any hypothesis need to
+
+* Write what is being tested `r ipacue()`
+* Translate to parameters tested
+* List the alternative hypothesis
+* Not forget what the test is powered to detect
+    + Test against nonzero slope has maximum power when linearity holds
+    + If true relationship is monotonic, test for non-flatness will
+    have some but not optimal power
+    + Test against a quadratic (parabolic) shape will have some
+    power to detect a logarithmic shape but not against a sine wave
+    over many cycles
+
+* Useful to write e.g. "$H_{a}:$ age is associated with
+$C(Y)$, powered to detect a _linear_ relationship"
+
+
+
+**Most Useful Tests for Linear age $\times$ sex Model**
+   `r ipacue()` 
+
+| Null or Alternative Hypothesis | Mathematical Statement |
+|-----|-----|
+| Effect of age is independent of sex or<br>Effect of sex is independent of age or<br>age and sex are additive<br>age effects are parallel  | $H_{0}: \beta_{3}=0$  |
+| age interacts with sex<br>age modifies effect of sex<br>sex modifies effect of age<br>sex and age are non-additive (synergistic) | $H_{a}: \beta_{3} \neq 0$  |
+| age is not associated with $Y$          | $H_{0}: \beta_{1}=\beta_{3}=0$  |
+| age is associated with $Y$<br>age is associated with $Y$ for either females or males | $H_{a}: \beta_{1} \neq 0 \textrm{~or~} \beta_{3} \neq 0$ |
+| sex is not associated with $Y$          | $H_{0}: \beta_{2}=\beta_{3}=0$  |
+| sex is associated with $Y$<br>sex is associated with $Y$ for some value of age| $H_{a}: \beta_{2} \neq 0 \textrm{~or~} \beta_{3} \neq 0$ |
+| Neither age nor sex is associated with $Y$  | $H_{0}: \beta_{1}=\beta_{2}=\beta_{3}=0$  |
+| Either age or sex is associated with $Y$    | $H_{a}: \beta_{1} \neq 0 \textrm{~or~} \beta_{2} \neq 0 \textrm{~or~} \beta_{3} \neq 0$|
+
+**Note**: The last test is called the global test of no
+association.  If an interaction effect present, there is
+both an age and a sex effect.  There can also be age or sex
+effects when the lines are parallel.  The global test of
+association (test of total association) has 3 d.f. instead of 2
+(age + sex) because it allows for unequal slopes.
+
+
+### Review of Composite (Chunk) Tests 
+
+* In the model `r ipacue()`
+
+```{r eval=FALSE}
+y ~ age + sex + weight + waist + tricep
+```
+
+we may want to jointly test the association between all body
+measurements and response, holding `age` and `sex` constant.
+
+* This 3 d.f. test may be obtained two ways:
+    + Remove the 3 variables and compute the change in $SSR$ or $SSE$
+    + Test $H_{0}:\beta_{3}=\beta_{4}=\beta_{5}=0$ using matrix
+   algebra (e.g., `anova(fit, weight, waist, tricep)` if `fit`
+   is a fit object created by the `R` `rms` package)
+
+
+
+
+## Relaxing Linearity Assumption for Continuous Predictors {#sec-relax.linear} 
+
+### Avoiding Categorization
+`r mrg(sound("genreg-3"))` 
+`r quoteit("Natura non facit saltus<br>(Nature does not make jumps)", "Gottfried Wilhelm Leibniz")`
+
+<img src="lucy.png" width="45%"> &nbsp;&nbsp;&nbsp;  Lucy D'Agostino McGowan
+
+* Relationships seldom linear except when predicting one variable `r ipacue()`
+  from itself measured earlier
+* Categorizing continuous predictors into intervals is a
+  disaster; see
+  @roy06dic, @alt91cat, @hil96pra, @lau96eva, @alt94dan, 
+  @bec92con, @far96sim, @rag92dic, @sui94bin, @bue97pro, 
+  @max93biv, @sch94out, @alt98sub, @hol04con, @mos04odd,
+  @wai06fin, @fed09con, @gia14opt, @col16qua, @ben12aga 
+  and [Biostatistics for Biomedical Research](https://hbiostat.org/bbr), Chapter 18.
+`r mrg(movie("https://youtu.be/-GEgR71KtwI"))`
+
+* Some problems caused by this approach:
+  
+1. Estimated values have reduced
+        precision, and associated tests have reduced power
+1. Categorization assumes relationship between predictor and
+    response is flat within intervals; far less reasonable than a
+    linearity assumption in most cases
+1. To make a continuous predictor be more accurately modeled when
+  categorization is used, multiple intervals are required
+1. Because of sample size limitations in the very low and very high
+  range of the variable, the outer intervals (e.g., outer quintiles)
+  will be wide, resulting in significant heterogeneity of subjects
+  within those intervals, and residual confounding
+1. Categorization assumes that there is a discontinuity in response
+  as interval boundaries are crossed.  Other than the effect of time
+  (e.g., an instant stock price drop after bad news), there are very
+  few examples in which such discontinuities have been shown to exist.
+1. Categorization only seems to yield interpretable estimates.
+    E.g. odds ratio for stroke for persons with a systolic blood
+    pressure $> 160$ mmHg compared to persons with a blood pressure
+    $\leq 160$ mmHg $\rightarrow$ interpretation of OR depends on
+  distribution of blood pressures in the sample (the proportion of
+  subjects $> 170$, $> 180$, etc.).  If blood pressure
+  is modeled as a continuous variable (e.g., using a regression
+  spline, quadratic, or linear effect) one can estimate the ratio of
+  odds for _exact_ settings of the predictor, e.g., the odds ratio for
+  200 mmHg compared to 120 mmHg.
+1. Categorization does not condition on full information.  When,
+  for example, the risk of stroke is being assessed for a new subject
+  with a known blood pressure (say 162~mmHg), the subject does not report
+  to her physician "my blood pressure exceeds 160" but rather reports
+  162 mmHg.  The risk for this subject will be much lower than that of
+  a subject with a blood pressure of 200 mmHg.
+1. If cutpoints are determined in a way that is not blinded to the
+  response variable, calculation of $P$-values and confidence
+  intervals requires special simulation techniques; ordinary
+  inferential methods are completely invalid.  E.g.:
+  cutpoints chosen by trial and error utilizing $Y$, even informally
+  $\rightarrow$ $P$-values too small and CLs not accurate^[If a cutpoint is chosen that minimizes the $P$-value and the resulting $P$-value is 0.05, the true type I error can easily be above 0.5 @hol04con.].
+1. Categorization not blinded to $Y$ $\rightarrow$ biased effect
+  estimates (@alt94dan, @sch94out)
+1. "Optimal" cutpoints do not replicate over studies.
+  @hol04con state that "... the optimal
+  cutpoint approach has disadvantages.  One of these is that in almost
+  every study where this method is applied, another cutpoint will
+  emerge. This makes comparisons across studies extremely difficult or
+  even impossible.  Altman et al. point out this problem for studies
+  of the prognostic relevance of the S-phase fraction in breast cancer
+  published in the literature.  They identified 19 different cutpoints
+  used in the literature; some of them were solely used because they
+  emerged as the 'optimal' cutpoint in a specific data set.  In a
+  meta-analysis on the relationship between cathepsin-D content and
+  disease-free survival in node-negative breast cancer patients, 12
+  studies were in included with 12 different cutpoints \ldots
+  Interestingly, neither cathepsin-D nor the S-phase fraction are
+  recommended to be used as prognostic markers in breast cancer in the
+  recent update of the American Society of Clinical Oncology."
+  @gia14opt demonstrated that many claimed
+  "optimal cutpoints" are just the observed median values in the
+  sample, which happens to optimize statistical power for detecting a
+  separation in outcomes.
+1. Disagreements in cutpoints (which are bound to happen whenever one
+  searches for things that do not exist) cause severe interpretation
+  problems.  One study may provide an odds
+  ratio for comparing body mass index (BMI) $> 30$ with BMI $\leq 30$,
+  another for comparing BMI $> 28$ with BMI $\leq 28$.  Neither of these has
+  a good definition and the two estimates are not comparable.
+1. Cutpoints are arbitrary and manipulable; cutpoints can be
+  found that can result in both positive and negative
+  associations @wai06fin.
+1. If a confounder is adjusted for by categorization, there will be
+  residual confounding that can be explained away by inclusion of the
+  continuous form of the predictor in the model in addition to the
+  categories.
+
+* To summarize: The use of a (single) cutpoint $c$ makes many
+  assumptions, including:  `r ipacue()` 
+  
+1. Relationship between $X$ and $Y$ is discontinuous at $X=c$ and
+    only $X=c$
+1. $c$ is correctly found as _the_ cutpoint
+1. $X$ vs. $Y$ is flat to the left of $c$
+1. $X$ vs. $Y$ is flat to the right of $c$
+1. The choice of $c$ does not depend on the values of other predictors
+
+
+Interactive demonstration of power loss of categorization vs.
+straight line and quadratic fits in OLS, with varying degree of
+nonlinearity and noise added to $X$ (must run in `RStudio`)
+
+`r mrg(movie("https://youtu.be/Q6snkhhTPnQM"))`
+
+```{r eval=FALSE}
+require(Hmisc)
+getRs('catgNoise.r')
+```
+
+Example^[From NHANES III; Diabetes Care 32:1327-34; 2009 adapted from Diabetes Care 20:1183-1197; 1997.] of misleading results from creating intervals (here, deciles) of a continuous predictor.  Final interval is extremely heterogeneous and is greatly influenced by very large glycohemoglobin values, creating the false impression of an inflection point at 5.9.
+
+<img src="nhanesIIIretinopathy.png" width="90%">
+
+See [this](https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/1471-2288-12-21) for excellent graphical examples of the harm of categorizing predictors, especially when using quantile groups.
+
+
+### Simple Nonlinear Terms
+`r mrg(sound("genreg-4"))`
+
+$$C(Y|X_{1}) = \beta_{0}+\beta_{1} X_{1}+\beta_{2} X_{1}^{2} .$$
+
+* $H_{0}:$ model is linear in $X_{1}$ vs. $H_{a}:$ model is `r ipacue()`
+  quadratic in $X_{1} \equiv H_{0}: \beta_{2}=0$.
+* Test of linearity may be powerful if true model is not extremely
+  non-parabolic
+* Predictions not accurate in general as many phenomena are
+  non-quadratic
+* Can get more flexible fits by adding powers higher than 2
+* But polynomials do not adequately fit logarithmic functions or
+  "threshold" effects, and have unwanted peaks and valleys.
+
+
+
+### Splines for Estimating Shape of Regression Function and Determining Predictor Transformations 
+
+* <b>Draftsman's _spline_</b>: flexible strip of metal or rubber used to `r ipacue()`
+trace curves.
+* **_Spline Function_**: piecewise polynomial
+* **_Linear Spline Function_**: piecewise linear function
+    + Bi-linear regression: model is $\beta_{0}+\beta_{1}X$ if $X \leq a$, $\beta_{2}+\beta_{3}X$ if $X > a$.
+    + Problem with this notation: two lines not constrained to join
+    + To force simple continuity: $\beta_{0} + \beta_{1}X +
+   \beta_{2}(X-a)\times [X>a] = \beta_{0} + \beta_{1}X_{1} +
+   \beta_{2}X_{2}$,<br>where $X_{2} = (X_{1}-a) \times [X_{1} > a]$.
+    + Slope is $\beta_{1}, X \leq a$, $\beta_{1}+\beta_{2}, X > a$.
+    + $\beta_{2}$ is the slope increment as you pass $a$
+
+
+More generally: $x$-axis divided into intervals with endpoints $a,b,c$
+(knots).
+
+\begin{array}{ccc}
+f(X) &=& \beta_{0}+\beta_{1}X+\beta_{2}(X-a)_{+}+\beta_{3}(X-b)_{+} \nonumber\\
+     &+& \beta_{4}(X-c)_{+} ,
+\end{array}
+
+where
+
+\begin{array}{ccc}
+(u)_{+}=&u,&u>0 ,\nonumber\\
+&0,&u\leq0 .
+\end{array}
+
+
+ `r ipacue()`
+ 
+\begin{array}{ccc}
+f(X) & = \beta_{0}+\beta_{1}X, & X\leq a \nonumber \\
+& = \beta_{0}+\beta_{1}X+\beta_{2}(X-a) & a<X\leq b \\
+& = \beta_{0}+\beta_{1}X+\beta_{2}(X-a)+\beta_{3}(X-b) & b<X\leq c \nonumber\\
+& = \beta_{0}+\beta_{1}X+\beta_{2}(X-a) & \nonumber\\
+& + \beta_{3}(X-b)+\beta_{4}(X-c) & c<X. \nonumber
+\end{array}
+
+```{r lspline2,echo=FALSE,cap='A linear spline function with knots at $a = 1, b = 3, c = 5$.'}
+#| label: fig-gen-lspline
+spar(bty='l')
+x <- c(0,1,3,5,6)
+y <- c(4,3,5.5,5,2)
+plot(x, y, type="l", xlab=expression(X), ylab=expression(f(X)), axes=FALSE)
+axis(1)
+axis(2, labels=FALSE)
+```
+
+$$C(Y|X) = f(X) = X\beta,$$
+where $X\beta = \beta_{0}+\beta_{1} X_{1}+\beta_{2} X_{2}+\beta_{3}X_{3}+\beta_{4} X_{4}$, and
+
+\begin{array}{cc}
+X_{1}=X             & X_{2} = (X-a)_{+}\nonumber\\
+X_{3}=(X-b)_{+}     & X_{4} = (X-c)_{+} .
+\end{array}
+
+Overall linearity in $X$ can
+be tested by testing $H_{0} : \beta_{2} = \beta_{3} = \beta_{4} = 0$.
+
+
+### Cubic Spline Functions 
+Cubic splines are smooth at knots (function, first and second derivatives
+agree) --- can't see joins.
+ `r ipacue()`
+
+\begin{array}{ccc}
+f(X) &=& \beta_{0}+\beta_{1}X+\beta_{2}X^{2}+\beta_{3}X^{3}\nonumber\\
+&+&\beta_{4}(X-a)_{+}^{3}+ \beta_{5}(X-b)_{+}^{3}+\beta_{6}(X-c)_{+}^{3}\\
+&=& X\beta\nonumber
+\end{array}
+
+
+\begin{array}{cc}
+X_{1}=X             & X_{2}=X^{2}\nonumber\\
+X_{3}=X^{3}         & X_{4}=(X-a)_{+}^{3}\\
+X_{5}=(X-b)_{+}^{3}     & X_{6}=(X-c)_{+}^{3}\nonumber .
+\end{array}
+
+$k$ knots $\rightarrow k+3$ coefficients excluding intercept.
+
+$X^2$ and $X^3$ terms must be included to allow nonlinearity when $X < a$.
+
+[stats.stackexchange.com/questions/421964](https://stats.stackexchange.com/questions/421964)
+has some useful descriptions of what happens at the knots, e.g.:
+
+Knots are where different cubic polynomials are joined, and
+  cubic splines force there to be three levels of continuity (the
+  function, its slope, and its acceleration or second derivative
+  (slope of the slope) do not change) at these points. At the knots
+  the jolt (third derivative or rate of change of acceleration) is
+  allowed to change suddenly, meaning the jolt is allowed to be
+  discontinuous at the knots. Between knots, jolt is constant.
+
+The following graphs show the function and its first three derivatives
+(all further derivatives are zero) for the function given by
+$f(x) = x + x^{2} + 2x^{3} + 10(x - 0.25)^{3}_{+} - 50(x - 0.5)^{3}_{+} -100(x - 0.75)^{3}_{+}$ for $x$ going from 0 to 1, where there are three knots, at $x=0.25, 0.5, 0.75$.
+
+```{r splinederivs,h=6.5,w=4,cap="A regular cubic spline function with three levels of continuity that prevent the human eye from detecting the knots.  Also shown is the function's first three derivatives.  Knots are located at $x=0.25, 0.5, 0.75$.  For $x$ beyond the outer knots, the function is not restricted to be linear.  Linearity would imply an acceleration of zero.  Vertical lines are drawn at the knots.",scap="Cubic spline function and its derivatives"}
+#| label: fig-gen-splinederivs
+spar(bty='l', mfrow=c(4,1), bot=-1.5)
+x  <- seq(0, 1, length=500)
+x1 <- pmax(x - .25, 0)
+x2 <- pmax(x - .50, 0)
+x3 <- pmax(x - .75, 0)
+b1 <- 1; b2 <- 1; b3 <- 2; b4 <- 10; b5 <- -50; b6 <- -100
+y  <- b1 * x + b2 * x^2 + b3 * x^3 + b4 * x1^3 + b5 * x2^3 + b6 * x3^3
+y1 <- b1     + 2*b2*x   + 3*b3*x^2 + 3*b4*x1^2 + 3*b5*x2^2 + 3*b6*x3^2
+y2 <-          2*b2     + 6*b3*x   + 6*b4*x1   + 6*b5*x2   + 6*b6*x3
+y3 <-                     6*b3     + 6*b4*(x1>0)+ 6*b5*(x2>0) + 6*b6*(x3>0)
+
+g <- function() abline(v=(1:3)/4, col=gray(.85))
+plot(x, y, type='l', ylab=''); g()
+text(0, 1.5, 'Function', adj=0)
+
+plot(x, y1, type='l', ylab=''); g()
+text(0, -15, 'First Derivative: Slope\nRate of Change of Function',
+     adj=0)
+plot(x, y2, type='l', ylab=''); g()
+text(0, -125, 'Second Derivative: Acceleration\nRate of Change of Slope',
+     adj=0)
+plot(x, y3, type='l', ylab=''); g()
+text(0, -400, 'Third Derivative: Jolt\nRate of Change of Acceleration',
+     adj=0)
+```
+
+
+
+### Restricted Cubic Splines {#sec-rcspline}
+`r mrg(sound("genreg-5"))`
+ `r ipacue()` 
+Stone and Koo @sto85: cubic splines poorly behaved in tails.
+Constrain function to be linear in tails. <br>
+$k+3 \rightarrow k-1$ parameters @dev86.
+
+To force linearity when $X < a$: $X^2$ and $X^3$ terms must be omitted
+<br>
+To force linearity when $X > $ last knot: last two $\beta$s are
+redundant, i.e., are just combinations of the other $\beta$s.
+
+The restricted spline function with $k$ knots $t_{1}, \ldots, t_{k}$
+is given by @dev86
+$$f(X) = \beta_{0}+\beta_{1} X_{1}+\beta_{2} X_{2}+\ldots+\beta_{k-1} X_{k-1},$$
+where $X_{1} = X$ and for $j=1, \ldots, k-2$,
+
+ `r ipacue()`
+
+$$\begin{array}{ccc}
+X_{j+1} &= &(X-t_{j})_{+}^{3}-(X-t_{k-1})_{+}^{3} (t_{k}-t_{j})/(t_{k}-t_{k-1})\nonumber\\
+&+&(X-t_{k})_{+}^{3} (t_{k-1}-t_{j})/(t_{k}-t_{k-1}).
+\end{array}$$ {#eq-rcspline-eq}
+
+
+$X_{j}$ is linear in $X$ for $X\geq t_{k}$.
+
+For numerical behavior and to put all basis functions for $X$ on the
+same scale, `R` `Hmisc` and `rms` package functions by default
+divide the terms above by $\tau = (t_{k} - t_{1})^{2}$.
+
+```{r rcscomp,h=3.5,w=4.5,cap='Restricted cubic spline component variables for $k = 5$ and knots at $X = .05, .275, .5, .725$, and $.95$.  Nonlinear basis functions are scaled by $\\tau$.  The left panel is a $y$--magnification of the right panel.  Fitted functions such as those in @fig-gen-rcsex will be linear combinations of these basis functions as long as knots are at the same locations used here.',scap='Restricted cubic spline component variables for 5 knots'}
+#| label: fig-gen-rcscomp
+require(Hmisc)
+spar(mfrow=c(1,2), left=-2)
+x <- rcspline.eval(seq(0,1,.01),
+                   knots=seq(.05,.95,length=5), inclx=T)
+xm <- x
+xm[xm > .0106] <- NA
+matplot(x[,1], xm, type="l", ylim=c(0,.01),
+        xlab=expression(X), ylab='', lty=1)
+matplot(x[,1], x,  type="l",
+        xlab=expression(X), ylab='', lty=1)
+```
+
+```{r rcsex,h=6,w=5.5,cap='Some typical restricted cubic spline functions for $k = 3, 4, 5, 6$.  The $y$--axis is $X\\beta$.  Arrows indicate knots. These curves were derived by randomly choosing values of $\\beta$ subject to standard deviations of fitted functions being normalized.',scap='Some typical restricted cubic spline functions'}
+#| label: fig-gen-rcsex
+spar(left=-2, bot=2, mfrow=c(2,2), ps=13)
+x <- seq(0, 1, length=300)
+for(nk in 3:6) {
+  set.seed(nk)
+  knots <- seq(.05, .95, length=nk)
+  xx <- rcspline.eval(x, knots=knots, inclx=T)
+  for(i in 1 : (nk - 1))
+    xx[,i] <- (xx[,i] - min(xx[,i])) /
+              (max(xx[,i]) - min(xx[,i]))
+  for(i in 1 : 20) {
+    beta  <- 2*runif(nk-1) - 1
+    xbeta <- xx %*% beta + 2 * runif(1) - 1
+    xbeta <- (xbeta - min(xbeta)) /
+             (max(xbeta) - min(xbeta))
+    if(i == 1) {
+      plot(x, xbeta, type="l", lty=1,
+           xlab=expression(X), ylab='', bty="l")
+      title(sub=paste(nk,"knots"), adj=0, cex=.75)
+      for(j in 1 : nk)
+        arrows(knots[j], .04, knots[j], -.03,
+               angle=20, length=.07, lwd=1.5)
+    }
+    else lines(x, xbeta, col=i)
+  }
+}
+``` 
+
+Interactive demonstration of linear and cubic spline fitting, plus
+ordinary $4^{th}$ order polynomial.  This can be run with
+`RStudio` or in an ordinary `R` session.
+
+`r mrg(movie("https://youtu.be/o_d4hmKhmsQ"))`
+
+```{r eval=FALSE}
+require(Hmisc)
+getRs('demoSpline.r')                 # if using RStudio
+getRs('demoSpline.r', put='source')   # if not
+```
+
+Paul Lambert's excellent self-contained interactive demonstrations of
+continuity restrictions, cubic polynomial, linear spline, cubic
+spline, and restricted cubic spline fitting is at
+[pclambert.net/interactivegraphs](https://pclambert.net/interactivegraphs).
+Jordan Gauthier
+has another nice interactive demonstration at [drjgauthier.shinyapps.io/spliny](https://drjgauthier.shinyapps.io/spliny).
+
+
+Once $\beta_{0}, \ldots, \beta_{k-1}$ are estimated, the restricted
+cubic spline can be restated in the form
+ `r ipacue()`
+
+$$\begin{array}{ccc}
+f(X) &=& \beta_{0}+\beta_{1}X+\beta_{2}(X-t_{1})_{+}^{3}+\beta_{3}(X-t_{2})_{+}^{3}\nonumber\\
+&& +\ldots+ \beta_{k+1}(X-t_{k})_{+}^{3}
+\end{array}$$ {#eq-rcspline-restate}
+
+by dividing $\beta_{2},\ldots,\beta_{k-1}$ by $\tau$ and computing
+
+\begin{array}{ccc}
+\beta_{k} &=&
+[\beta_{2}(t_{1}-t_{k})+\beta_{3}(t_{2}-t_{k})+\ldots\nonumber\\
+&& +\beta_{k-1}(t_{k-2}-t_{k})]/(t_{k}-t_{k-1})\nonumber\\
+\beta_{k+1} &= &
+[\beta_{2}(t_{1}-t_{k-1})+\beta_{3}(t_{2}-t_{k-1})+\ldots\\
+&& + \beta_{k-1}(t_{k-2}-t_{k-1})]/(t_{k-1}-t_{k})\nonumber .
+\end{array}
+
+A test of linearity in X can be obtained by testing
+
+$$H_{0} : \beta_{2} = \beta_{3} = \ldots = \beta_{k-1} = 0.$$
+
+Example: @sel10gly
+
+<img src="sel10gly.png" width="50%">
+
+
+### Choosing Number and Position of Knots {#sec-knots}
+`r mrg(sound("genreg-6"))`
+
+* Knots are specified in advance in regression splines `r ipacue()`
+* Locations not important in most situations---
+  @sto86, @dur89
+* Place knots where
+data exist --- fixed quantiles of predictor's marginal distribution
+* Fit depends more on choice of $k$
+
+```{r echo=FALSE}
+require(kableExtra)
+w <- data.frame(
+  k=3:7,
+	skip='    ',
+	a=c(   '',   '',     '', '.05',  '.025'),
+	b=c(   '',   '',  '.05', '.23', '.1833'),
+	c=c('.10', '.05','.275','.41','.3417'),
+	d=c( '.5', '.35',  '.5','.59',   '.5'),
+	e=c('.90', '.65','.725','.77','.6583'),
+	f=c(   '', '.95', '.95','.95','.8167'),
+	g=c(   '',    '',    '',   '', '.975'))
+kable(w, booktabs=TRUE, col.names=NULL) %>%
+  add_header_above(c('k'=1, ' '=1, 'Quantiles'=7)) %>%
+	kable_paper(full_width=FALSE)
+```
+
+<!--
+| k | \multicolumn{7}{|c}{Quantiles}   |
+|-----|-----|
+| 3 ||| .10 | .5 | .90 ||        |
+| 4 | | | .05 | .35 | .65 | .95 |  |
+| 5 | | .05 | .275 | .5 | .725 | .95 |  |
+| 6 | .05 | .23 | .41 | .59 | .77 | .95 |  |
+| 7 | .025 | .1833 | .3417 | .5 | .6583 | .8167 | .975   |
+-->
+
+$n<100$ -- replace outer quantiles with 5th smallest and 5th largest $X$
+(@sto85).
+
+Choice of $k$:
+
+* Flexibility of fit vs. $n$ and variance `r ipacue()`
+* Usually $k=3,4,5$.  Often $k=4$
+* Large $n$ (e.g. $n\geq 100$) -- $k=5$
+* Small $n$ ($<30$, say) -- $k=3$
+* Can use Akaike's information criterion (AIC) (@atk80, @hou90pre) to choose $k$
+* This chooses $k$ to maximize model likelihood ratio $\chi^{2} - 2k$.
+
+See @gov07com for a comparison of restricted cubic splines,
+fractional polynomials, and penalized splines.
+
+
+### Nonparametric Regression {#sec-nonpar.reg}
+`r mrg(sound("genreg-7"))`
+
+* Estimate tendency (mean or median) of $Y$ as a function of $X$ `r ipacue()`
+* Few assumptions
+* Especially handy when there is a single $X$
+* Plotted trend line may be the final result of the analysis
+* Simplest smoother: moving average <br>
+
+| $X$: | 1 | 2 | 3 | 5 | 8  |
+|-----|-----|-----|-----|-----|-----|
+| $Y$: | 2.1 | 3.8 | 5.7 | 11.1 | 17.2 |
+
+\begin{array}{ccc}
+\hat{E}(Y | X=2) &=& \frac{2.1+3.8+5.7}{3} \\
+\hat{E}(Y | X=\frac{2+3+5}{3}) &=& \frac{3.8+5.7+11.1}{3}
+\end{array}
+
+* overlap OK
+* problem in estimating $E(Y)$ at outer $X$-values
+* estimates very sensitive to bin width
+* Moving linear regression far superior to moving avg. (moving
+  flat line) `r ipacue()` 
+* @cle79 moving linear regression smoother _loess_ (locally weighted least squares) is the most popular
+  smoother.  To estimate central tendency of $Y$ at $X=x$:
+    + take all the data having $X$ values within a suitable interval
+   about $x$ (default is $\frac{2}{3}$ of the data)
+    + fit weighted least squares linear regression within this
+   neighborhood
+    + points near $x$ given the most weight^[Weight here means something different than regression coefficient.  It means how much a point is emphasized in developing the regression coefficients.]
+    + points near extremes of interval receive almost no weight
+    + loess works much better at extremes of $X$ than moving avg.
+    + provides an estimate at each observed $X$; other estimates
+   obtained by linear interpolation
+    + outlier rejection algorithm built-in
+
+* loess works for binary $Y$ --- just turn off outlier detection `r ipacue()`
+* Other popular smoother: Friedman's "super smoother"
+* For loess or supsmu amount of smoothing can be controlled by analyst
+* Another alternative: smoothing splines^[These place knots at all the observed data points but penalize coefficient estimates towards smoothness.]
+* Smoothers are very useful for estimating trends in residual
+  plots
+
+
+
+### Advantages of Regression Splines over Other Methods
+`r mrg(sound("genreg-8"))`
+Regression splines have several advantages (@har88):
+
+* Parametric splines can be fitted using any existing `r ipacue()`
+regression program
+* Regression coefficients estimated using standard
+techniques (ML or least squares), formal tests of no overall association, linearity, and additivity, confidence limits for the estimated regression
+function are derived by standard theory.
+* The fitted function directly estimates transformation predictor
+should receive to yield linearity in $C(Y|X)$.
+* Even when a simple transformation is obvious, spline function
+can be used to represent the predictor in the final model (and the
+d.f. will be correct).  Nonparametric methods do not yield a
+prediction equation.
+* Extension to non-additive models.  <br> Multi-dimensional
+nonparametric estimators often require burdensome computations.
+
+
+
+## Recursive Partitioning: Tree-Based Models {#sec-tree.models} 
+@bre84cla: CART (Classification and Regression Trees) --- essentially model-free
+
+Method:
+
+* Find predictor so that best possible binary split has maximum `r ipacue()`
+    value of some statistic for comparing 2 groups
+* Within previously formed subsets, find best predictor and split
+    maximizing criterion in the subset
+* Proceed in like fashion until $<k$ obs. remain to split
+* Summarize $Y$ for the terminal node (e.g., mean, modal category)
+* Prune tree backward until it cross-validates as well as its
+    "apparent" accuracy, or use shrinkage
+
+
+
+Advantages/disadvantages of recursive partitioning:
+
+* Does not require functional form for predictors `r ipacue()`
+* Does not assume additivity --- can identify complex interactions
+* Can deal with missing data flexibly
+* Interactions detected are frequently spurious
+* Does not use continuous predictors effectively
+* Penalty for overfitting in 3 directions
+* Often tree doesn't cross-validate optimally unless pruned
+        back very conservatively
+* Very useful in messy situations or those in which overfitting
+        is not as problematic (confounder adjustment using propensity
+        scores @coo88asy; missing value imputation)
+
+See @aus10log.
+
+
+### New Directions in Predictive Modeling
+`r mrg(sound("genreg-9"))`
+The approaches recommended in this course are
+
+* fitting fully pre-specified models without deletion of `r ipacue()`
+  "insignificant" predictors
+* using data reduction methods (masked to $Y$) to reduce the
+  dimensionality of the predictors and then fitting the number of
+  parameters the data's information content can support
+* use shrinkage (penalized estimation) to fit a large model
+  without worrying about the sample size.
+
+The data reduction approach can yield very interpretable, stable
+models, but there are many decisions to be made when using a two-stage
+(reduction/model fitting) approach,  Newer approaches are evolving,
+including the following.  These new approach handle continuous
+predictors well, unlike recursive partitioning.
+
+* lasso (shrinkage using L1 norm favoring zero regression `r ipacue()`
+  coefficients) - @tib96reg, @ste00pro
+* elastic net (combination of L1 and L2 norms that handles the
+  $p > n$ case better than the lasso) @zou05reg
+* adaptive lasso @zha07ada, @wan07uni
+* more flexible lasso to differentially penalize for variable
+  selection and for regression coefficient estimation (@rad08var)
+* group lasso to force selection of all or none of a group of
+  related variables (e.g., indicator variables representing a polytomous
+  predictor)
+* group lasso-like procedures that also allow for variables within a
+  group to be removed (@wan09hie)
+* sparse-group lasso using L1 and L2 norms to achieve spareness on
+  groups and within groups of variables (@sim13spa)
+* adaptive group lasso (Wang \& Leng)
+* Breiman's nonnegative garrote (@xio10som)
+* "preconditioning", i.e., model simplification after developing
+  a "black box" predictive model - @pau08pre,@not10bay
+* sparse principal components analysis to achieve
+  parsimony in data reduction @wit08tes,@zou06spa,@len09gen,@lee10spa
+* bagging, boosting, and random forests @has08ele
+
+One problem prevents most of these methods from being ready for everyday use: `r ipacue()` 
+they require scaling predictors before fitting the model.  When a
+predictor is represented by nonlinear basis functions, the scaling
+recommendations in the literature are not sensible.  There are also
+computational issues and difficulties obtaining hypothesis tests and
+confidence intervals.
+
+When data reduction is not required, generalized additive
+models @has90gen, @woo06gen should also be considered.
+
+
+
+### Choosing Between Machine Learning and Statistical Modeling
+
+* Statistical models allow for complexity (nonlinearity, interaction)
+* Easy to allow every predictor to have nonlinear effect
+* Easy to handle unlimited numbers of candidate predictors if
+  assume additivity (e.g., using ridge regression, lasso, elastic net)
+* Interactions should be pre-specified
+* Machine learning is gaining attention but is oversold in some settings
+`r mrg(blog("medml"))`
+* Researchers are under the mistaken impression that machine
+  learning can be used on small samples
+`r mrg(blog("ml-sample-size"))`
+
+
+**Considerations in Choosing One Approach over Another**
+
+A statistical model may be the better choice if
+
+* Uncertainty is inherent and the signal:noise ratio is not large;
+  even with identical twins, one twin may
+  get colon cancer and the other not; model tendencies instead of
+  doing classification
+* One could never have perfect training data, e.g., cannot
+  repeatedly test one subject and have outcomes assessed without error
+* One wants to isolate effects of a small number of variables
+* Uncertainty in an overall prediction or the effect of a
+  predictor is sought
+* Additivity is the dominant way that predictors affect the
+  outcome, or interactions are relatively small in number and can be
+  pre-specified
+* The sample size isn't huge
+* One wants to isolate (with a predominantly additive effect) the
+  effects of "special" variables such as treatment or a risk factor
+* One wants the entire model to be interpretable
+
+
+Machine learning may be the better choice if
+
+* The signal:noise ratio is large and the outcome being predicted 
+  doesn't have a strong component of
+  randomness; e.g., in visual pattern recognition an object must be an "E"
+  or not an "E"
+* The learning algorithm can be trained on an unlimited number of
+  exact replications (e.g., 1000 repetitions of each letter in the
+  alphabet or of a certain word to be translated to German)
+* Overall prediction is the goal, without being able to succinctly
+  describe the impact of any one variable (e.g., treatment)
+* One is not very interested in estimating uncertainty in
+  forecasts or in effects of select predictors
+* Non-additivity is expected to be strong and can't be isolated to
+  a few pre-specified variables (e.g., in visual pattern recognition
+  the letter "L" must have both a dominating vertical component and
+  a dominating horizontal component)
+* The sample size is huge (@plo14mod)
+* One does not need to isolate the effect of a special variable
+  such as treatment
+* One does not care that the model is a "black box"
+
+
+
+
+## Multiple Degree of Freedom Tests of Association  {#sec-multiple.df}
+`r mrg(sound("genreg-10"))` 
+ `r ipacue()`
+$$C(Y|X) = \beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2}+\beta_{3}X_{2}^{2} ,$$
+$H_{0}: \beta_{2}=\beta_{3}=0$ with 2 d.f. to assess association
+between $X_{2}$ and outcome.
+
+In the 5-knot restricted cubic spline model
+$$C(Y|X) = \beta_{0}+\beta_{1}X+\beta_{2}X'+\beta_{3}X''+\beta_{4}X''' ,$$
+$H_{0}: \beta_{1}=\ldots=\beta_{4}=0$
+
+* Test of association: 4 d.f. `r ipacue()`
+* Insignificant $\rightarrow$ dangerous to interpret plot
+* What to do if 4 d.f. test insignificant, 3 d.f. test for
+    linearity insig., 1 d.f. test sig. after delete nonlinear
+    terms?
+
+@gra91 elegantly described the hazards of
+pretesting
+
+* Studied quadratic regression `r ipacue()`
+* Showed 2 d.f. test of association is nearly optimal even when
+  regression is linear if nonlinearity **entertained**
+* Considered ordinary regression model <br>
+$E(Y|X) =\beta_{0}+\beta_{1}X+\beta_{2}X^{2}$
+* Two ways to test association between $X$ and $Y$
+* Fit quadratic model and test for linearity ($H_{0}:
+  \beta_{2}=0$)
+* $F$-test for linearity significant at $\alpha=0.05$ level
+  $\rightarrow$ report as the
+  final test of association the 2 d.f. $F$ test of $H_{0}:
+  \beta_{1}=\beta_{2}=0$
+* If the test of linearity insignificant, refit without the
+  quadratic term and final test of association is  1 d.f. test,
+  $H_{0}:\beta_{1}=0 | \beta_{2}=0$
+* Showed that type I error $> \alpha$
+* Fairly accurate $P$-value obtained by instead testing against
+  $F$ with 2 d.f. even at second stage
+* Cause: are retaining the most significant part of $F$
+* **BUT** if test against 2 d.f. can only lose power when
+  compared with original $F$ for testing both $\beta$s
+* $SSR$ from quadratic model $> SSR$ from linear model
+
+
+
+## Assessment of Model Fit
+`r mrg(sound("genreg-11"))` 
+
+### Regression Assumptions
+The general linear regression model is `r ipacue()` 
+$$C(Y|X) = X\beta =\beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2}+\ldots+\beta_{k}X_{k} .$$
+Verify linearity and additivity.  Special case:
+$$C(Y|X) = \beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2},$$
+where $X_{1}$ is binary and $X_{2}$ is continuous.
+
+```{r regass,echo=FALSE,cap='Regression assumptions for one binary and one continuous predictor'}
+#| label: fig-gen-regass
+spar(axes=FALSE)
+plot(0:1, 0:1, xlab=expression(X[2]), ylab=expression(C(Y)),
+     axes=FALSE,  type='n')
+axis(1, at=0:1, labels=rep('',2))
+axis(2, at=0:1, labels=rep('',2))
+lines(c(.05, .8), c(.05, .5))
+lines(c(.05, .8), c(.30, .75))
+text(.9, .5, expression(X[1]==0), adj=.5)
+text(.9, .75,expression(X[1]==1), adj=.5)
+```
+
+Methods for checking fit:
+
+1. Fit simple linear additive model and check examine `r ipacue()`
+  residual plots for patterns
+ 
+* For OLS: box plots of $e$ stratified by $X_{1}$,
+  scatterplots of $e$ vs. $X_{2}$ and $\hat{Y}$, with trend
+  curves (want flat central tendency, constant variability)
+* For normality, `qqnorm` plots of overall and stratified
+   residuals
+
+**Advantage**: Simplicity
+
+**Disadvantages**:
+ 
+* Can only compute standard residuals for uncensored continuous
+   response
+* Subjective judgment of non-randomness
+* Hard to handle interaction
+* Hard to see patterns with large $n$ (trend lines help)
+* Seeing patterns does not lead to corrective action
+
+1. Scatterplot of $Y$ vs. $X_{2}$ using different symbols
+  according to values of $X_{1}$ `r ipacue()`  <br>
+ **Advantages**: Simplicity, can see interaction
+
+ **Disadvantages**:
+ 
+* Scatterplots cannot be drawn for binary, categorical, or
+   censored $Y$
+* Patterns difficult to see if relationships are weak or $n$
+   large
+
+1. Stratify the sample by $X_{1}$ and quantile groups (e.g.
+  deciles) of $X_{2}$; estimate $C(Y|X_{1},X_{2})$ for each stratum <br>
+ **Advantages**: Simplicity, can see interactions, handles
+ censored $Y$ (if you are careful)
+
+ **Disadvantages**:
+ 
+* Requires large $n$
+* Does not use continuous var. effectively (no interpolation)
+* Subgroup estimates have low precision
+* Dependent on binning method
+
+1. Separately for levels of $X_{1}$ fit a nonparametric smoother
+  relating $X_{2}$ to $Y$  `r ipacue()`  <br>
+ **Advantages**: All regression aspects of the model can be
+ summarized efficiently with minimal assumptions
+
+ **Disadvantages**:
+ 
+* Does not apply to censored $Y$
+* Hard to deal with multiple predictors
+
+1. Fit flexible nonlinear parametric model
+
+ **Advantages**:
+ 
+* One framework for examining the model assumptions, fitting the
+   model, drawing formal inference
+* d.f. defined and all aspects of statistical
+  inference "work as advertised"
+
+ **Disadvantages**:
+ 
+* Complexity
+* Generally difficult to allow for interactions when assessing
+   patterns of effects
+
+
+Confidence limits, formal inference can be problematic for methods 1-4. `r ipacue()` 
+
+Restricted cubic spline works well for method 5.
+
+\begin{array}{ccc}
+\hat{C}(Y|X) &=& \hat{\beta}_{0}+\hat{\beta}_{1}X_{1}+\hat{\beta}_{2}X_{2}+\hat{\beta}_{3}X_{2}'+\hat{\beta}_{4}X_{2}'' \nonumber\\
+&=& \hat{\beta}_{0}+\hat{\beta}_{1}X_{1}+\hat{f}(X_{2}) ,
+\end{array}
+
+where
+$$\hat{f}(X_{2}) = \hat{\beta}_{2}X_{2}+\hat{\beta}_{3}X_{2}'+\hat{\beta}_{4}X_{2}'' ,$$
+$\hat{f}(X_{2})$ spline-estimated transformation of $X_{2}$.
+
+* Plot $\hat{f}(X_{2})$ vs. $X_{2}$ `r ipacue()`
+* $n$ large $\rightarrow$ can fit separate functions by $X_{1}$
+* Test of linearity: $H_{0}:\beta_{3}=\beta_{4}=0$
+* Few good reasons to do the test other than to demonstrate that
+  linearity is not a good default assumption
+* Nonlinear $\rightarrow$ use transformation suggested by spline fit
+    or keep spline terms
+* Tentative transformation $g(X_{2})$ $\rightarrow$ check adequacy
+    by expanding $g(X_{2})$ in spline function and testing linearity
+* Can find transformations by plotting $g(X_{2})$ vs. $\hat{f}(X_{2})$ for
+    variety of $g$
+* Multiple continuous predictors $\rightarrow$ expand each using spline
+* Example: assess linearity of $X_{2}, X_{3}$
+
+
+ `r ipacue()`
+
+\begin{array}{ccc}
+C(Y|X) &=& \beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2}+\beta_{3}X_{2}'+\beta_{4}X_{2}'' \nonumber\\
+&+& \beta_{5}X_{3}+\beta_{6}X_{3}'+\beta_{7}X_{3}'' ,
+\end{array}
+
+Overall test of linearity $H_{0}: \beta_{3}=\beta_{4}=\beta_{6}=\beta_{7}=0$, with 4 d.f.
+
+
+### Modeling and Testing Complex Interactions {#sec-interaction.surface}
+`r mrg(sound("genreg-12"))`  
+**Note**: Interactions will be misleading if main effects are not properly modeled (@zha20int).
+
+Suppose $X_1$ binary or linear, $X_2$ continuous:
+ `r ipacue()`
+
+\begin{array}{ccc}
+C(Y|X) & = & \beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2}+\beta_{3}X_{2}'+\beta_{4}X_{2}'' \\ \nonumber
+&&+\beta_{5}X_{1}X_{2}+\beta_{6}X_{1}X_{2}'+\beta_{7}X_{1}X_{2}''
+\end{array}
+
+Simultaneous test of linearity and additivity:
+$H_{0}: \beta_{3} = \ldots = \beta_{7} = 0$.
+
+* 2 continuous variables: could transform separately and form `r ipacue()`
+    simple product
+* **But** transformations depend on whether interaction terms
+  adjusted for, so it is usually not possible to estimate
+  transformations and interaction effects other than simultaneously
+* Compromise: Fit interactions of the form $X_{1} f(X_{2})$ and
+  $X_{2} g(X_{1})$:
+
+ `r ipacue()`
+
+$$\begin{array}{ccc}
+C(Y|X) & = & \beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{1}'+\beta_{3}X_{1}'' \nonumber\\
+&+& \beta_{4}X_{2}+\beta_{5}X_{2}'+\beta_{6}X_{2}'' \nonumber\\
+&+& \beta_{7}X_{1}X_{2}+\beta_{8}X_{1}X_{2}'+\beta_{9}X_{1}X_{2}'' \\
+&+& \beta_{10}X_{2}X_{1}'+\beta_{11}X_{2}X_{1}'' \nonumber
+\end{array}$$ {#eq-restricted-ia}
+
+
+* Test of additivity is $H_{0}: \beta_{7} = \beta_{8} = \ldots =  \beta_{11} = 0$ with 5 d.f.  `r ipacue()`
+* Test of lack of fit for the simple product interaction with
+  $X_{2}$ is $H_{0}: \beta_{8} = \beta_{9} = 0$
+* Test of lack of fit for the simple product interaction with
+  $X_{1}$ is $H_{0}: \beta_{10} = \beta_{11} = 0$
+
+
+General spline surface:
+
+* Cover $X_{1} \times X_{2}$ plane with grid and `r ipacue()`
+    fit patch-wise cubic polynomial in two variables
+* Restrict to be of form $aX_{1}+bX_{2}+cX_{1}X_{2}$ in corners
+* Uses all    $(k-1)^{2}$ cross-products of restricted cubic
+    spline terms
+* See @gra92fle, @gra94spl for penalized splines
+    allowing control of effective degrees of freedom.  See
+    @ber08usi for a good discussion of tensor splines.
+
+
+```{r echo=FALSE}
+#| label: fig-gen-image-stroke
+#| fig-cap: "Logistic regression estimate of probability of a hemorrhagic stroke for patients in the GUSTO-I trial given $t$-PA, using a tensor spline of two restricted cubic splines and penalization (shrinkage).  Dark (cold color) regions are low risk, and bright (hot) regions are higher risk."
+#| fig-scap: "Probability of hemorrhagic stroke vs. blood pressures"
+knitr::include_graphics('image-stroke.png')
+```
+
+ @fig-gen-image-stroke is particularly interesting
+ because the literature had suggested (based on approximately 24
+ strokes) that pulse pressure was the main
+ cause of hemorrhagic stroke whereas this flexible modeling approach
+ (based on approximately 230 strokes)
+ suggests that mean arterial blood pressure (roughly a $45^\circ$ line)
+ is what is most important
+ over a broad range of blood pressures.  At the far right one can see
+ that pulse pressure (axis perpendicular to $45^\circ$ line) may have
+ an impact although a non-monotonic one.
+
+Other issues:
+
+* $Y$ non-censored (especially continuous) $\rightarrow$ multi-dimensional `r ipacue()`
+    scatterplot smoother (@Swhite)
+* Interactions of order $>2$: more trouble
+* 2-way interactions among $p$ predictors: pooled tests
+* $p$ tests each with $p-1$ d.f.
+
+
+Some types of interactions to pre-specify in clinical studies:
+
+* Treatment $\times$ severity of disease being treated `r ipacue()`
+* Age $\times$ risk factors
+* Age $\times$ type of disease
+* Measurement $\times$ state of a subject during measurement
+* Race $\times$ disease
+* Calendar time $\times$ treatment
+* Quality $\times$ quantity of a symptom
+* Measurement $\times$ amount of deterioration of the measurement
+
+<!-- \nosound -->
+The last example is worth expanding as an example in model formulation.  Consider the following study.
+
+
+* A sample of patients seen over several years have a blood sample taken at time of hospitalization `r ipacue()`
+* Blood samples are frozen
+* Long after the last patient was sampled, the blood samples are thawed all in the same week and a blood analysis is done
+* It is known that the quality of the blood analysis deteriorates roughly logarithmically by the age of the sample; blood measurements made on old samples are assumed to be less predictive of outcome
+* This is reflected in an interaction between a function of sample age and the blood measurement `B`^[For continuous $Y$ one might need to model the residual variance of $Y$ as increasing with sample age, in addition to modeling the mean function.]
+* Patients were followed for an event, and the outcome variable of interest is the time from hospitalization to that event
+* To not assume a perfect logarithmic relationship for sample age on the effect of the blood measurement, a restricted cubic spline model with 3 default knots will be fitted for log sample age
+* Sample age is assumed to not modify the effects of non-blood predictors patient `age` and `sex`
+* Model may be specified the following way using the `R` `rms` package to fit a Cox proportional hazards model
+* Test for nonlinearity of `sampleAge` tests the adequacy of assuming a plain logarithmic trend in sample age
+
+```{r detmodel,eval=FALSE}
+f <- cph(Surv(etime, event) ~ rcs(log(sampleAge), 3) * rcs(B, 4) +
+           rcs(age, 5) * sex, data=mydata)
+```
+The `B` $\times$ `sampleAge` interaction effects have 6 d.f. and tests whether the sample deterioration affects the effect of `B`.  By not assuming that `B` has the same effect for old samples as for young samples, the investigator will be able to estimate the effect of `B` on outcome when the blood analysis is ideal by inserting `sampleAge` = 1 day when requesting predicted values as a function of `B`.
+<!-- \enosound -->
+
+
+### Fitting Ordinal Predictors
+
+* Small no. categories (3-4) $\rightarrow$ polytomous factor, indicator variables `r ipacue()`
+* Design matrix for easy test of adequacy of initial codes $\rightarrow$
+    $k$ original codes + $k-2$ indicators
+* More categories $\rightarrow$ score using data-driven trend.  Later
+    tests use $k-1$ d.f. instead of 1 d.f.
+* E.g., compute logit(mortality) vs. category
+* Much better: used penalized maximum likelihood estimation (`R`
+  `ordSmooth` package) or Bayesian shrinkage (`R` `brms` package).
+
+
+### Distributional Assumptions
+
+* Some models (e.g., logistic): all assumptions in $C(Y|X)=X\beta$ `r ipacue()`
+    (implicitly assuming no omitted variables!)
+* Linear regression: $Y \sim X\beta + \epsilon,
+    \epsilon \sim n(0,\sigma^{2})$
+* Examine distribution of residuals
+* Some models (Weibull, @cox72): <br>
+    $C(Y|X) = C(Y=y|X) = d(y)+X\beta$ <br>
+    $C =$ log hazard
+* Check form of $d(y)$
+* Show $d(y)$ does not interact with $X$
+
+
+## Complex Curve Fitting Example
+
+* Restricted cubic spline `r ipacue()`
+* Discontinuity (interrupted time series analysis)
+* Cyclic trend (seasonality)
+* Data from [academic.oup.com/ije/article/46/1/348/2622842](https://academic.oup.com/ije/article/46/1/348/2622842) by @ber17int
+* Rates of hospital admissions for acute coronary events in Sicily before and after a smoking ban on 2005-01
+* Poisson regression on case counts, adjusted for population size
+  as an offset variable (analyzes event rate) (see [stats.stackexchange.com/questions/11182](https://stats.stackexchange.com/questions/11182))
+* Classic interrupted time series puts a discontinuity at the intervention point and assesses statistical evidence for a nonzero jump height
+* We will do that and also fit a continuous cubic spline but with multiple knots near the intervention point
+* All in context of long-term and seasonal trends
+* Uses the `rms` package `gTrans` function documented at [hbiostat.org/R/rms/gtrans.html](https://hbiostat.org/R/rms/gtrans.html)
+* Can do this without `gTrans` but harder to plot predicted values, get contrasts, and get chunk tests
+* Time variable is months after 2001-12-01
+
+
+```{r sicily}
+require(rms)  # engages rms which also engages Hmisc which provides getHdata
+options(prType='html')   # applies to printing model fits
+getHdata(sicily)   # fetch dataset from hbiostat.org/data
+d    <- sicily
+dd   <- datadist(d);  options(datadist='dd')
+```
+
+Start with a standard restricted cubic spline fit, 6 knots at default quantile locations.  From the fitted Poisson model we estimate the number of cases per a constant population size of 100,000.
+
+```{r sic}
+g   <- function(x) exp(x) * 100000
+off <- list(stdpop=mean(d$stdpop))    # offset for prediction (383464.4)
+w   <- geom_point(aes(x=time, y=rate), data=d)
+v   <- geom_vline(aes(xintercept=37, col=I('red')))
+yl  <- ylab('Acute Coronary Cases Per 100,000')
+f   <- Glm(aces ~ offset(log(stdpop)) + rcs(time, 6), data=d, family=poisson)
+f$aic
+ggplot(Predict(f, fun=g, offset=off)) + w + v + yl
+```
+
+
+* To add seasonality to the model can add sine and/or cosine terms `r ipacue()`
+* See [pmean.com/07/CyclicalTrends.html](http://www.pmean.com/07/CyclicalTrends.html) by Steve Simon
+* If you knew the month at which incidence is a minimum, could just add a sine term to the model
+* Adding both sine and cosine terms effectively allows for a model parameter that estimates the time origin
+* Assume the period (cycle length) is 12m
+
+
+```{r sic2}
+# Save knot locations
+k  <- attr(rcs(d$time, 6), 'parms')
+k
+kn <- k
+# rcspline.eval is the rcs workhorse
+h <- function(x) cbind(rcspline.eval(x, kn),
+                       sin=sin(2*pi*x/12), cos=cos(2*pi*x/12))
+f <- Glm(aces ~ offset(log(stdpop)) + gTrans(time, h),
+         data=d, family=poisson)
+f$aic
+ggplot(Predict(f, fun=g, offset=off)) + w + v + yl
+```
+
+Next add more knots near intervention to allow for sudden change
+
+```{r sic3}
+kn <- sort(c(k, c(36, 37, 38)))
+f <- Glm(aces ~ offset(log(stdpop)) + gTrans(time, h),
+         data=d, family=poisson)
+f$aic
+ggplot(Predict(f, fun=g, offset=off)) + w + v + yl
+```
+
+Now make the slow trend simpler (6 knots) but add a discontinuity at the intervention. More finely control times at which predictions are requested, to handle discontinuity.
+
+```{r sic4}
+h <- function(x) cbind(rcspline.eval(x, k),
+                       sin=sin(2*pi*x/12), cos=cos(2*pi*x/12),
+                       jump=x >= 37)
+f <- Glm(aces ~ offset(log(stdpop)) + gTrans(time, h),
+         data=d, family=poisson)
+f$aic
+times <- sort(c(seq(0, 60, length=200), 36.999, 37, 37.001))
+ggplot(Predict(f, time=times, fun=g, offset=off)) + w + v + yl
+```
+
+Look at fit statistics especially evidence for the jump
+
+<small>
+```{r sic5,results='asis'}
+f
+```
+</small>
+
+
+* Evidence for an intervention effect (jump) `r ipacue()`
+* Evidence for seasonality
+* Could have analyzed rates using a semiparametric model
+
+
+
+
+```{r echo=FALSE}
+saveCap('02')
+```

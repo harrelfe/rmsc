@@ -1,0 +1,7 @@
+# Case Study in Ordinal Regression, Data Reduction, and Penalization {#sec-ordcase}
+
+See Chapter 14 of _Regression Modeling Strategies_, 2nd edition
+
+Note: Multinomial logistic regression would perhaps be a better solution to the problem posed for this case study.  It would require estimating more parameters but would be conceptually much simpler.
+
+
