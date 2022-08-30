@@ -50,7 +50,7 @@ book:
       - text: "Copyright 2022, Frank E Harrell Jr"
     right:
       - text: "License"
-        href: https://www.gnu.org/licenses/gpl-3.0.en.html
+        href: http://creativecommons.org/licenses/by-nc-sa/4.0
 
   navbar:
     collapse-below: xl
