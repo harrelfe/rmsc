@@ -115,11 +115,10 @@ with $X_{2}$.
 
 ## Strategies for Developing an Imputation Model
 
-\textbf{The goal of imputation is to preserve the information and
-  meaning of the non-missing data.}
+**The goal of imputation is to preserve the information and meaning of the non-missing data.**
+
 `r mrg(sound("missing-2"))`
 
-\medskip
 
 There is a full Bayesian modeling alternative to all the methods
 presented below.  The Bayesian approach requires more effort but has
@@ -197,7 +196,7 @@ Exactly how are missing values estimated?
     + Tukey's tricube function is a good weighting function (used in
    loess): $w_{i} = (1 - \min(d_{i}/s, 1)^{3})^{3}$, <br>
    $d_{i} = |\hat{y_{i}} - y^{*}|$ <br>
-   $s = 0.2\times\textrm{mean} |\hat{y_{i}} - y^{*}|$ is a good default
+   $s = 0.2\times\text{mean} |\hat{y_{i}} - y^{*}|$ is a good default
    scale factor <br>
    scale so that $\sum w_{i} = 1$
 
