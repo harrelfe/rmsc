@@ -15,9 +15,6 @@ rms[Multivariable Model Development] --> est[Estimation] --> pred[Prediction] --
 
 # Preface {.unnumbered}
 
-`r mrg(sound("philosophy"))`
-
-
 All standard regression models have assumptions that
 must be verified for the model to have power to test hypotheses and
 for it to be able to predict accurately. Of the principal assumptions
@@ -88,6 +85,9 @@ Students will
   nature of the problem
 
 ## Course Philosophy {#sec-philosophy}
+
+`r mrg(sound('philosophy'))`
+[The audio narration starts with the third bullet point listed here.]{.aside}
 
 * Modeling is the endeavor to transform data into information and information into either prediction or evidence about the data generating mechanism^[Thanks to Drew Levy for ideas that greatly improved this section.]
 * Models are usually the best descriptive statistics
