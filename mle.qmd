@@ -106,6 +106,10 @@ knitr::include_graphics('mle-liktest.png')
   
 * LR and score-based confidence intervals also exist. However, they are computationally more intensive than the confidence interval based on the Wald statistic
 
+* Profile likelihood confidence intervals are probably best.  See [here](https://stats.stackexchange.com/a/588832/4253) for a nice example showing how to compute profile intervals on derived parameters.
+
+<!-- added 2022-09-16 -->
+
 ---
 
 ## Boostrap Confidence Regions {#sec-mle-boot}
