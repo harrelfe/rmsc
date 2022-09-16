@@ -23,7 +23,7 @@ introduction to missing data and imputation concepts.
 
 * Quantify extent of missing data `r ipacue()`
 * Characterize types of subjects with missing data
-* Find sets of variables missing on same subjects
+* Find sets of variables that are missing on same subjects
 
 
 ## Missing Values for Different Types of Response Variables
