@@ -171,7 +171,8 @@ that further discusses the topic.
 To be able to run all the examples in the book, install current versions of the following `CRAN` packages:
 
 ```
-Hmisc, rms, data.table, nlme, rmsb, ggplot2, kableExtra, pcaPP, VGAM, MASS, leaps, rpart
+Hmisc, rms, data.table, nlme, rmsb, ggplot2
+kableExtra, pcaPP, VGAM, MASS, leaps, rpart
 ```
 
 ## License

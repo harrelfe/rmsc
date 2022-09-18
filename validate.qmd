@@ -1,9 +1,9 @@
 ```{r include=FALSE}
+options(qproject='rms', prType='html')
 require(Hmisc)
 getRs('reptools.r')
 getRs('qbookfun.r')
 hookaddcap()
-options(qproject='rms', prType='html')
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
 ```
 
