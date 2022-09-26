@@ -27,7 +27,7 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
         levels of interacting factors
 * Subtract estimates, anti-log, e.g., to get inter-quartile-range  `r ipacue()`
         odds or hazards ratios.  Base C.L. on s.e. of difference. See  @fig-coxcase-summary.
-* Partial effect plot: Plot effect of each predictor on $X\beta$ or some transformation.  See  @fig-coxcase-plot.
+* Partial effect plot: Plot effect of each predictor on $X\beta$ or some transformation.  See  @fig-coxcase-shapes.
         See also @kar09vis.
 * Nomogram.  See  @fig-coxcase-nomogram
 * Use regression tree to approximate the full model
@@ -183,12 +183,6 @@ for(i in 1:B) {
   x <- sort(y[s])
   m <- .5*(x[n2]+x[n21])
   M[i] <- m
-  if(i <= 20) {
-    w <- as.character(x)
-    cat(w, "& &", sprintf('%.1f',m),
-        if(i < 20) "<br><br>\n" else "<br><br> <br>hline\n",
-        file='~/doc/rms/validate/tab.tex', append=i > 1)
-  }
   points(i, mean(M[1:i]), pch=46)
   if(i>=10)	{
     q <- quantile(M[1:i], c(.1,.9))
