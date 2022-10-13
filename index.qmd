@@ -156,6 +156,8 @@ that further discusses the topic.
 * [Discussion board for the overall course](http://datamethods.org/rms)
 * [RMS main web site](https://hbiostat.org/rms)
 * Twitter: `#rmscourse`
+* Publicly available videos of the short course
+   + [Four hour short course](https://youtu.be/UPcpkIJXlvY) from useR!2022
 * [BBR course](https://hbiostat.org/bbrc)
 * Go directly to a YouTube video for RMS Session `n` by going to `bit.ly/yt-rmsn`
 * [Study questions](https://hbiostat.org/rms/qstudy.html)
