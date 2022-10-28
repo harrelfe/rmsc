@@ -4,11 +4,23 @@ options(qproject='rms')
 getRs('qbookfun.r')
 ```
 
+
+
 # Introduction {#sec-intro}
 
 `r mrg(movie("https://youtu.be/IiJ6pMs2BiA"))`
 
 ## Hypothesis Testing, Estimation, and Prediction
+
+```{mermaid}
+flowchart LR
+uses[Uses of models] --> test[Hypothesis testing]
+uses --> estimat[Estimation]
+uses --> pred[Prediction]
+test --> ftest["Formal tests<br>Formal model<br>comparison<br>(e.g. AIC)"]
+estimat --> festimat[Point and interval<br>estimation of one<br>predictor's effect]
+pred --> fpred[Estimated outcome<br>or outcome<br>tendency for<br>a subject]
+```
 
 Even when only testing $H_{0}$ a model based approach has advantages:
 
@@ -70,6 +82,14 @@ Statistical estimation is usually model-based
 ## Misunderstandings about Prediction vs. Classification
 
 `r mrg(sound("classification"), blogl("classification", "Classification vs. Prediction"))`
+
+```{mermaid}
+flowchart LR
+goal[Goal] --> predest[Estimation or Prediction]
+goal --> classif[Classification]
+predest --> whatpre[Continuous output<br><br>Handles close<br>calls and<br>gray zones<br><br>Provides input to<br>decision maker]
+classif --> whatclass[Categorical output<br><br>Hides close calls<br><br>Makes premature<br>decisions<br><br>Does not provide<br>sufficient input<br>to decision maker<br><br>Useful for quick<br>easy decisions or<br>when outcome<br>probabilities are<br>near 0 and 1]
+```
 
 * Many analysts desire to develop "classifiers" instead of `r ipacue()`
   predictions
@@ -288,6 +308,19 @@ General aspects to capture in the predictors:
 ## Model uncertainty / Data-driven Model Specification
 
 `r mrg(sound("uncertainty"))`
+
+```{mermaid}
+%%| column: screen-inset-right
+%%| fig-width: 8
+flowchart LR
+ms[Model Selection] --> pre[Pre-specified] --> eps[Try to specify<br>a model flexible<br>enough to fit<br><br>Fit assumed<br>to be adequate<br><br>Need not be perfect<br>but as good as<br>any model not<br>requiring larger N] --> nomu[No model<br>uncertainty,<br>accurate statistical<br>inference]
+ms --> bayes[Pre-specified<br>Bayesian model<br>with parameters<br>capturing departures<br>from simplicity] --> bac[No binary model<br>choices required] --> api[Accurate posterior<br>inference<br><br>Robust<br><br>Insights about<br>non-normality etc.]
+ms --> cont[Contest between<br>desired and<br>more general model] --> pair[Check if more<br>general model is<br>better for the money] --> mmu[Better way to<br>check goodness<br>of fit<br><br>Minimal model<br>uncertainty]
+ms --> emp[Empirical] --> gof[Goodness-of-fit<br>checking if<br>involves >2<br> pre-specified<br>models] --> dist
+emp --> empus[May be highly<br>unstable if<br>entertain many<br>models or do<br>feature<br>selection] --> dist[Distorted statistical<br>inference]
+ms --> ml[Machine learning] --> mluns[May be highly<br>unstable<br>unless N huge] --> noinf[No statistical inference]
+```
+
 
 * Standard errors, C.L., $P$-values, $R^2$ wrong if computed as `r ipacue()`
         if the model pre-specified

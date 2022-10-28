@@ -186,6 +186,7 @@ kableExtra, pcaPP, VGAM, MASS, leaps, rpart
 
 | Date | Sections | Changes |
 |:---|:-|:--------|
+| 2022-10-28 | [-@sec-intro]      | 3 new flowcharts |
 | 2022-10-28 | [-@sec-intro-gof]  | New subsection of model uncertainty and GOF |
 | 2022-09-16 | [-@sec-mle-ci]     | Link to nice profile likelihood CI example |
 
