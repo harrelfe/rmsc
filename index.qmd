@@ -184,8 +184,9 @@ kableExtra, pcaPP, VGAM, MASS, leaps, rpart
 ::: {.callout-note collapse="true"}
 # Update History
 
-| Date | Sections | Changes | Thanks To |
-|:-----|:---------|:--------|:----------|
-| 2022-09-16 | [-@sec-mle-ci]     | Link to nice profile likelihood CI example | |
+| Date | Sections | Changes |
+|:---|:-|:--------|
+| 2022-10-28 | [-@sec-intro-gof]  | New subsection of model uncertainty and GOF |
+| 2022-09-16 | [-@sec-mle-ci]     | Link to nice profile likelihood CI example |
 
 :::

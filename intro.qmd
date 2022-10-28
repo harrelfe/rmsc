@@ -305,7 +305,7 @@ General aspects to capture in the predictors:
 
 * See @luo06tun for an approach involving adding noise to
     $Y$ to improve variable selection
-* Another example: $t$-test to compare two means
+* Another example: $t$-test to compare two means   <!-- NEW -->
     + Basic test assumes equal variance and normal data
       distribution
     + Typically examine the two sample distributions to
@@ -322,3 +322,18 @@ General aspects to capture in the predictors:
        - Bayesian $t$-test: parameters for variance ratio and for
         d.f. of a $t$-distribution for the raw data (allows heavy
         tails)
+
+<!-- NEW 2022-10-28 -->
+
+### Model Uncertainty and Model Checking {#sec-intro-gof}
+
+As the Bayesian $t$-test exemplifies, there are advantages of a continuous approach to modeling instead of engaging in dichotomous goodness-of-fit (GOF) assessments.  Some general comments:
+
+* In a frequentist setting, GOF checking can inflate type I assertion probability $\alpha$ and make confidence intervals falsely narrow.  In a Bayesian setting, posterior distributions and resulting uncertainty intervals can be too narrow.
+* Rather than accepting or not accepting a proposed model on the basis of a GOF assessment, embed the proposed model inside a more general model that relaxes the assumptions, and use AIC or a formal test to decide between the two.  Comparing only two pre-specified models will result in minimal model uncertainty.
+   + More general model could include nonlinear terms and interactions
+   + It could also relax distributional assumptions, as done with the non-normality parameter in the Bayesian $t$-test
+   + Often the sample size is not large enough to allow model assumptions to be relaxed without overfitting; AIC assesses whether additional complexities are "good for the money". If a more complex model results in worse predictions due to overfitting, it is doubtful that such a model should be used for inference.
+* Instead of focusing on model assumption checking, focus on the [_impact_ of making those assumptions](https://fharrell.com/post/impactpo), using for example comparison of adjusted $R^2$ measures and bootstrap confidence intervals for differences in predicted values from two models.
+* In many situations you can use a [semiparametric model](https://fharrell.com/post/rpo) that makes many fewer assumptions than a parametric model
+* See [this](https://stats.stackexchange.com/questions/551264) for more in-depth discussion
