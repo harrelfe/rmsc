@@ -58,6 +58,7 @@ Some good general references on longitudinal data analysis are @davis-repmeas, @
   subjects in group 2, have a dummy variable for group 2, a time
   "main effect" curve with $k$ d.f. and all $k$ products of these
   time components with the dummy variable for group 2
+* Time should be modeled using indicator variables only when time is really discrete, e.g., when time is in weeks and subjects were followed at exactly the intended weeks.  In general time should be modeled continuously (and nonlinearly if there are more than 2 followup times) using actual visit dates instead of intended dates [@donnat].
 
 
 
@@ -147,7 +148,7 @@ time zero is that many studies have inclusion/exclusion criteria that
 include cutoffs on the baseline variable.  In other words, the
 baseline measurement comes from a truncated distribution.  In general
 it is not appropriate to model the baseline with the same
-distributional shape as the follow-up measurements.  Thus the approach
+distributional shape as the follow-up measurements.  Thus the approaches
 recommended by @lia00lon and
 @liu09sho are problematic^[In addition to this, one of the paper's conclusions that analysis of covariance is not appropriate if the population means of the baseline variable are not identical in the treatment groups is not correct [@sen06cha].  See @ken10sho for a rebuke of @liu09sho.].
 
@@ -167,7 +168,7 @@ recommended by @lia00lon and
     for individual subjects
     + Models without random effects are marginalized with respect to
   subject-specific effects
-    + They are natural when the interest is on group-level parameters
+    + They are natural when the interest is on group-level (i.e., covariate-specific but not patient-specific) parameters
   (e.g., overall treatment effect)
     + Random effects are natural when there is clustering at more
     than the subject level (multi-level models)
