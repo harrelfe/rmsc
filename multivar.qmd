@@ -492,7 +492,7 @@ for(j in 1:20) axis(1, at=j, labels=names(ybar)[j])
   Cessie [@hou90pre, Eq. 77]
 $$\hat{\gamma} = \frac{{\rm model}\ \chi^{2} - p}{{\rm model}\ \chi^{2}},$$ {#eq-heuristic-shrink}
 
-* OLS^[An excellent discussion about such indexes may be found [here](http://r.789695.n4.nabble.com/Adjusted-R-squared-formula-in-lm-td4656857.html).]:
+* OLS^[An excellent discussion about such indexes may be found [here](https://stats.stackexchange.com/questions/48703).]:
 $\hat{\gamma} = \frac{n-p-1}{n-1} R^{2}_{\rm adj} / R^{2}$ <br>
     $R^{2}_{\rm adj} = 1 - (1 - R^{2})\frac{n-1}{n-p-1}$
 * $p$ close to no. candidate variables

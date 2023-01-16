@@ -1,7 +1,15 @@
+```{r setup, include=FALSE}
+require(Hmisc)
+getRs('qbookfun.r')
+```
+
 # R Software {#sec-r}
+
 `R` allows interaction spline functions, wide variety of
 predictor parameterizations, wide variety of models, unifying model
-formula language, model validation by resampling.
+formula language, model validation by resampling. 
+
+
 
 `R` is comprehensive:
 
@@ -97,6 +105,10 @@ Some `R` functions:
 
 ## The `rms` Package
 
+`r mrg(rmsdisc())`
+
+[[FAQ](http://datamethods.org/rms)]{.aside}
+
 * `datadist` function to compute predictor distribution summaries 
 
 
@@ -143,6 +155,8 @@ procedures described in these notes:
 | `strat`  | Non-modeled stratification factors (used for `cph` only) | `strata`  |
 
 : `rms` Transformation Functions
+
+The transformation functions work also with regular R functions, e.g. when `predict()` is called the predicted values are computed by looking up the knot locations for `rcs`.
 
 
 Below notice that there are three graphic models implemented for

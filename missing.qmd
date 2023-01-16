@@ -73,6 +73,7 @@ Adding extra categories of categorical predictors---
 * Fails even under MCAR [@jon96ind; @all01mis; @don06rev; @hei06imp; @kno10unp]
 * May be OK if values are "missing" because of "not
   applicable"^[E.g. you have a measure of marital happiness, dichotomized as high or low, but your sample contains some unmarried people.  OK to have a 3-category variable with values high, low, and unmarried---Paul Allison, IMPUTE list, 4Jul09.]
+* May be OK for pure prediction where interpretation of coefficients is of no interest and patterns of missingness will be the same in future data as in the training data
 
 Likewise, serious problems are caused by setting missing continuous
 predictors to a constant (e.g., zero) and adding an indicator variable
@@ -411,7 +412,7 @@ the proportion of observations having _any_ variables missing.
   order" analysis by creating multiple imputations
   using different orderings of sometimes missing variables.  It may be
   beneficial to initially sort variables so that the one with the most
-  `NA`s will be imputed first.
+  `NA`s will be imputed first.  `aregImpute` cycles in the order the analyst specifies variables in the formula.
 
 
 Reason for missings more important than number of missing values.
