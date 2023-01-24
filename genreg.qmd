@@ -428,7 +428,7 @@ $$C(Y|X_{1}) = \beta_{0}+\beta_{1} X_{1}+\beta_{2} X_{1}^{2} .$$
 
 * <b>Draftsman's _spline_</b>: flexible strip of metal or rubber used to `r ipacue()`
 trace curves.
-* **_Spline Function_**: piecewise polynomial
+* **_Spline Function_**: piecewise polynomial[See [this](https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-019-0666-3) for a nice review and information about resources in R.]{.aside}
 * **_Linear Spline Function_**: piecewise linear function
     + Bi-linear regression: model is $\beta_{0}+\beta_{1}X$ if $X \leq a$, $\beta_{2}+\beta_{3}X$ if $X > a$.
     + Problem with this notation: two lines not constrained to join
