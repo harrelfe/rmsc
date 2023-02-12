@@ -29,12 +29,12 @@ categories
 Create a variable `acute` to flag categories of
 interest; print univariable descriptive statistics.
 
-```{r results='asis'}
+```{r}
 require(rms)
 options(prType='html')    # for print, summary, anova
 getHdata(support)          # Get data frame from web site
 acute <- support$dzclass %in% c('ARF/MOSF','Coma')
-html(describe(support[acute,]))
+describe(support[acute,])
 ```
 
  `r ipacue()` 
@@ -212,7 +212,7 @@ singularity problems once less promising predictors are simplified.
         but the audio is incorrect for $g$ and $g_{r}$.
 
 
-```{r results='asis'}
+```{r}
 f <- psm(S ~ rcs(age,5) + sex + dzgroup + num.co +
              scoma + pol(adlsc,2) + race2 + rcs(meanbp,5) +
              rcs(hrt,3) + rcs(resp,3) + temp +
@@ -240,7 +240,7 @@ ggplot(Predict(f, ref.zero=TRUE), vnames='names',
 
  `r ipacue()` 
  
-```{r results='asis'}
+```{r}
 a
 ```
 
@@ -269,12 +269,12 @@ plot(summary(f), log=TRUE, main='')
 Validate indexes describing the fitted model.
 
 
-```{r results='asis'}
+```{r}
 # First add data to model fit so bootstrap can re-sample
 #  from the data
 g <- update(f, x=TRUE, y=TRUE)
 set.seed(717)
-html(validate(g, B=120, dxy=TRUE))
+validate(g, B=120, dxy=TRUE)
 ```
 
 * From $D_{xy}$ and $R^2$ there is a moderate amount of `r ipacue()`
@@ -360,7 +360,7 @@ r[c(which.min(r), which.max(r))]
 
  `r ipacue()` 
 
-```{r results='asis'}
+```{r}
 f.approx$var <- v
 anova(f.approx, test='Chisq', ss=FALSE)
 ```
@@ -368,7 +368,7 @@ anova(f.approx, test='Chisq', ss=FALSE)
 
 Equation for simplified model:
 
-```{r results='asis'}
+```{r}
 # Typeset mathematical form of approximate model
 latex(f.approx)
 ```

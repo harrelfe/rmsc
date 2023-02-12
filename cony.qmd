@@ -77,12 +77,12 @@ ordinary linear models.
 * Subset with age $\geq 21$, neither diagnosed nor treated for DM
 
 
-```{r desc,results='asis'}
+```{r desc}
 require(rms)
-options(prType='html')   # for print, summary, anova
+options(prType='html')   # for print, summary, anova, describe
 getHdata(nhgh)
 w <- subset(nhgh, age >= 21 & dx==0 & tx==0, select=-c(dx,tx))
-html(describe(w))
+describe(w)
 dd <- datadist(w); options(datadist='dd')
 ```
 
@@ -252,18 +252,7 @@ are shown in Table @tbl-cony-ormdist.  `r ipacue()`
 | Gumbel minimum value| $1 - \exp(-\exp(y))$ | $\log(-\log(1 - y))$ | complementary $\log-\log$ | $1-P_{2}=(1-P_{1})^{\exp(\Delta)}$ |
 | Cauchy | $\frac{1}{\pi}\tan^{-1}(y) + \frac{1}{2}$ | $\tan[\pi(y - \frac{1}{2})]$ | cauchit |
 
-: Distribution families used in ordinal cumulative probability models. $\Phi$
-  denotes the Gaussian cumulative distribution function.  For the
-  Connection column, $P_{1}=\Pr[Y \geq y | X_{1}], P_{2}=\Pr[Y
-    \geq y | X_{2}], \Delta=(X_{2}-X_{1})\beta$.  The connection
-  specifies the only distributional assumption if the model is
-  fitted semiparametrically, i.e, contains
-  an intercept for every unique $Y$ value less one.  For parametric
-  models, $P_{1}$ must be specified absolutely instead of just
-  requiring a relationship between $P_{1}$ and $P_{2}$.  For example,
-  the traditional Gaussian parametric model specifies that
-  $\Pr[Y \geq y | X] = 1 - \Phi(\frac{y - X\beta}{\sigma})
-  = \Phi(\frac{-y + X\beta}{\sigma})$. {#tbl-cony-ormdist}
+: Distribution families used in ordinal cumulative probability models. $\Phi$ denotes the Gaussian cumulative distribution function.  For the Connection column, $P_{1}=\Pr[Y \geq y | X_{1}], P_{2}=\Pr[Y \geq y | X_{2}], \Delta=(X_{2}-X_{1})\beta$.  The connection specifies the only distributional assumption if the model is fitted semiparametrically, i.e, contains an intercept for every unique $Y$ value less one.  For parametric models, $P_{1}$ must be specified absolutely instead of just requiring a relationship between $P_{1}$ and $P_{2}$.  For example, the traditional Gaussian parametric model specifies that $\Pr[Y \geq y | X] = 1 - \Phi(\frac{y - X\beta}{\sigma}) = \Phi(\frac{-y + X\beta}{\sigma})$. {#tbl-cony-ormdist}
 
 The Gumbel maximum value distribution is also called the extreme value
 type I distribution.  This distribution
@@ -530,7 +519,7 @@ summary of height and weight for estimating median `gh`.
     and weight
 
 
-```{r htwtcoef,results='asis'}
+```{r htwtcoef}
 f <- orm(gh ~ rcs(age,5) + log(ht) + log(wt),
          family=loglog, data=w)
 f
@@ -559,8 +548,8 @@ likelihood free of the intercepts $\alpha$ (and requires a second
 step to estimate these log discrete hazard components) whereas we are
 using a full marginal likelihood of the ranks of $Y$ [@kal73].
 
-```{r coxhtwtcoef,results='asis'}
-print(cph(Surv(gh) ~ rcs(age,5) + log(ht) + log(wt), data=w))
+```{r coxhtwtcoef}
+cph(Surv(gh) ~ rcs(age,5) + log(ht) + log(wt), data=w)
 ```
 
 Back up and look at all body size measures, and examine their
@@ -622,7 +611,7 @@ model is fit using
 casewise deletion, then we do a composite test to assess whether any
 of the frequently-missing predictors is important.
 
-```{r fitfullcasewise,results='asis'}
+```{r fitfullcasewise}
 f <- orm(gh ~ rcs(age,5) + sex + re + rcs(wt,3) + rcs(leg,3) + arml +
          rcs(armc,3) + rcs(waist,4) + tri + rcs(sub,3),
          family=loglog, data=w, x=TRUE, y=TRUE)
@@ -677,9 +666,9 @@ g <- function() {
 v <- runifChanged(g)
 ```
 
-```{r prval,results='asis'}
+```{r prval}
 # Show number of variables selected in first 30 boots
-html(v)
+v
 ```
 
 Next fit the reduced model.  Use multiple imputation to impute missing
@@ -687,7 +676,7 @@ Next fit the reduced model.  Use multiple imputation to impute missing
 Do an ANOVA for the reduced model,  `r ipacue()`  taking imputation into account.
 
 
-```{r sanova,results='asis'}
+```{r sanova}
 h <- function() {
   a <- aregImpute(~ gh + wt + ht + bmi + leg + arml + armc + waist +
                   tri + sub + age +re, data=w, n.impute=5, pr=FALSE)

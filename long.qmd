@@ -382,7 +382,7 @@ dystonia from nine U.S. sites.
 #| label: fig-long-spaghetti
 require(rms)
 require(data.table)
-options(prType='html')    # for model print, summary, anova
+options(prType='html')    # for model print, summary, anova, validate
 getHdata(cdystonia)
 setDT(cdystonia)          # convert to data.table
 cdystonia[, uid := paste(site, id)]   # unique subject ID
@@ -455,7 +455,7 @@ this the continuous-time AR1 and exponential structures are tied for
 the best.  For the remainder of the analysis use `corCAR1`,
 using `Gls`. [ @kes98com did a simulation study to study the reliability of AIC for selecting the correct covariance structure in repeated measurement models.  In choosing from among 11 structures, AIC selected the correct structure 47% of the time.  @gur11avo demonstrated that fixed effects in a mixed effects model can be biased, independent of sample size, when the specified covariate matrix is more restricted than the true one.]{.aside}
 
-```{r l,results='asis'}
+```{r l}
 ```
 $\hat{\rho} = 0.8672$, the estimate of the correlation between two  `r ipacue()` 
 measurements taken one week apart on the same subject.  The estimated
@@ -477,7 +477,7 @@ Now get hypothesis tests, estimates, and graphically interpret the
 model.
 `r mrg(sound("gls-11"))`
 
-```{r m,results='asis'}
+```{r m}
 ```
 
 ```{r fig-long-anova,cap='Results of `anova.rms` from generalized least squares fit with continuous time AR1 correlation structure',w=5,h=4}
@@ -490,7 +490,7 @@ model.
 ```
 
 
-```{r o,results='asis'}
+```{r o}
 ```
 
 ```{r p}
@@ -532,7 +532,7 @@ plot(n, cex.axis=.55, cex.var=.8, lmgp=.25)  # Figure (*\ref{fig:longit-nomogram
 ```{r bayesfit}
 ```
 
-```{r bayesfit2,results='asis'}
+```{r bayesfit2}
 ```
 
 * Show the final graphic (high dose:placebo contrast as function of time `r ipacue()`
@@ -598,7 +598,7 @@ Fit the model and run standard Stan diagnostics.
 
 Note that posterior sampling is much more efficient without random effects.
 
-```{r mark2,results='asis'}
+```{r mark2}
 ```
 
 Let's add subject-level random effects to the model.  Smallness of the
@@ -609,7 +609,7 @@ models and allows us to simplify the model by omitting random effects.
 ```{r mark3}
 ```
 
-```{r mark4,results='asis'}
+```{r mark4}
 ```
 
 The random effects SD is only 0.11 on the logit scale.  Also, the

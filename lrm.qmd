@@ -28,7 +28,7 @@ $$
 P = [1+\exp(-x)]^{-1} = \text{expit}(x)
 $$
 
-```{r lrm-fun,echo=FALSE,w=3.5,h=2.5,cap='Logistic function'}
+```{r echo=FALSE,w=3.5,h=2.5,cap='Logistic function'}
 #| label: fig-lrm-fun
 ## @knitr logistic-fun
 spar(bty='l')
@@ -104,7 +104,7 @@ kbl(d, col.names=.q(Probability, Odds, '  ', Odds, Probability)) %>%
   add_header_above(c("Without Risk Factor" = 2, "  " = 1, "With Risk Factor" = 2))
 ```
 
-```{r lrm-or-vs-diff,cap='Absolute benefit as a function of risk of the event in a control subject and the relative effect (odds ratio) of the risk factor.  The odds ratios are given for each curve.',scap='Absolute benefit as a function of risk in a control subject and the relative effect'}
+```{r cap='Absolute benefit as a function of risk of the event in a control subject and the relative effect (odds ratio) of the risk factor.  The odds ratios are given for each curve.',scap='Absolute benefit as a function of risk in a control subject and the relative effect'}
 #| label: fig-lrm-or-vs-diff
 spar(bty='l')
 plot(0, 0, type="n", xlab="Risk for Subject Without Risk Factor",
@@ -198,16 +198,15 @@ plot(Predict(f, age=seq(34, 70, length=200), sex, fun=plogis),
      ylab='Pr(response)', ylim=c(-.02, 1.02), addpanel=w)
 ```
 
-```{r results='asis'}
+```{r}
 ltx <- function(fit) {
   w <- latex(fit, inline=TRUE, columns=54,
              after='', digits=3,
              before='$$X\\hat{\\beta}=$$')
-  cat(w, sep='\n')
+	rendHTML(w, html=FALSE)
   }
 ltx(f)
 ```
-
 
 <pre><tt>
                  sex        response
@@ -434,7 +433,7 @@ $$\text{expit}(X_{i}\hat{\beta}\pm zs)$$
   $\frac{n}{2}$.  Compute mean of $\max_{X \in [-1.5,1.5]} |P - \hat{P}|$ over 1000 simulations for varying $n$ and $\sigma$^[An average absolute error of 0.05 corresponds roughly to a 0.95 confidence interval margin of error of 0.1.]
 
 
-```{r lrm-simerr,w=5,h=4,cap='Simulated expected maximum error in estimating probabilities for $x \\in [-1.5, 1.5]$ with a single normally distributed $X$ with mean zero',scap='Average maximum error with continuous predictor'}
+```{r w=5,h=4,cap='Simulated expected maximum error in estimating probabilities for $x \\in [-1.5, 1.5]$ with a single normally distributed $X$ with mean zero',scap='Average maximum error with continuous predictor'}
 #| label: fig-lrm-simerr
 require(rms)
 getRs('hashCheck.r')  # also defines runifChanged
@@ -513,7 +512,7 @@ $$r_{ij} = \hat{\beta}_{j}X_{ij} + \frac{Y_{i} - \hat{P}_{i}}{\hat{P}_{i}(1-\hat
 
 $$\text{logit}(Y=1|X) = \beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2}$$
 
-```{r lrm-assumptions,echo=FALSE,cap='Logistic regression assumptions for one binary and one continuous predictor'}
+```{r echo=FALSE,cap='Logistic regression assumptions for one binary and one continuous predictor'}
 #| label: fig-lrm-assumptions
 spar()
 plot(0:1, 0:1, xlab=expression(X[2]), ylab='logit(Y=1)',
@@ -527,7 +526,7 @@ text(.9, .75,expression(X[1]==1), adj=.5)
 ```
 
 
-```{r lrm-emp-age-sex}
+```{r}
 #| label: lrm-emp-age-sex
 getHdata(acath)
 acath$sex <- factor(acath$sex, 0:1, c('male','female'))
@@ -539,7 +538,7 @@ kn[length(kn)] <- paste('and', kn[length(kn)])
 kn <- paste(kn, collapse=', ')
 ```
 
-```{r lrm-emp-age-sex-pl}
+```{r}
 #| fig-cap: "Logit proportions of significant coronary artery disease by sex and deciles of age for n=3504 patients, with spline fits (smooth curves). Spline fits are for $k=4$ knots at age=36, 48, 56, and 68 years, and interaction between age and sex is allowed.  Shaded bands are pointwise 0.95 confidence limits for predicted log odds.  Smooth nonparametric estimates are shown as dotted curves. Data courtesy of the Duke Cardiovascular Disease Databank."
 #| fig-scap: "Logit proportions of significant CAD by sex and age"
 #| label: fig-lrm-emp-age-sex-pl
@@ -585,7 +584,7 @@ plot(Predict(f, age, sex), ylim=c(-2,4), addpanel=w,
 
 `r ipacue()` 
 
-```{r lrm-lrtest,eval=TRUE}
+```{r eval=TRUE}
 lr <- function(formula)
   {
     f <- lrm(formula, data=acath)
@@ -636,7 +635,7 @@ lrtest(c, d)
 
 
 
-```{r lrm-dur,cap='Estimated relationship between duration of symptoms and the log odds of severe coronary artery disease for $k=5$. Knots are marked with arrows. Solid line is spline fit; dotted line is a nonparametric loess estimate.',scap='Duration of symptoms and severe CAD'}
+```{r cap='Estimated relationship between duration of symptoms and the log odds of severe coronary artery disease for $k=5$. Knots are marked with arrows. Solid line is spline fit; dotted line is a nonparametric loess estimate.',scap='Duration of symptoms and severe CAD'}
 #| label: fig-lrm-dur
 dz <- subset(acath, sigdz==1)
 dd <- datadist(dz)
@@ -655,7 +654,7 @@ plot(Predict(f, cad.dur), addpanel=w)
 
 
 
-```{r lrm-problog,cap='Fitted linear logistic model in $\\log_{10}(\\text{duration + 1})$, with subgroup estimates using groups of 150 patients. Fitted equation is $\\Pr(\\text{tvdlm})$ = $\\text{expit}(-.9809+.7122 \\log_{10}(\\text{months}+1))$.',scap='Duration of symptoms and $\\log_{10}(\\text{months}+1$)'}
+```{r cap='Fitted linear logistic model in $\\log_{10}(\\text{duration + 1})$, with subgroup estimates using groups of 150 patients. Fitted equation is $\\Pr(\\text{tvdlm})$ = $\\text{expit}(-.9809+.7122 \\log_{10}(\\text{months}+1))$.',scap='Duration of symptoms and $\\log_{10}(\\text{months}+1$)'}
 #| label: fig-lrm-problog
 f <- lrm(tvdlm ~ log10(cad.dur + 1), data=dz)
 w <- function(...)
@@ -682,7 +681,7 @@ plot(Predict(f, cad.dur, fun=plogis), ylab='P',
         cubic spline in cholesterol, age tertile $\times$ cholesterol
 
 
-```{r lrm-acath,results='asis'}
+```{r lrm-acath}
 acath <- transform(acath,
                    cholesterol = choleste,
                    age.tertile = cut2(age,g=3),
@@ -697,12 +696,12 @@ f <- lrm(sigdz ~ age.tertile*(sex + rcs(cholesterol,4)),
          data=acath)
 f
 ltx(f)
+print(anova(f), caption='Crudely categorizing age into tertiles')
 ```
 
 
-```{r lrm-cholxage,results='asis',cap='Log odds of significant coronary artery disease modeling age with two dummy variables'}
+```{r cap='Log odds of significant coronary artery disease modeling age with two dummy variables'}
 #| label: fig-lrm-cholxage
-print(anova(f), caption='Crudely categorizing age into tertiles')
 yl <- c(-1,5)
 plot(Predict(f, cholesterol, age.tertile),
      adj.subtitle=FALSE, ylim=yl)
@@ -712,7 +711,7 @@ plot(Predict(f, cholesterol, age.tertile),
 * Now model age as continuous predictor  `r ipacue()`
 * Start with nonparametric surface using $Y=0/1$
 
-```{r lrm-iacholxage-loess,h=5,w=7,cap='Local regression fit for the logit of the probability of significant coronary disease vs. age and cholesterol for males, based on the `loess` function.',scap='Local regression fit for log odds of significant coronary disease vs. age and cholesterol'}
+```{r h=5,w=7,cap='Local regression fit for the logit of the probability of significant coronary disease vs. age and cholesterol for males, based on the `loess` function.',scap='Local regression fit for log odds of significant coronary disease vs. age and cholesterol'}
 #| label: fig-lrm-iacholxage-loess
 # Re-do model with continuous age
 f <- loess(sigdz ~ age * (sx + cholesterol), data=acath,
@@ -736,14 +735,16 @@ wireframe(qlogis(p) ~ cholesterol*age,
   limit plotting to points that are supported by at least 5 subjects
   beyond those cholesterol/age combinations
 
-
-```{r lrm-iacholxage-lsp,results='asis',h=5,w=7,cap='Linear spline surface for males, with knots for age at 46, 52, 59 and knots for cholesterol at 196, 224, and 259 (quartiles).',scap='Linear spline surface for logit(significant disease) for males'}
-#| label: fig-lrm-iacholxage-lsp
+```{r}
 f <- lrm(sigdz ~ lsp(age,c(46,52,59)) *
          (sex + lsp(cholesterol,c(196,224,259))),
          data=acath)
 ltx(f)
 print(anova(f), caption='Linear spline surface')
+```
+
+```{r h=5,w=7,cap='Linear spline surface for males, with knots for age at 46, 52, 59 and knots for cholesterol at 196, 224, and 259 (quartiles).',scap='Linear spline surface for logit(significant disease) for males'}
+#| label: fig-lrm-iacholxage-lsp
 perim <- with(acath,
               perimeter(cholesterol, age, xinc=20, n=5))
 zl <- c(-2, 4)
@@ -753,40 +754,49 @@ bplot(Predict(f, cholesterol, age, np=40), perim=perim,
 
 * Next try smooth spline surface, include all cross-products  `r ipacue()`
 
-```{r lrm-iacholxage-a,results='asis',h=5,w=7,cap='Restricted cubic spline surface in two variables, each with $k=4$ knots'}
-#| label: fig-lrm-iacholxage-a
+```{r}
 f <- lrm(sigdz ~ rcs(age,4)*(sex + rcs(cholesterol,4)),
          data=acath, tol=1e-11)
 ltx(f)
 print(anova(f), caption='Cubic spline surface')
+```
+
+```{r h=5,w=7,cap='Restricted cubic spline surface in two variables, each with $k=4$ knots'}
+#| label: fig-lrm-iacholxage-a
 bplot(Predict(f, cholesterol, age, np=40), perim=perim,
       lfun=wireframe, zlim=zl, adj.subtitle=FALSE)
 ```
 
 * Now restrict surface by excluding doubly nonlinear terms  `r ipacue()`
 
-```{r lrm-iacholxage-b,results='asis',h=5,w=7,cap='Restricted cubic spline fit with age $\\times$ spline(cholesterol) and cholesterol $\\times$ spline(age)'}
-#| label: fig-lrm-iacholxage-b
+```{r}
 f <- lrm(sigdz ~ sex*rcs(age,4) + rcs(cholesterol,4) +
          rcs(age,4) %ia% rcs(cholesterol,4), data=acath)
+ltx(f)
 print(anova(f),
       caption='Singly nonlinear cubic spline surface')
+```
+
+```{r h=5,w=7,cap='Restricted cubic spline fit with age $\\times$ spline(cholesterol) and cholesterol $\\times$ spline(age)'}
+#| label: fig-lrm-iacholxage-b
 bplot(Predict(f, cholesterol, age, np=40), perim=perim,
       lfun=wireframe, zlim=zl, adj.subtitle=FALSE)
-ltx(f)
 ```
 
 * Finally restrict the interaction to be a simple product  `r ipacue()`
 
-```{r lrm-iacholxage-c,results='asis',h=5,w=7,cap='Spline fit with nonlinear effects of cholesterol and age and a simple product interaction'}
-#| label: fig-lrm-iacholxage-c
+```{r}
 f <- lrm(sigdz ~ rcs(age,4)*sex + rcs(cholesterol,4) +
          age %ia% cholesterol, data=acath)
+ltx(f)
 print(anova(f), caption='Linear interaction surface')
+```
+
+```{r h=5,w=7,cap='Spline fit with nonlinear effects of cholesterol and age and a simple product interaction'}
+#| label: fig-lrm-iacholxage-c
 bplot(Predict(f, cholesterol, age, np=40), perim=perim,
       lfun=wireframe, zlim=zl, adj.subtitle=FALSE)
 f.linia <- f  # save linear interaction fit for later
-ltx(f)
 ```
 
 The Wald test for age $\times$ cholesterol interaction yields
@@ -795,7 +805,7 @@ $\chi^{2}=7.99$ with 1 d.f., p=.005.
         initial model using 2 dummies for age
 * Request predictions to be made at mean age within tertiles
 
-```{r lrm-cholxage-model,cap='Predictions from linear interaction model with mean age in tertiles indicated.'}
+```{r cap='Predictions from linear interaction model with mean age in tertiles indicated.'}
 #| label: fig-lrm-cholxage-model
 # Make estimates of cholesterol effects for mean age in
 # tertiles corresponding to initial analysis
@@ -812,7 +822,7 @@ plot(Predict(f, cholesterol, age=round(mean.age,2),
 `r mrg(sound("lrm-9"))`
 
 
-```{r lrm-dur-partial-resid,h=4,w=6.5,cap='Partial residuals for duration and $\\log_{10}$(duration+1).  Data density shown at top of each plot.',scap='Partial residuals for binary logistic model'}
+```{r h=4,w=6.5,cap='Partial residuals for duration and $\\log_{10}$(duration+1).  Data density shown at top of each plot.',scap='Partial residuals for binary logistic model'}
 #| label: fig-lrm-dur-partial-resid
 spar(mfrow=c(1,2), ps=10)
 f <- lrm(tvdlm ~ cad.dur, data=dz, x=TRUE, y=TRUE)
@@ -926,7 +936,7 @@ $$
 * 2 predictors forced into every model
 
 
-```{r lrm-sex-age-response-boot,results='asis'}
+```{r lrm-sex-age-response-boot}
 d  <- sex.age.response
 dd <- datadist(d); options(datadist='dd')
 f  <- lrm(response ~ sex + age, data=d, x=TRUE, y=TRUE)
@@ -934,9 +944,9 @@ set.seed(3)  # for reproducibility
 v1  <- validate(f, B=150)
 ap1 <- round(v1[,'index.orig'], 2)
 bc1 <- round(v1[,'index.corrected'], 2)
-html(v1,
-    caption='Bootstrap Validation, 2 Predictors Without Stepdown',
-    digits=2)
+print(v1,
+      caption='Bootstrap Validation, 2 Predictors Without Stepdown',
+      digits=2)
 ```
 
 
@@ -944,12 +954,12 @@ html(v1,
 * Use individual tests at $\alpha=0.10$
 * Both age and sex selected in 137 of 150, neither in 3 samples
 
-```{r lrm-sex-age-response-bootsw,results='asis'}
+```{r lrm-sex-age-response-bootsw}
 v2 <- validate(f, B=150, bw=TRUE,
                rule='p', sls=.1, type='individual')
 ap2 <- round(v2[,'index.orig'], 2)
 bc2 <- round(v2[,'index.corrected'], 2)
-html(v2,
+print(v2,
       caption='Bootstrap Validation, 2 Predictors with Stepdown',
       digits=2, B=15)
 ```
@@ -981,11 +991,11 @@ as <- apply(k[,1:2], 1,
             function(x) paste(v[1:2][x], collapse=', '))
 ```
 
-```{r lrm-sex-age-response-bootsw5,results='asis'}
+```{r lrm-sex-age-response-bootsw5}
 kabl(table(paste(as, ' ', nx, 'Xs')))
-html(v3,
- caption='Bootstrap Validation with 5 Noise Variables and Stepdown',
- digits=2, B=15)
+print(v3,
+      caption='Bootstrap Validation with 5 Noise Variables and Stepdown',
+      digits=2, B=15)
 ```
 
 
@@ -998,20 +1008,23 @@ ap4 <- round(v4[,'index.orig'], 2)
 bc4 <- round(v4[,'index.corrected'], 2)
 ```
 
-```{r lrm-sex-age-response-bootsw52,results='asis'}
-html(v4,
-     caption='Bootstrap Validation with 5 Noise Variables and Stepdown, Forced Inclusion of age and sex',
-     digits=2, B=15)
+```{r lrm-sex-age-response-bootsw52}
+print(v4,
+      caption='Bootstrap Validation with 5 Noise Variables and Stepdown, Forced Inclusion of age and sex',
+      digits=2, B=15)
 ```
 
 
 ## Describing the Fitted Model
 `r mrg(sound("lrm-12"))`
 
-```{r lrm-cholxage-confbar,results='asis',top=2,bot=1,cap='Odds ratios and confidence bars, using quartiles of age and cholesterol for assessing their effects on the odds of coronary disease.',scap='Effects of predictors on odds of coronary disease'}
-#| label: fig-lrm-cholxage-confbar
+```{r}
 s <- summary(f.linia)
 s
+```
+
+```{r top=2,bot=1,cap='Odds ratios and confidence bars, using quartiles of age and cholesterol for assessing their effects on the odds of coronary disease.',scap='Effects of predictors on odds of coronary disease'}
+#| label: fig-lrm-cholxage-confbar
 plot(s)
 ```
 
@@ -1043,7 +1056,7 @@ knitr::include_graphics('cad-nomo.png')
 knitr::include_graphics('abm-nomo.png')
 ```
 
-```{r lrm-iacholxage-3-nomogram,w=6.5,h=7,cap='Nomogram relating age, sex, and cholesterol to the log odds and to the probability of significant coronary artery disease.  Select one axis corresponding to sex and to age $\\in \\{30,40,50,60,70\\}$. There was linear interaction between age and sex and between age and cholesterol.  0.70 and 0.90 confidence intervals are shown (0.90 in gray).  Note that for the `Linear Predictor` scale there are various lengths of confidence intervals near the same value of $X\\hat{\\beta}$, demonstrating that the standard error of $X\\hat{\\beta}$ depends on the individual $X$ values.  Also note that confidence intervals corresponding to smaller patient groups (e.g., females) are wider.',scap='Nomogram for CAD using age, sex, cholesterol'}
+```{r w=6.5,h=7.75,cap='Nomogram relating age, sex, and cholesterol to the log odds and to the probability of significant coronary artery disease.  Select one axis corresponding to sex and to age $\\in \\{30,40,50,60,70\\}$. There was linear interaction between age and sex and between age and cholesterol.  0.70 and 0.90 confidence intervals are shown (0.90 in gray).  Note that for the `Linear Predictor` scale there are various lengths of confidence intervals near the same value of $X\\hat{\\beta}$, demonstrating that the standard error of $X\\hat{\\beta}$ depends on the individual $X$ values.  Also note that confidence intervals corresponding to smaller patient groups (e.g., females) are wider.',scap='Nomogram for CAD using age, sex, cholesterol'}
 #|label: fig-lrm-iacholxage-3-nomogram
 # Draw a nomogram that shows examples of confidence intervals
 nom <- nomogram(f.linia, cholesterol=seq(150, 400, by=50),
@@ -1107,7 +1120,7 @@ prior probabilities. Four MCMC chains with 5000 iterations were used
 with a warm-up of 2500 iterations each, resulting in 10000 retained draws from
 the posterior distribution.
 
-```{r results='asis'}
+```{r}
 # Set priors
 # Solve for SD such that sex effect has only a 0.025 chance of
 # being above 5 (or being below -5)
@@ -1147,7 +1160,7 @@ frequentist 0.95 confidence interval for the `age` parameter is
 when the sample size is small.
 
 
-```{r lrm-bayes2-bin_fits,results='asis'}
+```{r lrm-bayes2-bin_fits}
 # Frequentist model output
 flrm
 

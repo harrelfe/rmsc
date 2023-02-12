@@ -370,3 +370,13 @@ As the Bayesian $t$-test exemplifies, there are advantages of a continuous appro
 * Instead of focusing on model assumption checking, focus on the [_impact_ of making those assumptions](https://fharrell.com/post/impactpo), using for example comparison of adjusted $R^2$ measures and bootstrap confidence intervals for differences in predicted values from two models.
 * In many situations you can use a [semiparametric model](https://fharrell.com/post/rpo) that makes many fewer assumptions than a parametric model
 * See [this](https://stats.stackexchange.com/questions/551264) for more in-depth discussion
+
+## Study Questions
+
+1. Can you estimate the effect of increasing age from 21 to 30 without a statistical model?
+1. What is an example where machine learning users have used "classification" in the wrong sense?
+1. When is classification (in the proper sense) an appropriate goal?
+1. Why are so many decisions non-binary?
+1. How do we normally choose statistical models---from subject matter theory or empirically?
+1. What is model uncertainty?
+1. An investigator feels that there are too many variables to analyze so she uses significance testing to select which variables to analyze further.  What is wrong with that?

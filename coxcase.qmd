@@ -48,9 +48,9 @@ Bone metastasis                     |   `bm`     | 1     | present/absent |
 * Impute missings and estimate shrinkage  `r ipacue()`
 
 
-```{r }
+```{r}
 require(rms)
-options(prType='html')    # for print, summary, anova
+options(prType='html')    # for print, summary, anova, validate
 getHdata(prostate)
 levels(prostate$ekg)[levels(prostate$ekg) %in%
                      c('old MI','recent MI')] <- 'MI'
@@ -82,8 +82,6 @@ S <- Surv(dtime, status!='alive')
 f <- cph(S ~ rx + rcs(age,4) + rcs(wt,4) + pf + hx +
          rcs(sbp,4) + rcs(dbp,4) + ekg + rcs(hg,4) +
          rcs(sg,4) + rcs(sz,4) + rcs(log(ap),4) + bm)
-```
-```{r results="asis"}
 print(f, coefs=FALSE)
 ```
 
@@ -106,7 +104,7 @@ print(f, coefs=FALSE)
 : Data reduction strategy
 
 
-```{r results="asis"}
+```{r}
 heart <- hx + ekg %nin% c('normal','benign')
 label(heart) <- 'Heart Disease Code'
 map   <- (2*dbp + sbp)/3
@@ -173,7 +171,7 @@ plot(phtest[1])  # plot only the first variable
 
 
 
-```{r results='asis'}
+```{r}
 z.dose <- z[,"rx"]  # same as saying z[,1] - get first column
 z.other <- z[,-1]   # all but the first column of z
 f.ia <- cph(S ~ z.dose * z.other)
@@ -202,10 +200,10 @@ ggplot(Predict(f), sepdiscrete='vertical', nlevels=4,
 
 
 
-```{r results='asis'}
+```{r}
 set.seed(1)  # so can reproduce results
 v <- validate(f, B=300)
-html(v)
+v
 ```
 
 

@@ -347,7 +347,7 @@ Variable selection methods [@har86log]:
 * Better to use subject matter knowledge!
 * No currently available stopping rule was developed for
         stepwise, only for comparing a limited number of pre-specified
-        models[bre92lit, Section 1.3]
+        models[@bre92lit, Section 1.3]
 * @roe91pre studied forward selection (FS), all  `r ipacue()`
         possible subsets selection (APS), full fits
 * APS more likely to select smaller, less accurate models than FS
@@ -411,7 +411,7 @@ discussed here but applied to time series modeling.
   social sciences in which the signal:noise ratio is small (higher
   ratios allow for more aggressive modeling)
 * $p$ should be $< \frac{m}{15}$ [@har84;  @har85reg; @smi92pro; @ped95imp; @ped96sim; @vit06rel; @plo14mod]
-* $p= $ number of parameters in full model or number of _candidate_
+* $p$ is number of parameters in full model or number of _candidate_
     parameters in a stepwise analysis
 * Derived from simulations to find minimum sample size so that
   apparent discrimination = validated discrimination
@@ -444,7 +444,7 @@ discussed here but applied to time series modeling.
 * Narrowly distributed predictor $\rightarrow$ even higher $n$ `r ipacue()`
 * $p$ includes _all_ variables screened for association
         with response, including interactions
-* Univariable screening (graphs, crosstabs, etc.) {\bf in no way}
+* Univariable screening (graphs, crosstabs, etc.) **in no way**
         reduces multiple comparison problems of model building [@sun96ina]
 
 
@@ -1046,6 +1046,89 @@ result of using a bad modeling strategy:
   different)
 1. Validation may help quantify over-adjustment
 
+## Study Questions
+
+**Section 4.1**
+
+1. An investigator is interested in finding risk factors for stroke.
+  She has collected data on 3000 subjects of whom 70 were known to
+  suffer a stroke within 5 years from study entry.  She has decided
+  that race (5 possible levels), age, height, and mean arterial blood
+  pressure should definitely be in the model.  She does not try to
+  find previous studies that show how these potential risk factors
+  relate to the risk of stroke.  What is one way to decide how many
+  degrees of freedom to spend on each predictor?  How can one achieve
+  these d.f. (whatever they are) for race and for a continuous variable?
+1. What is the driving force behind the approach used here to prespecify the complexity with which each predictor is specified in the regression model?
+1. Why is the process fair?
+1. When feasible to do, why is learning from a saturated model preferred?
+
+**Section 4.3**
+
+1. What did we already study that variable selection is an extension of?
+1. What does variable selection ruin more than it ruins regression coefficient estimates?
+1. Besides those problems what's the worst thing you can say about statistical test-based variable selection?
+1. In which situation would variable selection have a chance to be helpful?
+1. What is the statistical point that the Maxwell demon analogy is trying to bring out?
+1. What is the single root cause of problems that is in common to each of the
+  following strategies?
+     + The investigator retains race as 5 categories and fits it with 4
+  dummy variables.  She examines coefficients from these dummy
+  variables to decide which races have similar coefficients and should
+  be pooled.
+     + All continuous variables are allowed to be nonlinear using
+  splines, and variables having insignificant nonlinear terms are
+  re-fitted as linear.
+     + All potential risk factors are used as candidate predictor
+  variables with forward stepwise variable selection with a
+  significance level for entering the model of $\alpha=0.1$.
+     + A clinical trial of 5 treatments find that 3 of the treatments
+  result in nearly the same blood pressure reduction.  These 3
+  treatments are pooled and their overall mean is compared with each
+  of the remaining 2 treatments.
+1. Name at least one specific harm done by the strategies outlined in the
+  last question, in general terms (not specific to each strategy).
+
+**Section 4.4**
+
+1. Describe a major way that "breaking ties" in Y, i.e., having it more continuous, results in more power and precision in modeling.
+1. What is the effective sample size in a study with 10 cancer outcomes and 100,000 normal outcomes?
+
+**Section 4.5**
+
+1. What are main causes of passive shrinkage/regression to the mean?
+1. Why does the heuristic shrinkage estimate work?
+1. What causes the graph of $\hat{Y}$ (on $x$-axis) vs.\ $Y$
+  (on $y$-axis; you could call this $Y_{new}$) to be flatter than a
+  $45^\circ$ line when the graph is made for new data not used to fit
+  the model?
+
+**Section 4.6**
+
+1. What causes the standard error of a regression coefficient to get large when adjusting for a competing predictor?
+1. When just wanting to measure strength of association or test a group of predictors, what is a simple fix for co-linearity?
+
+**Section 4.7**
+
+1. What is the purpose of data reduction, and why does it not create
+  phantom degrees of freedom that need to be accounted for later in
+  the modeling process?
+1. Name several data reduction methods for reducing the number of
+  regression coefficients to estimate.
+1. Principal components can have unstable loadings (e.g., if you bootstrap).  Why are they still a valuable component in a data reduction strategy?
+1. What is the overall guidance for knowing how much unsupervised learning (data reduction) to do?
+
+**Section 4.9**
+
+1. Why are high leverage (far out) observations influential on regression coefficients even when Y is binary?
+
+**Section 4.10**
+
+1. What would make one model having much better predictive discrimination than another irrelevant?
+
+**Section 4.12**
+
+1. Are the steps to the default strategy complete and is the sequencing "correct"?
 
 
 

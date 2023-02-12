@@ -163,9 +163,10 @@ that further discusses the topic.
 * [Study questions](https://hbiostat.org/rms/qstudy.html)
 * [Datamethods discussion board](http://datamethods.org)
 * [Statistical papers written for clinical researchers](https://hbiostat.org/bib)
+* [RMS overview and template for statistical analysis plan](https://fharrell.com/post/modplan)
 * [Statistical Thinking blog](https://fharrell.com)
 * [Statistical Thinking News](https://paper.li/stn)
-* [Glossary of statistical terms](https://hbiostat.org/doc/glossary.pdf)
+* [Glossary of statistical terms](https://hbiostat.org/glossary)
 * [R Workflow](https://hbiostat.org/rflow)
 
 ## R Packages
@@ -186,8 +187,17 @@ kableExtra, pcaPP, VGAM, MASS, leaps, rpart
 
 | Date | Sections | Changes |
 |:---|:-|:--------|
+| 2023-02-12 |                    | Used rms 6.5-0 to improve code, removing results='asis' from chunk headers |
+| 2023-02-07 |                    | Started moving study questions to end of chapters |
 | 2022-10-28 | [-@sec-intro]      | 3 new flowcharts |
 | 2022-10-28 | [-@sec-intro-gof]  | New subsection of model uncertainty and GOF |
 | 2022-09-16 | [-@sec-mle-ci]     | Link to nice profile likelihood CI example |
 
 :::
+
+## Review Questions
+
+1. Consider inference from comparing central tendencies of two groups on a continuous response variable Y.  What assumptions are you willing to make when selecting a statistical test?  Why are you willing to make those assumptions?
+1. Consider the comparison of 5 groups on a continuous Y.  Suppose you observe that two of the groups have a similar mean and the other three also have a similar sample mean.  What is wrong with combining the two samples and combining the three samples, then comparing two means?  How does this compare to stepwise variable selection?
+1. Name a specific statistical test for which we don't have a corresponding statistical model
+1. Concerning a multi-group problem or a sequential testing problem what is the frequentist approach to multiplicity correction?  The Bayesian approach?

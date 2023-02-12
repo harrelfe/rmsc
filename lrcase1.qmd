@@ -61,7 +61,7 @@ category, and dichotomizing `ekg` for use in ordinary principal
 components (PCs).
 
 
-```{r }
+```{r}
 require(rms)
 options(prType='html')
 getHdata(prostate)
@@ -107,7 +107,7 @@ first 8 PCs.  `ap` is log-transformed because of
 its extreme distribution.
 
 
-```{r }
+```{r}
 # Function to compute the first k PCs
 ipc <- function(x, k=1, ...)
   princomp(x, ..., cor=TRUE)$scores[,1:k]
@@ -134,7 +134,7 @@ h <- lrm(cvd ~ trans, data=psub)
 The five approaches to modeling the outcome are compared using AIC
 (where smaller is better).
 
-```{r }
+```{r}
 c(f8=AIC(f8), f8t=AIC(f8t), f=AIC(f), g=AIC(g), h=AIC(h))
 ```
 
@@ -151,20 +151,22 @@ Summary statistics and a Wald-ANOVA table are below, followed by
 partial effects plots with pointwise confidence bands, and odds ratios
 over default ranges of predictors.
 
-
-```{r full,h=3.5,w=3.5,results='asis',cap='Ranking of apparent importance of predictors of cause of death'}
-#| label: fig-lrcase1-full
-spar(ps=8)
+```{r}
 f
 an <- anova(f)
 an
+```
+
+```{r h=3.5,w=3.5,cap='Ranking of apparent importance of predictors of cause of death'}
+#| label: fig-lrcase1-full
+spar(ps=8)
 plot(an)
 s <- f$stats
 gamma.hat <- (s['Model L.R.'] - s['d.f.'])/s['Model L.R.']
 ```
 
 
-```{r fullpeffects,h=6.5,w=6,cap='Partial effects (log odds scale) in full model for cause of death, along with vertical line segments showing the raw data distribution of predictors',scap='Partial effects in cause of death model'}
+```{r h=6.5,w=6,cap='Partial effects (log odds scale) in full model for cause of death, along with vertical line segments showing the raw data distribution of predictors',scap='Partial effects in cause of death model'}
 #| label: fig-lrcase1-fullpeffects
 dd <- datadist(psub); options(datadist='dd')
 ggplot(Predict(f), sepdiscrete='vertical', vnames='names',
@@ -173,7 +175,7 @@ ggplot(Predict(f), sepdiscrete='vertical', vnames='names',
 ```
 
 
-```{r fullor,h=5.5,w=5,top=2,cap='Interquartile-range odds ratios for continuous predictors and simple odds ratios for categorical predictors.  Numbers at left are upper quartile : lower quartile or current group : reference group.  The bars represent $0.9, 0.95, 0.99$ confidence limits.  The intervals are drawn on the log odds ratio scale and labeled on the odds ratio scale.  Ranges are on the original scale.',scap='Interquartile-range odds ratios and confidence limits'}
+```{r h=5.5,w=5,top=2,cap='Interquartile-range odds ratios for continuous predictors and simple odds ratios for categorical predictors.  Numbers at left are upper quartile : lower quartile or current group : reference group.  The bars represent $0.9, 0.95, 0.99$ confidence limits.  The intervals are drawn on the log odds ratio scale and labeled on the odds ratio scale.  Ranges are on the original scale.',scap='Interquartile-range odds ratios and confidence limits'}
 #| label: fig-lrcase1-fullor
 plot(summary(f), log=TRUE)
 ```
@@ -192,15 +194,18 @@ death.  Later validation will take this screening of variables into
 account.
 The greatly reduced model results in a simple nomogram.
 
-```{r }
+```{r}
 fastbw(f)
 ```
 
-
-```{r nom,results='asis',w=5.5,h=5,ps=8,cap='Nomogram calculating $X\\hat{\\beta}$ and $\\hat{P}$ for `cvd` as the cause of death, using the step-down model.  For each predictor, read the points assigned on the 0--100 scale and add these points.  Read the result on the `Total Points` scale and then read the corresponding predictions below it.',scap='Nomogram for obtaining $X\\hat{\\beta}$ and $\\hat{P}$ from step-down model'}
-#| label: fig-lrcase1-nom
+```{r}
 fred <- lrm(cvd ~ sz + log(ap) + age + hx, data=psub)
-latex(fred, file='')
+latex(fred)
+```
+
+
+```{r w=5.5,h=5,ps=8,cap='Nomogram calculating $X\\hat{\\beta}$ and $\\hat{P}$ for `cvd` as the cause of death, using the step-down model.  For each predictor, read the points assigned on the 0--100 scale and add these points.  Read the result on the `Total Points` scale and then read the corresponding predictions below it.',scap='Nomogram for obtaining $X\\hat{\\beta}$ and $\\hat{P}$ from step-down model'}
+#| label: fig-lrcase1-nom
 nom <- nomogram(fred, ap=c(.1, .5, 1, 5, 10, 50),
                 fun=plogis, funlabel="Probability",
                 fun.at=c(.01,.05,.1,.25,.5,.75,.9,.95,.99))
@@ -226,8 +231,8 @@ v <- validate(f, B=200, bw=TRUE)
 ```
 
 
-```{r results='asis'}
-html(v, B=20, digits=3)
+```{r}
+print(v, B=20, digits=3)
 ```
 
 The slope shrinkage ($\hat{\gamma}$) is a bit lower than was estimated
@@ -241,7 +246,7 @@ A nearly unbiased estimate of future calibration of the
 stepwise-derived model is given below.
 
 
-```{r cal,h=3,w=4.75,cap='Bootstrap overfitting-corrected calibration curve estimate for the backwards step-down cause of death logistic model, along with a rug plot showing the distribution of predicted risks.  The smooth nonparametric calibration estimator (`loess`) is used.',scap='Bootstrap nonparametric calibration curve for reduced cause of death model'}
+```{r h=3,w=4.75,cap='Bootstrap overfitting-corrected calibration curve estimate for the backwards step-down cause of death logistic model, along with a rug plot showing the distribution of predicted risks.  The smooth nonparametric calibration estimator (`loess`) is used.',scap='Bootstrap nonparametric calibration curve for reduced cause of death model'}
 #| label: fig-lrcase1-cal
 spar(ps=9, bot=1)
 cal <- calibrate(f, B=200, bw=TRUE)
@@ -254,9 +259,9 @@ consistent with the indexes produced by the `validate` function.
 For comparison, consider a bootstrap validation of the full model
 without using variable selection.
 
-```{r results='asis'}
+```{r}
 vfull <- validate(f, B=200)
-html(vfull, digits=3)
+print(vfull, digits=3)
 ```
 
 Compared to the validation of the full model, the step-down model
@@ -278,8 +283,8 @@ approximate Wald tests rather than tests combining all deleted variables.
 v5 <- validate(f, bw=TRUE, sls=0.5, type='individual', B=200)
 ```
 
-```{r results='asis'}
-html(v5, digits=3, B=0)
+```{r}
+print(v5, digits=3, B=0)
 ```
 
 The performance statistics are midway between the full model and the
@@ -299,7 +304,7 @@ We begin by computing the "gold standard" linear predictor from the
 full model fit ($R^{2} = 1.0$), then running backwards step-down OLS
 regression to approximate it.
 
-```{r approxr2,h=3,w=3.5,cap='Fraction of explainable variation (full model LR $\\chi^2$) in `cvd` that was explained by approximate models, along with approximation accuracy ($x$-axis)',scap='Model approximation vs. LR $\\chi^2$ preserved'}
+```{r h=3,w=3.5,cap='Fraction of explainable variation (full model LR $\\chi^2$) in `cvd` that was explained by approximate models, along with approximation accuracy ($x$-axis)',scap='Model approximation vs. LR $\\chi^2$ preserved'}
 #| label: fig-lrcase1-approxr2
 spar(bty='l', ps=9)
 lp <- predict(f)   # Compute linear predictor from full model
@@ -339,13 +344,16 @@ lost.  Therefore we take as our
 approximate model the one that removed 6 predictors.  The equation for
 this model is below, and its nomogram is in the figure below.
 
-```{r nomapprox,results='asis',h=6,w=6,cap='Nomogram for predicting the probability of `cvd` based on the approximate model',scap='Approximate nomogram for predicting cause of death'}
-#| label: fig-lrcase1-nomapprox
-spar(ps=8)
+```{r}
 fapprox <- ols(lp ~ sz + sg + log(ap) + age + ekg + pf + hx +
                rx, data=psub)
 fapprox$stats['R2']   # as a check
-latex(fapprox, file='')
+latex(fapprox)
+```
+
+```{r h=6,w=6,cap='Nomogram for predicting the probability of `cvd` based on the approximate model',scap='Approximate nomogram for predicting cause of death'}
+#| label: fig-lrcase1-nomapprox
+spar(ps=8)
 nom <- nomogram(fapprox, ap=c(.1, .5, 1, 5, 10, 20, 30, 40),
                 fun=plogis, funlabel="Probability",
                 lp.at=(-5):4,

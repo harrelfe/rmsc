@@ -20,7 +20,7 @@ spreadsheet formats from [hbiostat.org/data](https://hbiostat.org/data) under th
 
 ## Descriptive Statistics
 
-```{r desc,results='asis'}
+```{r desc}
 require(rms)
 options(prType='html')   # for print, summary, anova
 getHdata(titanic3)        # get dataset from web site
@@ -28,7 +28,7 @@ getHdata(titanic3)        # get dataset from web site
 v <- c('pclass','survived','age','sex','sibsp','parch')
 t3 <- titanic3[, v]
 units(t3$age) <- 'years'
-html(describe(t3))
+describe(t3)
 ```
 
 ```{r summary,cap='Univariable summaries of Titanic survival'}
@@ -102,7 +102,7 @@ gridExtra::grid.arrange(p1, p2, ncol=2)
 First fit a model that is saturated with respect to `age, sex, pclass`.  Insufficient variation in `sibsp`, `parch` to fit
 complex interactions or nonlinearities.
 
-```{r anova3,results='asis'}
+```{r anova3}
 f1 <- lrm(survived ~ sex*pclass*rcs(age,5) +
           rcs(age,5)*(sibsp + parch), data=t3)
 print(f1, coefs=FALSE)
@@ -111,7 +111,7 @@ anova(f1)
 
 3-way interactions, `parch` clearly insignificant, so drop
 
-```{r ia2,results='asis'}
+```{r ia2}
 f <- lrm(survived ~ (sex + pclass + rcs(age,5))^2 + 
          rcs(age,5)*sibsp, data=t3)
 f
@@ -120,7 +120,7 @@ f
 Note that the adjusted Maddala-Cox-Snell $R^2$ using an effective sample
 size of 758.1 is only 0.004 smaller than the full model.
 
-```{r anova2,results='asis'}
+```{r anova2}
 anova(f)
 ```
 
@@ -143,11 +143,11 @@ ones.
 Validate the model using the bootstrap to check overfitting.  Ignoring two very  `r ipacue()` 
 insignificant pooled tests.
 
-```{r val,results='asis'}
+```{r val}
 f <- update(f, x=TRUE, y=TRUE)
 # x=TRUE, y=TRUE adds raw data to fit object so can bootstrap
 set.seed(131)                  # so can replicate re-samples
-html(validate(f, B=200), digits=2)
+print(validate(f, B=200), digits=2)
 ```
 
 ```{r calibrate,cap='Bootstrap overfitting-corrected loess nonparametric calibration curve for casewise deletion model'}
@@ -181,14 +181,14 @@ plot(summary(is.na(age) ~ sex + pclass + survived +
              sibsp + parch, data=t3))  
 ```
 
-```{r nalrm,results='asis'}
+```{r nalrm}
 m <- lrm(is.na(age) ~ sex * pclass + survived + sibsp + parch,
          data=t3)
 m
 ```
 
 
-```{r anova.na,results='asis'}
+```{r anova.na}
 anova(m)
 ```
 `pclass` and `parch` are the important predictors of missing age.
@@ -213,7 +213,7 @@ with(t3, tapply(age.i[i], list(sex[i],pclass[i]), mean))
 with(t3, tapply(age, list(sex,pclass), mean, na.rm=TRUE))
 ```
 
-```{r fit.si,results='asis'}
+```{r fit.si}
 dd   <- datadist(dd, age.i)
 f.si <- lrm(survived ~ (sex + pclass + rcs(age.i,5))^2 + 
             rcs(age.i,5)*sibsp, data=t3)
@@ -230,7 +230,7 @@ p  <- rbind('Casewise Deletion'=p1, 'Single Imputation'=p2,
 ggplot(p, groups='sex', ylab='Probability of Surviving')
 ```
 
-```{r anova.si,results='asis'}
+```{r anova.si}
 anova(f.si)
 ```
 
@@ -267,7 +267,7 @@ Ecdf(t3$age, add=TRUE, col='gray', lwd=2,
 Fit logistic models for 20 completed datasets and print the ratio  `r ipacue()` 
  of imputation-corrected variances to average ordinary variances
 
-```{r anova.mi,results='asis'}
+```{r anova.mi}
 f.mi <- fit.mult.impute(
   survived ~ (sex + pclass + rcs(age,5))^2 +
   rcs(age,5)*sibsp,
@@ -352,7 +352,7 @@ is not feasible when so many interaction terms are present.
   to account for imputation and get correct posterior distribution
 
 
-```{r blrm,results='asis'}
+```{r blrm}
 # Use all available CPU cores.  Each chain will be run on its
 # own core.
 # fitIf function only re-runs the model if bt.rds file doesn't exist

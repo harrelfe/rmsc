@@ -249,7 +249,7 @@ sex
 $$\lambda(t|X_{1},X_{2}) = .02 \exp[.8X_{1}+.04(X_{2}-50)]$$
 
 
-```{r km-age-sex,w=4.5,h=3.5,cap='Kaplan--Meier log $\\Lambda$ estimates by sex and deciles of age, with $0.95$ confidence limits.  Solid line is for males, dashed line for females.',scap='Kaplan--Meier log $\\Lambda$ estimates by sex and deciles of age'}
+```{r km-age-sex,w=4.5,h=3.5,cap='Kaplan--Meier log $\\Lambda$ estimates by sex and deciles of age, with $0.95$ confidence limits.',scap='Kaplan--Meier log $\\Lambda$ estimates by sex and deciles of age'}
 #| label: fig-cox-km-age-sex
 n <- 2000
 set.seed(3)
@@ -296,22 +296,30 @@ To not assume PH in $X_1$, stratify on it:
 &=& \log \lambda_{j}(t)+f(X_{2})
 \end{array}
 
-```{r spline-age-sex-noia,w=4.5,h=3.5,cap='Cox PH model stratified on sex, using spline function for age, no interaction. 0.95 confidence limits also shown.  Solid line is for males, dashed line is for females.',scap='Cox PH model stratified on sex, using spline function for age',results='asis'}
-#| label: fig-cox-spline-age-sex-noia
+```{r}
 f.noia <- cph(Srv ~ rcs(age,4) + strat(sex), x=TRUE, y=TRUE) 
+latex(f.noia)
+anova(f.noia)
+```
+
+```{r}
+#| fig.cap: 'Cox PH model stratified on sex, using spline function for age, no interaction. 0.95 confidence limits also shown.'
+#| fig.scap: 'Cox PH model stratified on sex, using spline function for age'
+#| fig.width: 4.5
+#| fig.height: 3.5
+#| label: fig-cox-spline-age-sex-noia
 # Get accurate C.L. for any age by specifying x=TRUE y=TRUE
 # Note: for evaluating shape of regression, we would not
 # ordinarily bother to get 3-year survival probabilities -
 # would just use X * beta
 # We do so here to use same scale as nonparametric estimates
-latex(f.noia)
-anova(f.noia)
 p <- Predict(f.noia, age, sex, time=3, loglog=TRUE)
 ggplot(p, ylim=c(-5, -.5))
 ```
 
 Formal test of linearity: $H_{0}: \beta_{2}=\beta_{3}=0, \chi^{2} =
 4.84$, 2 d.f., $P=0.09$.
+
 * Model allowing interaction with sex strata:
 
 \begin{array}{ccc}
@@ -322,12 +330,15 @@ Formal test of linearity: $H_{0}: \beta_{2}=\beta_{3}=0, \chi^{2} =
 
 Test for interaction: $P=0.33$.
 
-```{r spline-age-sex-ia,w=4.5,h=3.5,cap='Cox PH model stratified on sex, with interaction between age spline and sex. 0.95 confidence limits are also shown.  Solid line is for males, dashed line for females.',scap='Cox PH model stratified on sex,with interaction between age spline and sex',results='asis'}
-#| label: fig-cox-spline-age-sex-ia
+```{r}
 f.ia <- cph(Srv ~ rcs(age,4) * strat(sex), x=TRUE, y=TRUE,
             surv=TRUE)
 latex(f.ia)
 anova(f.ia)
+```
+
+```{r spline-age-sex-ia,w=4.5,h=3.5,cap='Cox PH model stratified on sex, with interaction between age spline and sex. 0.95 confidence limits are also shown.',scap='Cox PH model stratified on sex,with interaction between age spline and sex'}
+#| label: fig-cox-spline-age-sex-ia
 p <- Predict(f.ia, age, sex, time=3, loglog=TRUE)
 ggplot(p, ylim=c(-5, -.5))
 ```
@@ -611,8 +622,8 @@ Validate slope calibration (estimate shrinkage from overfitting):
 $$\lambda(t|X) = \lambda(t) \exp(\gamma Xb)$$
 
 
-```{r val-random,results='asis'}
-html(validate(f, B=200), digits=3,
+```{r val-random}
+print(validate(f, B=200), digits=3,
       caption='Bootstrap validation of a Cox model with random predictors')
 ```
 
@@ -729,7 +740,7 @@ survival probabilities and median survival time (when defined) are
 displayed against age and sex.  The fact that a nonlinear effect
 interacts with a stratified factor is taken into account.
 
-```{r spline-age-sex-ia-nomogram,w=6,h=5.75,results='asis',cap='Nomogram from a fitted stratified Cox model that allowed for interaction between age and sex, and nonlinearity in age.  The axis for median survival time is truncated on the left where the median is beyond the last follow-up time.',scap='Nomogram for stratified Cox model'}
+```{r spline-age-sex-ia-nomogram,w=6,h=5.75,cap='Nomogram from a fitted stratified Cox model that allowed for interaction between age and sex, and nonlinearity in age.  The axis for median survival time is truncated on the left where the median is beyond the last follow-up time.',scap='Nomogram for stratified Cox model'}
 #| label: fig-cox-spline-age-sex-ia-nomogram
 surv    <- Survival(f.ia)
 surv.f  <- function(lp) surv(3, lp, stratum='sex=Female')
@@ -745,7 +756,10 @@ n <- nomogram(f.ia, fun=list(surv.m, surv.f, med.m,med.f),
          fun.at=list(c(.8,.9,.95,.98,.99),
                      c(.1,.3,.5,.7,.8,.9,.95,.98),
                      c(8,10,12),c(1,2,4,8,12)))
-plot(n, col.grid=FALSE, lmgp=.2)   
+plot(n, col.grid=FALSE, lmgp=.2)
+```
+
+```{r}
 latex(f.ia, digits=3)
 ```
 

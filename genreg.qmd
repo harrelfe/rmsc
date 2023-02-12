@@ -563,8 +563,8 @@ $k+3 \rightarrow k-1$ parameters @dev86.
 
 To force linearity when $X < a$: $X^2$ and $X^3$ terms must be omitted
 <br>
-To force linearity when $X > $ last knot: last two $\beta$s are
-redundant, i.e., are just combinations of the other $\beta$s.
+To force linearity when $X$ is beyond the last knot: last two $\beta$ s are
+redundant, i.e., are just combinations of the other $\beta$ s.
 
 The restricted spline function with $k$ knots $t_{1}, \ldots, t_{k}$
 is given by @dev86
@@ -636,8 +636,8 @@ ordinary $4^{th}$ order polynomial.  This can be run with
 
 ```{r eval=FALSE}
 require(Hmisc)
-getRs('demoSpline.r')                 # if using RStudio
-getRs('demoSpline.r', put='source')   # if not
+getRs('demoSpline.r', put='rstudio')  # to see code in RStudio window
+getRs('demoSpline.r')                 # to just run the code
 ```
 
 Paul Lambert's excellent self-contained interactive demonstrations of
@@ -674,7 +674,7 @@ $$H_{0} : \beta_{2} = \beta_{3} = \ldots = \beta_{k-1} = 0.$$
 
 Example: @sel10gly
 
-<img src="sel10gly.png" width="50%">
+<img src="sel10gly.png" width="100%">
 
 
 ### Choosing Number and Position of Knots {#sec-knots}
@@ -1343,7 +1343,7 @@ ggplot(Predict(f, time=times, fun=g, offset=off)) + w + v + yl
 Look at fit statistics especially evidence for the jump
 
 <small>
-```{r sic5,results='asis'}
+```{r sic5}
 f
 ```
 </small>
@@ -1353,6 +1353,67 @@ f
 * Evidence for seasonality
 * Could have analyzed rates using a semiparametric model
 
+## Study Questions
+
+1. Contrast statistical models vs. machine learning in a few ways
+
+**Section 2.1-2.2**
+
+1. What is always linear in the linear model?
+
+**Section 2.3**
+
+1. Define an interaction effect in words
+1. In a model with main effects and two-way interactions, which regression parameter is the most "universal" by virtue of being most independent of coding?
+1. When a predictor is involved in an interaction, which test of association involving that predictor is preferred?
+1. What are two ways of doing chunk (composite) tests?
+1. An analyst intends to use least squares multiple regression to
+  predict follow-up blood pressure from baseline blood pressure, age,
+  and sex.  She wants to use this model for estimation, prediction,
+  and inference (statistical tests and confidence limits).  List all
+  of the assumptions she makes by fitting the model $Y = \beta_{0} +
+  \beta_{1} \text{bp} + \beta_{2} \text{age} + \beta_{3} [\text{sex=female}]$.
+1. List as many methods as you can for checking the assumptions you listed.
+
+**Section 2.4.1**
+
+1. Provide an example where categorizing a continuous predictor is a good idea
+1. If you dichotomize a continuous predictor that has a smooth relationship with Y, how can you arbitrarily change its estimated regression coefficients?
+1. What is a general term used for the statistical problem caused by categorizing continuous variables?
+1. What tends to happen when data are used to find cutpoints for relationships that are in fact smooth?
+1. What other inferential distortion is caused by categorization?
+1. Is there an amount of noise that could be added to a continuous X that makes a categorized analysis better than a continuous one?
+
+**Section 2.4.2**
+
+1. What is the biggest drawback to using regular polynomials to fit smooth nonlinear relationships?
+1. Why does a spline function require one to use a truncated term?
+1. What advantages does a linearly tail-restricted cubic spline have?
+1. Why are its constructed variables X' X'' X''' etc. so complex?
+1. What do you need to do to handle a sudden curvature change when fitting a nonlinear spline?
+1. Barring a sudden curvature change, why are knot locations not so important in a restricted cubic spline (rcs)?
+1. What is the statistical term for the delimma that occurs when choosing the number of knots?
+1. What is a Bayesian way of handling this?
+1. What is the core idea behind Cleveland's loess smoother?
+1. Can fitted spline functions for some of the predictors be an end in themselves?
+
+**Section 2.5**
+
+1. What is the worst thing about recursive partitioning?
+1. What is a major tradeoff between the modeling strategy we will largely use and ML?
+1. What are some determinants of the best choice between SM and ML?
+
+**Section 2.6** 
+
+1. What is the main message of the Grambsch and O'Brien paper?
+1. What notational error do many analysts make that lead them to ignore model uncertainty?
+
+**Section 2.7.2**
+
+1. Why is it a good idea to pre-specify interactions, and how is this done?
+1. Why do we not fiddle with transformations of a predictor before considering interactions?
+1. What 3-dimensional restriction does the cross-products of two restricted cubic splines force?
+1. What is an efficient and likely-to-fit approach to allowing for the effect of measurement degradement?
 
 
 

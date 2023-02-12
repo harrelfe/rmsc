@@ -266,8 +266,8 @@ Example:
 
 ```{r eval=FALSE}
 require(rms)                     # make new functions available
-options(prType='html')           # print, summary, anova LaTeX output
-                                 # others: 'html', 'plain'
+options(prType='html')           # print, summary, anova, validate: html output
+                                 # others: 'latex', 'plain'
 options(grType='plotly')         # plotly graphics for ggplot, anova, summary
                                  # default is 'base' for static graphics
 ddist <- datadist(cholesterol, treat, num.diseases, age)

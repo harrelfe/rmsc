@@ -141,7 +141,7 @@ knitr::include_graphics('mle-bootstrapEx.png')
 ---
 
 
-```{r results='asis'}
+```{r}
 set.seed(15)
 
 n     <- 200

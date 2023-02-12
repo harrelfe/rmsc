@@ -409,18 +409,19 @@ title(sub="Log-normal", adj=0, cex=.7)
 Fit Weibull (in aft form), log-logistic, and log-normal models.
 
 
-```{r fittedpsm,results='asis'}
+```{r fittedpsm}
 fw <- psm(S ~ group, data=kprats, dist='weibull')
 fl <- psm(S ~ group, data=kprats, dist='loglogistic',
           y=TRUE)
 fn <- psm(S ~ group, data=kprats, dist='lognormal')
-cat('**Weibull default form**:\n\n')
+bld <- function(x) knitr::asis_output(paste0('**', x, '** :\n\n'))
+bld('Weibull default form')
 latex(fw)
-cat('**Weibull PH form**:\n\n')
+bld('Weibull PH form')
 latex(pphsm(fw))
-cat('**Log-logistic**:\n\n')
+bld('Log-logistic')
 latex(fl)
-cat('**Log-normal**')
+bld('Log-normal')
 latex(fn)
 ```
 

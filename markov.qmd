@@ -180,7 +180,7 @@ ICUs to study the effectiveness of vitamin D vs. placebo
 
 
 
-```{r setdata, results='asis'}
+```{r setdata}
 require(rms)
 require(data.table)
 require(VGAM)
@@ -191,7 +191,7 @@ d[, y     := factor(y,     levels=rev(levels(y    )))]
 d[, yprev := factor(yprev, levels=rev(levels(yprev)))]
 setnames(d, 'time', 'day')
 # Show descriptive statistics for baseline data
-html(describe(d[day == 1, .(yprev, age, sofa, tx)], 'Baseline Variables'))
+describe(d[day == 1, .(yprev, age, sofa, tx)], 'Baseline Variables')
 # Check that death can only occur on the last day
 d[, .(ddif=if(any(y == 'Dead')) min(day[y == 'Dead']) -
                                 max(day) else NA_integer_),
@@ -420,7 +420,7 @@ b <- blrm(y ~ yprev + lsp(day, 2) + age + sofa + tx + cluster(id),
 stanDx(b)
 ```
 
-```{r bayesre2,results='asis'}
+```{r bayesre2}
 b
 ```
 
