@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 require(rms)
+require(qreport)
 options(qproject='rms', prType='html')
-getRs('reptools.r')
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w   = 'fig.width', h    = 'fig.height',
@@ -1270,6 +1270,63 @@ ggplot(as.data.frame(draws), aes(x=`sex=male`, y = age)) +
   geom_hex() + 
   theme(legend.position="none")
 ```
+
+## Study Questions
+
+**Section 10.1**
+
+1. Why can the relationship between X and the log odds possibly be linear?
+1. Why can the relationship between X and the probability not possibly be linear over a wide range of X if X is powerful?
+1. In the logistic model Prob$[Y=1 | X] = \frac{1}{1 + \exp(-X\beta)} =
+  P$, what is the inverse transformation of $P$ that "frees"
+  $X\beta$, both in mathematical form and interpreted using words?
+1. A logistic model is used to relate treatment to the probability of
+  patient response.  X is coded 0 for treatment A, 1 for treatment
+  B, and the model is Prob$[Y=1 |$ treatment$]=
+  \frac{1}{1+\exp[-(\beta_{0} + \beta_{1}X)]}$.  What are the
+  interpretations of $\beta_{0}$ and $\beta_{1}$ in this model?  What
+  is the interpretation of $\exp(\beta_{1})$?
+1. What does the estimate of $\beta$ optimize in the logistic model?
+1. In OLS an $F$ statistic involves the ratio between the explained sum of
+  squares and an estimate of $\sigma^2$.  The numerator d.f. is the number of
+  parameters being  tested, and the denominator d.f. is the d.f. for
+  error.  Why do we always use $\chi^2$ rather than $F$ statistics with the logistic model?  What denominator d.f. could you say a $\chi^2$ statistic has?
+1. Consider a logistic model logit$(Y=1 | X) = \beta_{0} + \beta_{1}X_{1} + \beta_{2}X_{2}$, where $X_1$ is binary and $X_2$ is continuous.  List all of the assumptions made by this model.
+1. A binary logistic model containing one variable (treatment, A vs. B) is
+  fitted, resulting in $\hat{\beta_{0}} = 0, \hat{\beta_{1}} = 1$,
+  where the dummy variable in the model was I[treatment=B].  Compute
+  the estimated B:A odds ratio, the odds of an event for patients on
+  treatment B, and (to two decimal places) the probability of an event
+  for patients on B.
+1. What is the central appeal of the odds ratio?
+1. Given the absence of interactions in a logistic model, which sort of subjects will show the maximum change in absolute risk when you vary any strong predictor?
+1. Would binary logistic regression be a good method for estimating the probability than a response exceeds a certain threshold?
+
+**Section 10.2**
+
+1. What is the best basis for computing a confidence interval for a risk estimate?
+1. If subect risks are not mostly between 0-0.2 and 0.8-1.0, what is the minimum sample size for fitting a binary logistic model?
+
+**Section 10.5**
+
+1. What is the best way to model non-additive effects of two continuous predictors?
+1. The lowess nonparametric smoother, with outlier detection turned
+  off, is an excellent way to depict how a continuous predictor $X$
+  relates to a binary response $Y$ (although splining the predictor in
+  a binary logistic model may perform better).  How would one modify the usual
+  lowess plot to result in a graph that assesses the fit of a simple
+  linear logistic model containing only this one predictor $X$ as a
+  linear effect?
+
+**Section 10.8**
+
+1. What are examples of high-information measures of predictive ability?
+1. What is a measure of pure discrimination for the binary logistic model?  What commonly used measure in medical diagnosis is this measure equivalent to?
+1. Name something wrong with using the percent of correctly classified observations to quantify the accuracy of a logistic model.
+
+**Section 10.9**
+
+1. What is the best way to demonstrate the absolute predictive accuracy of a binary logistic model?
 
 
 ```{r echo=FALSE}

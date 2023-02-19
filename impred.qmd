@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 require(Hmisc)
+require(qreport)
 options(qproject='rms', prType='html')
-getRs('reptools.r')
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
@@ -247,10 +247,10 @@ bootstrap adjustment is minimized.  In contrast, model uncertainty associated
 with stepwise regression (driven by associations with $Y$) is massive.
 
 For the prostate dataset, consider PCs
-on raw candidate predictors, expanding polytomous factors using dummy variables.
-The `R` function `princomp` is used, after singly imputing missing raw
+on raw candidate predictors, expanding polytomous factors using indicator variables.
+The `R` function `princmp` is used, after singly imputing missing raw
 values using `transcan`'s optimal additive nonlinear models.  In
-this series of analyses we ignore the treatment variable, `rx`.
+this series of analyses we ignore the treatment variable, `rx`.  `princmp` calls the built-in `princomp` function.  `princmp` assists with interpretation of PCs.
 
 
 ```{r pc,w=4,h=3,cap='Variance of the system of raw predictors (black) explained by individual principal components (lines) along with cumulative proportion of variance explained (text), and variance explained by components computed on `transcan`-transformed variables (red)',scap='Variance of the system explained by principal components.'}
@@ -265,27 +265,11 @@ imputed <- as.data.frame(imputed)
 Ekg <- model.matrix(~ ekg, data=imputed)[, -1]
 # Use correlation matrix
 pfn <- prostate$pfn
-prin.raw <- princomp(~ sz + sg + ap + sbp + dbp + age +
-                     wt + hg + Ekg + pfn + bm + hx,
-                     cor=TRUE, data=imputed)
+prin.raw <- princmp(~ sz + sg + ap + sbp + dbp + age +
+          wt + hg + ekg + pfn + bm + hx,
+          k=16, sw=TRUE, ylim=c(0, 4), offset=1, data=imputed)
 
-plot(prin.raw, type='lines', main='', ylim=c(0,3))
-# Add cumulative fraction of variance explained
-addscree <- function(x, npcs=min(10, length(x$sdev)),
-                     plotv=FALSE,
-                     col=1, offset=.8, adj=0, pr=FALSE) {
-  vars <- x$sdev^2
-  cumv <- cumsum(vars)/sum(vars)
-  if(pr) print(cumv)
-  text(1:npcs, vars[1:npcs] + offset*par('cxy')[2],
-       as.character(round(cumv[1:npcs], 2)),
-       srt=45, adj=adj, cex=.65, xpd=NA, col=col)
-  if(plotv) lines(1:npcs, vars[1:npcs], type='b', col=col)
-}
-addscree(prin.raw)
-prin.trans <- princomp(ptrans$transformed, cor=TRUE)
-addscree(prin.trans, npcs=10, plotv=TRUE, col='red',
-         offset=-.8, adj=1)
+prin.trans <- princmp(ptrans$transformed, k=12, add=TRUE, col='red', offset=-1.3)
 ```
 
 The resulting plot shown in  @fig-impred-pc is called a
@@ -299,7 +283,7 @@ system.  Two of the 16 dimensions are almost totally redundant.
 After repeating this process when transforming all predictors via
 `transcan`,  we have only 12 degrees of freedom for the 12
 predictors.  The variance explained is depicted in  @fig-impred-pc in red.
-It requires at least 9 of the 12 possible components to explain $\geq 0.9$
+It requires at least 8 of the 12 possible components to explain $\geq 0.8$
 of the variance, and the first 5 components explain $0.66$ of the
 variance as opposed to $0.49$ for untransformed variables.
 
@@ -321,7 +305,7 @@ spar(bty='l')
 S <- with(prostate, Surv(dtime, status != "alive"))
 # two-column response var.
 
-pcs <- prin.raw$scores         # pick off all PCs
+pcs <- prin.raw         # pick off all PCs
 aic <- numeric(16)
 for(i in 1:16) {
   ps <- pcs[,1:i]
@@ -358,11 +342,11 @@ transformed variables.
 ```{r}
 # Compute PC1 on a subset of transcan-transformed predictors
 pco <- function(v) {
-  f <- princomp(ptrans$transformed[,v], cor=TRUE)
-  vars <- f$sdev^2
+  f <- princmp(ptrans$transformed[,v], pl=FALSE, scoef=FALSE, orig=FALSE)
+  vars <- attr(f, 'vars')
   cat('Fraction of variance explained by PC1:',
-      round(vars[1]/sum(vars),2), '\n')
-  f$scores[,1]
+      round(vars[1] / sum(vars),2), '\n')
+  f[,1]
 }
 tumor   <- pco(c('sz','sg','ap','bm'))
 bp      <- pco(c('sbp','dbp'))
@@ -400,7 +384,7 @@ redundancy analysis.
 
 @pcaPP have written a nice
 `R` package `pcaPP` for doing sparse PC
-analysis.^[The `spca` package is a new sparse PC package that should also be considered.]
+analysis.^[The `spcr` package is another sparse PC package that should also be considered.]
 The following example uses the prostate data again.
 To allow for nonlinear transformations and to score the `ekg`
 variable in the prostate dataset down to a scalar, we use the
@@ -409,16 +393,7 @@ variable in the prostate dataset down to a scalar, we use the
 
 ```{r spca,cap='Variance explained by individual sparse principal components (lines) along with cumulative proportion of variance explained (text)',scap='Sparse principal components'}
 #| label: fig-impred-spca
-require(pcaPP)
-spar()
-s <- sPCAgrid(ptrans$transformed, k=10, method='sd',
-              center=mean, scale=sd, scores=TRUE,
-              maxiter=10)
-plot(s, type='lines', main='', ylim=c(0,3))
-addscree(s)
-lo <- unclass(s$loadings)
-flo <- format(round(lo, 2), zero.print=FALSE)
-print(flo, quote=FALSE)    # These loadings are on the orig. transcan scale
+s <- princmp(ptrans$transformed, k=10, method='sparse', sw=TRUE, nvmax=3)
 ```
 
 <!-- # Computing loadings on the original transcan scales--->
@@ -437,7 +412,7 @@ regression predicts time until death.
 ```{r spc,cap='Performance of sparse principal components in Cox models',scap='Performance of sparse principal components'}
 #| label: fig-impred-spc
 spar(bty='l')
-pcs <- s$scores         # pick off sparse PCs
+pcs <- s         # pick off sparse PCs
 aic <- numeric(10)
 for(i in 1:10) {
   ps <- pcs[,1:i]
@@ -483,7 +458,33 @@ transformations in  @fig-impred-ace determined using
 `transace` were similar to those in  @fig-impred-transcan.
 The `transcan` transformation for `ekg` makes more sense.
 
+## Study Questions
+
+**Section 8.2**
+
+1. Critique the choice of the number of parameters devoted to each
+   predictor.
+   
+**Section 8.3**
+
+1. Explain why the final amount of redundancy can change from the
+   initial assessment.
+   
+**Section 8.5**
+
+1. What is the meaning of the first canonical variate?
+1. Explain the first row of numbers in the matrix of coefficients of
+   canonical variates.
+1. The transformations in Figure 8.3 are not optimal for predicting
+   the outcome.  What good can be said of them?
+   
+**Section 8.6**
+
+1. Why in general terms do principal components work well in
+   predictive modeling?
+1. What is the advantage of sparse PCs over regular PCs?
+
+
 ```{r echo=FALSE}
 saveCap('08')
 ```
-

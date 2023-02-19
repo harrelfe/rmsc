@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 require(Hmisc)
 options(qproject='rms', prType='html')
-getRs('reptools.r')
+require(qreport)
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
@@ -699,6 +699,27 @@ mean TWSTRS between high and low dose
 
 ```{r mark9}
 ```
+
+## Study Questions
+
+**Section 7.2**
+
+1. When should one model the time-response profile using discrete time?
+   
+**Section 7.3**
+
+1. What makes generalized least squares and mixed effect models
+   relatively robust to non-completely-random dropouts?
+1. What does the last observation carried forward method always violate?
+
+**Section 7.4**
+
+1. Which correlation structure do you expect to fit the data when there are rapid repetitions over a short time span?  When the follow-up time span is very long?
+
+**Section 7.8**
+
+1. What can go wrong if many correlation structures are tested in one dataset?
+1. In a longitudinal intervention study, what is the most typical comparison of interest?  Is it best to borrow information in estimating this contrast?
 
 ```{r echo=FALSE}
 saveCap('07')

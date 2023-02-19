@@ -187,6 +187,7 @@ kableExtra, pcaPP, VGAM, MASS, leaps, rpart
 
 | Date | Sections | Changes |
 |:---|:-|:--------|
+| 2023-02-19 | [-@sec-impred]     | Used new Hmisc 5.0-0 function princmp for principal components |
 | 2023-02-12 |                    | Used rms 6.5-0 to improve code, removing results='asis' from chunk headers |
 | 2023-02-07 |                    | Started moving study questions to end of chapters |
 | 2022-10-28 | [-@sec-intro]      | 3 new flowcharts |

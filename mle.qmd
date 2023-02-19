@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 require(rms)
+require(qreport)
 options(qproject='rms', prType='html')
-getRs('reptools.r')
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w   = 'fig.width', h    = 'fig.height',
@@ -365,7 +365,47 @@ ggplot(both, aes(x=x1, y=yhat, color=Penalty)) + geom_line() +
   geom_abline(col=gray(0.7)) + facet_grid (~ type)
 ```
 
+## Study Questions
 
+**Section 9.1**
+
+1. What does the MLE optimize?
+1. Describe in general terms why the information matrix is related to precision of MLEs.
+
+**Section 9.2**
+
+1. Explain in general terms how the Rao efficient score test works.
+
+**Section 9.3**
+
+1. For right-censored time-to-event data, what is the likelihood component for an uncensored and for a censored data value?
+1. What makes the Wald test not very accurate in general?
+1. Why are Wald confidence intervals symmetric?
+
+**Section 9.4**
+
+1. Why do we like the Newton-Raphson method for solving for MLEs?
+
+**Section 9.5**
+
+1. Why does the robust cluster sandwich covariance estimator not make sense at a fundamental level?
+1. Will the cluster sandwich covariance estimator properly detect and ignore observations that are duplicated?
+
+**Section 9.7**
+
+1. Why are most bootstrap confidence intervals not extremely accurate (other than from the double bootstrap or the bootstrap t method)?
+1. What is the real appeal of bootstrap confidence intervals?
+
+**Section 9.8**
+
+1. Why is AIC not an answer to the question of whether a biomarker is useful to know, after adjusting for other predictors?
+1. What is the appeal of the adequacy index?
+
+**Section 9.10**
+
+1. What is are the main challenges with penalized MLE?
+1. Can penalization hurt estimates?
+1. What is the most principled method for doing statistical inference if one is penalizing parameter estimates?
 
 ```{r echo=FALSE}
 saveCap('09')

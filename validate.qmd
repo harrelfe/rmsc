@@ -622,8 +622,51 @@ ggplot(w, aes(x=predictor, y=Rank)) + geom_point() + coord_flip() +
    values from a model derived by data torture from all of the
    features not used in the model
 
+## Study Questions
 
+**Section 5.1**
 
+1. What is a general way to solve the problem of how to understand a
+  complex model?
+1. Why is it useful to estimate the effect of changing a continuous
+  predictor on the outcome by varying the predictor from its $25^{th}$
+  to its $75^{th}$ percentile?
+
+**Section 5.2**
+
+1. Describe briefly in very general terms what the bootstrap involves.
+1. The bootstrap may be used to estimate measures of many types of statistical quantities.  Which type is being estimated when it comes to model validation?
+
+**Section 5.3**
+
+1. What are some disadvantages of external validation?
+1. What would cause an independently validated $R^2$ to be negative?
+1. A model to predict the probability that a patient has a disease was
+  developed using patients cared for at hospital A.  Sort the
+  following in order from the worst way to validate the
+  predictive accuracy of a model to the best and most stringent way.
+  You can just specify the letters corresponding to the following, in
+  the right order.
+     a. compute the predictive accuracy of the model when applied to
+  a large number of patients in another country
+     a. compute the accuracy on a large number of patients in hospital
+  B that is in the same state as hospital A
+     a. compute the accuracy on 5 patients from hospital $A$ that were
+  collected after the original sample used in model fitting was completed
+     a. use the bootstrap
+     a. randomly split the data into two halves assuming that the
+  dataset is not extremely large; develop the model on
+  one half, freeze it, and evaluate the predictive accuracy on the other half
+     a. report how well the model predicted the disease status of
+  the patients used to fit the model
+     a. compute the accuracy on patients in hospital $A$ that were
+  admitted after the last patient's data used to fit the model were
+  collected, assuming that both samples were large
+
+**Section 5.6**
+
+1. What is a way to do a misleading interaction analysis?
+1. What would cause the most embarrassment to a researcher who analyzed a high-dimensional dataset to find "winning" associations?
 
 
 ```{r echo=FALSE}
