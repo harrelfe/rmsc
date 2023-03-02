@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 require(Hmisc)
 options(qproject='rms', prType='html')
-getRs('reptools.r')
+require(qreport)
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
@@ -104,20 +104,17 @@ transformed variables) predict the cause of death.
 There are 127 `cvd`s.  We use the 15:1 rule of thumb
 discussed in @sec-multivar-overfit to justify using the
 first 8 PCs.  `ap` is log-transformed because of
-its extreme distribution.
+its extreme distribution.  We use `Hmisc::princmp`.
 
 
 ```{r}
-# Function to compute the first k PCs
-ipc <- function(x, k=1, ...)
-  princomp(x, ..., cor=TRUE)$scores[,1:k]
 # Compute the first 8 PCs on raw variables then on
 # transformed ones
-pc8 <- ipc(~ sz + sg + log(ap) + sbp + dbp + age +
+pc8 <- princmp(~ sz + sg + log(ap) + sbp + dbp + age +
            wt + hg + ekg.norm + pfn + bm + hx + rxn + dtime,
-           data=psub, k=8)
+           data=psub, k=8, sw=TRUE, kapprox=2, orig=FALSE)
 f8   <- lrm(cvd ~ pc8, data=psub)
-pc8t <- ipc(trans, k=8)
+pc8t <- princmp(trans, k=8, sw=TRUE, kapprox=2, orig=FALSE)
 f8t  <- lrm(cvd ~ pc8t, data=psub)
 # Fit binary logistic model on original variables
 f <- lrm(cvd ~ sz + sg + log(ap) + sbp + dbp + age +

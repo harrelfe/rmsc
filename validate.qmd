@@ -511,7 +511,89 @@ Other issues:
     examples of problems resulting from data-driven analyses.
 
 
+### Multiple Imputation and Resampling-Based Model Validation {#sec-val-mival}
 
+When there are missing data, especially missing $X$, there are simple approaches that are sometimes used for strong internal validation, including
+
+* When the fraction of incomplete observations is small, fit the model on complete cases and validate it with the bootstrap or cross-validation.
+* When the fraction of incomplete observations is moderately small, do single imputation and validate the model the ordinary way as in the last bullet.
+* For either solution, still use multiple imputation for coefficient estimation, confidence intervals, and statistical tests.
+
+A more general approach is needed.
+
+* Spirit of multiple imputation: average the regression coefficients over $k$ model fits for $k$ completed datasets
+* For validation: do a bootstrap validation separately for each model fit on each completed dataset
+* Average the $k$ estimates of model performance
+* For each fit use $B$ bootstrap resamples for a total of $kB$ iterations
+* May be OK to choose lower value of $B$ than usual because of the averaging over $k$ validations
+* For $k=20$ consider using $B=100$, with a lower $B$ for very large dataset
+* Procedure is implemented using the `Hmisc` `fit.mult.impute` function (for `Hmisc` 5.0-1 or later) and the `rms` `processMI` function (for `rms` 6.6-0 or later)
+* Example: Simulate data making two predictors missing completely at random for $\frac{1}{5}$ of the observations
+* Ordinary linear model
+* 5 noise variables added to create more overfitting
+
+```{r}
+require(rms)
+options(prType='html')
+set.seed(1)
+n <- 200
+d <- data.frame(age = rnorm(n, 50, 10),
+                sex = sample(c('f', 'm'), n, TRUE),
+                x1  = runif(n),
+                x2  = runif(n),
+                x3  = runif(n),
+                x4  = runif(n),
+                x5  = runif(n)   )
+mis <- function(x) ifelse(runif(n) < 0.2, NA, x)
+d <- transform(d,
+  y = 0.07 * (age - 50) + (sex == 'f') + rnorm(n),
+  age = mis(age),
+  sex = mis(sex) )
+# Do inefficient complete case analysis
+f <- ols(y ~ age + sex + x1 + x2 + x3 + x4 + x5, data=d)
+f   
+```
+
+* Fraction of missing data is 0.59 so we should perhaps run 60 imputations
+
+```{r}
+a <- aregImpute(~ y + age + sex + x1 + x2 + x3 + x4 + x5,
+                data=d, n.impute=60, pr=FALSE)   # 3s
+```
+
+* For each imputation, complete the dataset using predictive mean matching
+* Fit a linear model on that completed dataset and run bootstrap validation of both model performance metrics and a smooth calibration curve
+* Just do $B=50$ resamples per imputaton because we are doing so many imputations
+* Specify a function to `fit.mult.impute` to tell it which extra analyses are needed per completed dataset
+
+```{r}
+g <- function(fit) 
+  list(validate  = validate(fit, B=50),
+       calibrate = calibrate(fit, B=50) )
+f <- fit.mult.impute(y ~ age + sex + x1 + x2 + x3 + x4 + x5,
+                     ols, a, data=d, pr=FALSE,
+                     fun=g, fitargs=list(x=TRUE, y=TRUE))   # 6s
+f
+```
+
+* The numbers in the top box of the output are averaged over the imputations.  So are the $\beta$s.
+* Average the bootstrapped performance measures and print
+
+```{r}
+processMI(f, 'validate')
+```
+
+* For the estimated calibration curves, `processMI` by default shows all the individual curves from all multiple imputations (set `plotall=FALSE` to suppress this)
+* Use an option to also show the first three individual validations followed by the average
+
+```{r}
+#| fig.height: 6
+#| fig.width: 8
+#| column: screen-right
+cal <- processMI(f, 'calibrate', nind=3)
+```
+
+* Run `plot(cal)` if you want to see a full size final average calibration
 
 ## Bootstrapping Ranks of Predictors {#sec-val-bootrank}
 `r mrg(sound("v-12"))`

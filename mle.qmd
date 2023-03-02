@@ -364,6 +364,9 @@ both$Penalty <- both$.set.
 ggplot(both, aes(x=x1, y=yhat, color=Penalty)) + geom_line() +
   geom_abline(col=gray(0.7)) + facet_grid (~ type)
 ```
+## Further Reading
+
+* [Quadratic approximation and normal asymptotics](https://strimmerlab.github.io/publications/lecture-notes/MATH20802/quadratic-approximation-and-normal-asymptotics.html) by Korbinian Strimmer
 
 ## Study Questions
 

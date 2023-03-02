@@ -206,10 +206,8 @@ Example: re-do the assessment above.  Note that the `VGAM` package `vglm` functi
 #| label: fig-ordinal-po-assumpts-impact
 spar(ps=7)
 require(rms)
-# Need source() until impactPO is in an rms update on CRAN
-# source('https://raw.githubusercontent.com/harrelfe/rms/master/R/impactPO.r')
 # One headache: since using a non-rms fitting function need to hard
-# code knots in splines.  This may not be necessary in later rms versions
+# code knots in splines.  This is not necessary in rms 6.5-0 and later
 kq   <- seq(0.05, 0.95, length=4)
 kage <- quantile(support$age,    kq, na.rm=TRUE)
 kbp  <- quantile(support$meanbp, kq, na.rm=TRUE)
