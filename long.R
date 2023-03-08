@@ -167,7 +167,7 @@ plot(n, cex.axis=.55, cex.var=.8, lmgp=.25)
 ## ---- bayesfit --------
 
 require(rmsb)
-options(mc.cores=parallel::detectCores() - 1)
+options(mc.cores=parallel::detectCores() - 1, rmsb.backend='cmdstan')
 bpo <- blrm(twstrs ~ treat * rcs(week, 3) + rcs(twstrs0, 3) +
             rcs(age, 4) * sex + cluster(uid), data=both, file='bpo.rds')
 # file= means that after the first time the model is run, it will not

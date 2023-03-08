@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 require(Hmisc)
 options(qproject='rms', prType='html')
-getRs('reptools.r')
+require(qreport)
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
@@ -121,6 +121,7 @@ many ties at 356 days.
 
 ```{r spearman, w=4.5, cap='Generalized Spearman $\\rho^2$ rank correlation between predictors and truncated survival time'}
 #| label: fig-psmcase-spearman
+#| fig-height: 3
 spar(top=1, ps=10, rt=3)
 ac <- upData(ac, print=FALSE,
   shortest.follow.up = min(d.time[death==0], na.rm=TRUE),
@@ -140,6 +141,7 @@ allowing for censoring.
 
 ```{r rcorrcens, w=4.5, cap='Somers\' $D_{xy}$ rank correlation between predictors and original survival time.  For `dzgroup` or `race`, the correlation coefficient is the maximum correlation from using a dummy variable to represent the most frequent or one to represent the second most frequent category.',scap='Somers\' $D_{xy}$ rank correlation between predictors and original survival time'}
 #| label: fig-psmcase-rcorrcens
+#| fig-height: 3
 spar(top=1, ps=10, rt=3)
 w <- rcorrcens(S ~ age + num.co + scoma + meanbp + hrt + resp +
                temp + crea + sod + adlsc + wblc + pafi + ph +
@@ -189,6 +191,7 @@ Better approach to gauging predictive potential and allocating d.f.:
 
 ```{r anovasat,cap='Partial $\\chi^{2}$ statistics for association of each predictor with response from saturated main effects model, penalized for d.f.',scap='Partial $\\chi^{2}$ statistics from saturated main effects model'}
 #| label: fig-psmcase-anovasat
+#| fig-height: 3.5
 k <- 4
 f <- psm(S ~ rcs(age,k)+sex+dzgroup+pol(num.co,2)+scoma+
          pol(adlsc,2)+race+rcs(meanbp,k)+rcs(hrt,k)+rcs(resp,k)+
@@ -247,6 +250,7 @@ a
 
 ```{r anova,cap='Contribution of variables in predicting survival time in log-normal model'}
 #| label: fig-psmcase-anova
+#| fig-height: 3.5
 plot(a)
 ```
 
@@ -274,7 +278,7 @@ Validate indexes describing the fitted model.
 #  from the data
 g <- update(f, x=TRUE, y=TRUE)
 set.seed(717)
-validate(g, B=120, dxy=TRUE)
+validate(g, B=300, dxy=TRUE)
 ```
 
 * From $D_{xy}$ and $R^2$ there is a moderate amount of `r ipacue()`
@@ -294,9 +298,9 @@ probability, with at least 60 patients per group.
 ```{r cal, cap='Bootstrap validation of calibration curve.  Dots represent apparent calibration accuracy; $\\times$ are bootstrap estimates corrected for overfitting, based on binning predicted survival probabilities and and computing Kaplan-Meier estimates.  Black curve is the estimated observed relationship using `hare` and the blue curve is the overfitting-corrected `hare` estimate.  The gray-scale line depicts the ideal relationship.',scap='Bootstrap validation of calibration curve for log-normal model'}
 #| label: fig-psmcase-cal
 set.seed(717)
-cal <- calibrate(g, u=1, B=120)
+cal <- calibrate(g, u=1, B=300)
 plot(cal, subtitles=FALSE)
-cal <- calibrate(g, cmethod='KM', u=1, m=60, B=120, pr=FALSE)
+cal <- calibrate(g, cmethod='KM', u=1, m=60, B=300, pr=FALSE)
 plot(cal, add=TRUE)
 ```
 

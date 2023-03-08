@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 require(Hmisc)
 options(qproject='rms', prType='html')
-getRs('reptools.r')
+require(qreport)
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
@@ -166,7 +166,7 @@ $S_{T}=S_{C}^{0.5}$
 knitr::include_graphics('parsurv-hr-diff.png')
 ```
 
-```{r hr-vs-surv,w=6,h=4.5,scap='Absolute clinical benefit as a function of survival in a control subject and the relative benefit',cap='Absolute clinical benefit as a function of survival in a control subject and the relative benefit (hazard ratio).  The hazard ratios are given for each curve.'}
+```{r w=6,h=4.5,scap='Absolute clinical benefit as a function of survival in a control subject and the relative benefit',cap='Absolute clinical benefit as a function of survival in a control subject and the relative benefit (hazard ratio).  The hazard ratios are given for each curve.'}
 #| label: fig-parsurv-hr-vs-surv
 spar(bty='l')
 plot(0, 0, type="n", xlab="Survival for Control Subject",
@@ -380,7 +380,7 @@ knitr::include_graphics('parsurv-aft-assumption-x.png')
 |         |344$^{+}$ |||||||||   |
 
 
-```{r kprats-check,h=6, w=7.5, scap='Examples of checking parametric survival model assumptions',cap='Altschuler-Nelson-Fleming-Harrington nonparametric survival estimates for rats treated with DMBA [@pik66], along with various transformations of the estimates for checking distributional assumptions of 3 parametric survival models.'}
+```{r h=6, w=7.5, scap='Examples of checking parametric survival model assumptions',cap='Altschuler-Nelson-Fleming-Harrington nonparametric survival estimates for rats treated with DMBA [@pik66], along with various transformations of the estimates for checking distributional assumptions of 3 parametric survival models.'}
 #| label: fig-parsurv-kprats-check
 spar(mfrow=c(2,2), top=1, bot=2, mgp=c(2.75, .365, 0))
 getHdata(kprats)
@@ -438,14 +438,14 @@ knitr::include_graphics('parsurv-group-effects.png')
         all have same standardized distribution (e.g., same $\sigma$)
 
 
-```{r kprats-psm-np,scap='Fitted log-logistic model',cap='Agreement between fitted log-logistic model and nonparametric survival estimates for rat vaginal cancer data'}
+```{r scap='Fitted log-logistic model',cap='Agreement between fitted log-logistic model and nonparametric survival estimates for rat vaginal cancer data'}
 #| label: fig-parsurv-kprats-psm-np
 survplot(f, conf.int=FALSE,   
          levels.only=TRUE, label.curves=list(keys='lines'))
 survplot(fl, add=TRUE, label.curves=FALSE, conf.int=FALSE)
 ```
 
-```{r kprats-resid-np,scap='Checking AFT distributional assumption using residuals',cap='Kaplan-Meier estimates of distribution of standardized, censored residuals from the log-logistic model, along with the assumed standard log-logistic distribution (blue).  Red step function is the estimated distribution of all residuals; black step functions are the estimated distributions of residuals stratified by group, as indicated.'}
+```{r scap='Checking AFT distributional assumption using residuals',cap='Kaplan-Meier estimates of distribution of standardized, censored residuals from the log-logistic model, along with the assumed standard log-logistic distribution (blue).  Red step function is the estimated distribution of all residuals; black step functions are the estimated distributions of residuals stratified by group, as indicated.'}
 #| label: fig-parsurv-kprats-resid-np
 r <- resid(fl, 'cens')
 survplot(npsurv(r ~ group, data=kprats),
@@ -471,7 +471,7 @@ surv
 Show fitted hazard function from log-logistic, and add median survival
 time to graph
 
-```{r kprats-hazard,w=5.25,h=4,scap='Estimated log-logistic hazard functions',cap='Estimated hazard functions for log-logistic fit to rat vaginal cancer data, along with median survival times'}
+```{r w=5.25,h=4,scap='Estimated log-logistic hazard functions',cap='Estimated hazard functions for log-logistic fit to rat vaginal cancer data, along with median survival times'}
 #| label: fig-parsurv-kprats-hazard
 spar(ps=9,top=1,bot=1,left=1,mgp=c(2.75,.365,0))
 # Plot estimated hazard functions and add median

@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 options(qproject='rms', prType='html')
 require(Hmisc)
-getRs('reptools.r')
+require(qreport)
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
@@ -549,21 +549,23 @@ d <- transform(d,
   y = 0.07 * (age - 50) + (sex == 'f') + rnorm(n),
   age = mis(age),
   sex = mis(sex) )
+fracmiss <- with(d, mean(is.na(age) | is.na(sex)))
 # Do inefficient complete case analysis
 f <- ols(y ~ age + sex + x1 + x2 + x3 + x4 + x5, data=d)
 f   
 ```
 
-* Fraction of missing data is 0.59 so we should perhaps run 60 imputations
+* Fraction of missing data is `r fracmiss` so let's run 40 imputations
 
 ```{r}
 a <- aregImpute(~ y + age + sex + x1 + x2 + x3 + x4 + x5,
-                data=d, n.impute=60, pr=FALSE)   # 3s
+                data=d, n.impute=40, pr=FALSE)   # 2s
 ```
 
 * For each imputation, complete the dataset using predictive mean matching
 * Fit a linear model on that completed dataset and run bootstrap validation of both model performance metrics and a smooth calibration curve
 * Just do $B=50$ resamples per imputaton because we are doing so many imputations
+* Fitting linear models is so fast that higher $B$ could have been used
 * Specify a function to `fit.mult.impute` to tell it which extra analyses are needed per completed dataset
 
 ```{r}
@@ -572,7 +574,7 @@ g <- function(fit)
        calibrate = calibrate(fit, B=50) )
 f <- fit.mult.impute(y ~ age + sex + x1 + x2 + x3 + x4 + x5,
                      ols, a, data=d, pr=FALSE,
-                     fun=g, fitargs=list(x=TRUE, y=TRUE))   # 6s
+                     fun=g, fitargs=list(x=TRUE, y=TRUE))   # 3s
 f
 ```
 
@@ -628,7 +630,7 @@ ranks <- matrix(NA, nrow=B, ncol=12)
 rankvars <- function(fit)
   rank(plot(anova(fit), sort='none', pl=FALSE))
 Rank <- rankvars(f)
-for(i in 1:B) {
+for(i in 1:B) {    # 6s
   j <- sample(1:n, n, TRUE)
   bootfit <- update(f, data=d, subset=j)
   ranks[i,] <- rankvars(bootfit)

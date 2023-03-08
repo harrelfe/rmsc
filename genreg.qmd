@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 options(qproject='rms', prType='html')
 require(Hmisc)
-getRs('reptools.r')
+require(qreport)
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
@@ -1285,6 +1285,7 @@ dd   <- datadist(d);  options(datadist='dd')
 Start with a standard restricted cubic spline fit, 6 knots at default quantile locations.  From the fitted Poisson model we estimate the number of cases per a constant population size of 100,000.
 
 ```{r sic}
+require(ggplot2)
 g   <- function(x) exp(x) * 100000
 off <- list(stdpop=mean(d$stdpop))    # offset for prediction (383464.4)
 w   <- geom_point(aes(x=time, y=rate), data=d)

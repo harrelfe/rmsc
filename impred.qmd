@@ -255,7 +255,9 @@ this series of analyses we ignore the treatment variable, `rx`.  `princmp` calls
 
 ```{r pc,w=4,h=3,cap='Variance of the system of raw predictors (black) explained by individual principal components (lines) along with cumulative proportion of variance explained (text), and variance explained by components computed on `transcan`-transformed variables (red)',scap='Variance of the system explained by principal components.'}
 #| label: fig-impred-pc
-spar(top=1)
+#| fig.width: 7
+#| column: page-inset-right
+spar(top=1, ps=7)
 # Impute all missing values in all variables given to transcan
 imputed <- impute(ptrans, data=prostate, list.out=TRUE)
 imputed <- as.data.frame(imputed)

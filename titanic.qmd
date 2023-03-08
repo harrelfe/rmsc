@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 require(Hmisc)
+require(qreport)
 options(qproject='rms', prType='html')
-getRs('reptools.r')
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
@@ -39,19 +39,20 @@ dd <- datadist(t3)
 options(datadist='dd')
 s <- summary(survived ~ age + sex + pclass +
              cut2(sibsp,0:3) + cut2(parch,0:3), data=t3)
-plot(s, main='', subtitles=FALSE)   
+plot(s, main='', subtitles=FALSE)
 ```
 
 Show 4-way relationships after collapsing levels.  Suppress estimates  `r ipacue()` based on $<25$ passengers.
 
 ```{r dot,h=3,w=6,cap='Multi-way summary of Titanic survival'}
 #| label: fig-titanic-dot
+require(ggplot2)
 tn <- transform(t3,
   agec = ifelse(age < 21, 'child', 'adult'),
   sibsp= ifelse(sibsp == 0, 'no sib/sp', 'sib/sp'),
   parch= ifelse(parch == 0, 'no par/child', 'par/child'))
 g <- function(y) if(length(y) < 25) NA else mean(y)
-s <- with(tn, summarize(survived, 
+s <- with(tn, summarize(survived,
            llist(agec, sex, pclass, sibsp, parch), g))
 # llist, summarize in Hmisc package
 ggplot(subset(s, agec != 'NA'),
@@ -112,7 +113,7 @@ anova(f1)
 3-way interactions, `parch` clearly insignificant, so drop
 
 ```{r ia2}
-f <- lrm(survived ~ (sex + pclass + rcs(age,5))^2 + 
+f <- lrm(survived ~ (sex + pclass + rcs(age,5))^2 +
          rcs(age,5)*sibsp, data=t3)
 f
 ```
@@ -124,12 +125,12 @@ size of 758.1 is only 0.004 smaller than the full model.
 anova(f)
 ```
 
-Show the many effects of predictors.  `r ipacue()` 
+Show the many effects of predictors.  `r ipacue()`
 
 ```{r plot1, h=3, w=6, cap='Effects of predictors on probability of survival of Titanic passengers, estimated for zero siblings or spouses',scap='Effects of predictors on probability of surviving the Titanic'}
 #| label: fig-titanic-plota
 p <- Predict(f, age, sex, pclass, sibsp=0, fun=plogis)
-ggplot(p)       
+ggplot(p)
 ```
 
 ```{r plot2,cap='Effect of number of siblings and spouses on the log odds of surviving, for third class males',scap='Effect of number of siblings/spouses on survival'}
@@ -140,20 +141,20 @@ ggplot(Predict(f, sibsp, age=c(10,15,20,50), conf.int=FALSE))
 Note that children having many siblings apparently had lower
 survival.  Married adults had slightly higher survival than unmarried
 ones.
-Validate the model using the bootstrap to check overfitting.  Ignoring two very  `r ipacue()` 
-insignificant pooled tests.
+Validate the model using the bootstrap to check overfitting.  Ignoring two very  `r ipacue()`
+insignificant pooled tests.  Validation of a complete case analysis when there are so many incomplete observations is not a very good idea.  We do this just for comparison with a later validation incorporating multiple imputation.
 
 ```{r val}
 f <- update(f, x=TRUE, y=TRUE)
 # x=TRUE, y=TRUE adds raw data to fit object so can bootstrap
 set.seed(131)                  # so can replicate re-samples
-print(validate(f, B=200), digits=2)
+print(validate(f, B=300), digits=3)
 ```
 
 ```{r calibrate,cap='Bootstrap overfitting-corrected loess nonparametric calibration curve for casewise deletion model'}
 #| label: fig-titanic-calibrate
 spar(ps=10, bot=1)
-cal <- calibrate(f, B=200)      
+cal <- calibrate(f, B=300)
 plot(cal, subtitles=FALSE)
 ```
 But moderate problem with missing data
@@ -170,7 +171,7 @@ require(rpart)      # Recursive partitioning package
 who.na <- rpart(is.na(age) ~ sex + pclass + survived +
                 sibsp + parch, data=titanic3, minbucket=15)
 naplot(na.patterns, 'na per var')
-plot(who.na, margin=.1); text(who.na) 
+plot(who.na, margin=.1); text(who.na)
 plot(na.patterns)
 ```
 
@@ -178,7 +179,7 @@ plot(na.patterns)
 #| label: fig-titanic-summary-na
 spar(ps=7, rt=3)
 plot(summary(is.na(age) ~ sex + pclass + survived +
-             sibsp + parch, data=t3))  
+             sibsp + parch, data=t3))
 ```
 
 ```{r nalrm}
@@ -195,14 +196,19 @@ anova(m)
 
 ## Single Conditional Mean Imputation
 
-`r ipacue()` 
+Single imputation is not the preferred approach here.  Click below to see this section.
+
+::: {.callout-note collapse="true"}
+### Single Imputation and Analysis Result
+
+`r ipacue()`
 First try: conditional mean imputation <br>
 Default spline transformation for age caused distribution of
   imputed values to be much different from non-imputed ones; constrain
   to linear
 
 ```{r transcan}
-xtrans <- transcan(~ I(age) + sex + pclass + sibsp + parch, 
+xtrans <- transcan(~ I(age) + sex + pclass + sibsp + parch,
                    imputed=TRUE, pl=FALSE, pr=FALSE, data=t3)
 summary(xtrans)
 # Look at mean imputed values by sex,pclass and observed means
@@ -215,12 +221,12 @@ with(t3, tapply(age, list(sex,pclass), mean, na.rm=TRUE))
 
 ```{r fit.si}
 dd   <- datadist(dd, age.i)
-f.si <- lrm(survived ~ (sex + pclass + rcs(age.i,5))^2 + 
+f.si <- lrm(survived ~ (sex + pclass + rcs(age.i,5))^2 +
             rcs(age.i,5)*sibsp, data=t3)
 print(f.si, coefs=FALSE)
 ```
 
-```{r nasingle, h=6, w=6, cap='Predicted probability of survival for males from fit using casewise deletion (bottom) and single conditional mean imputation (top).  `sibsp` is set to zero for these predicted values.',scap='Predicted log odds of survival in Titanic using casewise deletion'}
+```{r h=6, w=6, cap='Predicted probability of survival for males from fit using casewise deletion (bottom) and single conditional mean imputation (top).  `sibsp` is set to zero for these predicted values.',scap='Predicted log odds of survival in Titanic using casewise deletion'}
 #| label: fig-titanic-nasingle
 spar(ps=12)
 p1 <- Predict(f,    age,   pclass, sex, sibsp=0, fun=plogis)
@@ -234,6 +240,8 @@ ggplot(p, groups='sex', ylab='Probability of Surviving')
 anova(f.si)
 ```
 
+:::
+
 ## Multiple Imputation
 
 `r mrg(sound("titanic-5"))`
@@ -246,7 +254,7 @@ missing age is $\frac{263}{1309} = 0.2$ we use 20 imputations.
 
 ```{r aregi}
 set.seed(17)         # so can reproduce random aspects
-mi <- aregImpute(~ age + sex + pclass + 
+mi <- aregImpute(~ age + sex + pclass +
                  sibsp + parch + survived,
                  data=t3, n.impute=20, nk=4, pr=FALSE)
 mi
@@ -255,7 +263,7 @@ mi
 mi$imputed$age[1:10, 1:10]
 ```
 
-Show the distribution of imputed (black) and actual ages (gray).  `r ipacue()` 
+Show the distribution of imputed (black) and actual ages (gray).  `r ipacue()`
 
 ```{r ageDist,w=3.5,h=3.25,cap='Distributions of imputed and actual ages for the Titanic dataset.  Imputed values are in black and actual ages in gray.',scap='Distribution of imputed and actual ages'}
 #| label: fig-titanic-agedist
@@ -264,26 +272,52 @@ Ecdf(t3$age, add=TRUE, col='gray', lwd=2,
      subtitles=FALSE)
 ```
 
-Fit logistic models for 20 completed datasets and print the ratio  `r ipacue()` 
- of imputation-corrected variances to average ordinary variances
+Fit logistic models for 20 completed datasets and print the ratio  `r ipacue()`
+ of imputation-corrected variances to average ordinary variances.
 
-```{r anova.mi}
-f.mi <- fit.mult.impute(
-  survived ~ (sex + pclass + rcs(age,5))^2 +
-  rcs(age,5)*sibsp,
-  lrm, mi, data=t3, pr=FALSE)
+For each completed dataset run bootstrap validation of model performance indexes and the nonparametric calibration curve.  Because the 20 analyses of completed datasets help to average out some of the noise in bootstrap estimates we can use fewer bootstrap repetitions (100) than usual (300 or so).  [The `Hmisc` package `runifChanged` function is used to save the result and not spend 1m running it again until an input changes.]{.aside}
+
+```{r fmi}
+val <- function(fit)
+  list(validate  = validate(fit,  B=100),
+       calibrate = calibrate(fit, B=100) )
+
+runmi <- function()
+  fit.mult.impute(       # 1m
+    survived ~ (sex + pclass + rcs(age,5))^2 +
+    rcs(age,5)*sibsp,
+    lrm, mi, data=t3, pr=FALSE,
+    fun=val, fitargs=list(x=TRUE, y=TRUE))
+seed <- 19
+f.mi <- runifChanged(runmi, seed, mi, t3, g, val)
 anova(f.mi)
 ```
 
-The Wald $\chi^2$ for age is reduced by accounting for imputation  `r ipacue()` 
+The Wald $\chi^2$ for age is reduced by accounting for imputation  `r ipacue()`
 but is increased by using patterns of association with survival status
 to impute missing age.
 Show estimated effects of age by classes.
 `r mrg(sound("titanic-6"))`
 
+* Display the 20 bootstrap internal validations averaged over the multiple imputations.
+* Show the 20 individual calibration curves then the first 3 in more detail followed by the overall calibration estimate
+
+```{r}
+val <- processMI(f.mi, 'validate')
+print(val, digits=3)
+```
+
+```{r}
+#| fig.width: 8.5
+#| fig.height: 6
+#| column: screen-inset-right
+spar(mfrow=c(2,2), top=1, bot=2)
+cal <- processMI(f.mi, 'calibrate', nind=3)
+# plot(cal) for full-size final calibration curve
+```
+
 ```{r namult, h=6, w=6, cap='Predicted probability of survival for males from fit using single conditional mean imputation again (top) and multiple random draw imputation (bottom).  Both sets of predictions are for `sibsp`=0.',scap='Predicted Titanic survival using multiple imputation'}
 #| label: fig-titanic-namult
-spar(ps=12)
 p1 <- Predict(f.si,  age.i, pclass, sex, sibsp=0, fun=plogis)
 p2 <- Predict(f.mi,  age,   pclass, sex, sibsp=0, fun=plogis)
 p  <- rbind('Single Imputation'=p1, 'Multiple Imputation'=p2,
@@ -292,15 +326,16 @@ ggplot(p, groups='sex', ylab='Probability of Surviving')
 ```
 
 ## Summarizing the Fitted Model
-Show odds ratios for changes in predictor values  `r ipacue()` 
+
+Show odds ratios for changes in predictor values  `r ipacue()`
 
 ```{r ors, w=5, h=3, cap='Odds ratios for some predictor settings'}
 #| label: fig-titanic-ors
-spar(bot=1, top=0.5)
+spar(bot=1, top=0.5, ps=8)
 # Get predicted values for certain types of passengers
-s <- summary(f.mi, age=c(1,30), sibsp=0:1)  
+s <- summary(f.mi, age=c(1,30), sibsp=0:1)
 # override default ranges for 3 variables
-plot(s, log=TRUE, main='')             
+plot(s, log=TRUE, main='')
 ```
 
 ```{r phat}
@@ -316,7 +351,7 @@ data.frame(combos, phat)
 options(digits=5)
 ```
 
-We can also get predicted values by creating an S function that will  `r ipacue()` 
+We can also get predicted values by creating an S function that will  `r ipacue()`
 evaluate the model on demand.
 
 
@@ -331,7 +366,7 @@ pred.logit
 plogis(pred.logit(age=c(2,21,50), sex='male', pclass='3rd'))
 ```
 
-A nomogram could be used to obtain predicted values manually, but this  `r ipacue()` 
+A nomogram could be used to obtain predicted values manually, but this  `r ipacue()`
 is not feasible when so many interaction terms are present.
 
 ## Bayesian Analysis
@@ -340,9 +375,11 @@ is not feasible when so many interaction terms are present.
   Bayesian binary logistic model
 * Using default `blrm` function normal priors on regression
   coefficients with zero mean and large SD making the priors almost flat
-* `blrm` uses the `rstan` package that provides the full
-  power of Stan to `R`
-* Could use smaller SDs to get penalized estimates
+* `blrm` uses the `rcmdstan` and `rstan` packages that provides the full power of Stan to `R`
+* Here we use `cmdstan` with `rcmdstan`
+* `rmsb` has its own caching mechanism that efficiently stores the model fit object (and all its posterior draws) and reads it back from disk install of running it again, until one of the inputs change
+* See [this](https://hbiostat.org/R/rmsb) for more about the `rmsb` package
+* Could use smaller prior SDs to get penalized estimates
 * Using 4 independent Markov chain Hamiltonion posterior sampling
   procedures each with 1000 burn-in iterations that are discarded, and
   1000 "real" iterations for a total of 4000 posterior sample draws
@@ -353,17 +390,17 @@ is not feasible when so many interaction terms are present.
 
 
 ```{r blrm}
-# Use all available CPU cores.  Each chain will be run on its
+#| column: page-inset-right
+# Use all available CPU cores less 1.  Each chain will be run on its
 # own core.
-# fitIf function only re-runs the model if bt.rds file doesn't exist
 require(rmsb)
-options(mc.cores=parallel::detectCores())
-getRs('fitIf.r', put='source')
-# 10 Bayesian analysis took 5m on 4 cores
-set.seed(1)
-fitIf(bt <- stackMI(survived ~ (sex + pclass + rcs(age, 5)) ^ 2 +
-                    rcs(age, 5) * sibsp,
-                    blrm, mi, data=t3, n.impute=10, refresh=25) )
+options(mc.cores=parallel::detectCores() - 1, rmsb.backend='cmdstan')
+# 10 Bayesian analyses took 3m on 11 cores
+set.seed(21)
+bt <- stackMI(survived ~ (sex + pclass + rcs(age, 5)) ^ 2 +
+          rcs(age, 5) * sibsp,
+          blrm, mi, data=t3, n.impute=10, refresh=25,
+          file='bt.rds')
 bt
 ```
 
@@ -371,9 +408,17 @@ bt
 * Everthing above accounts for imputation
 * Look at diagnostics
 
+::: {.callout-note collapse="true"}
+### Separate Diagnostics for Each of 10 Imputed Datasets
 
-```{r blrmdx,w=8,h=8}
+```{r}
 stanDx(bt)
+```
+
+:::
+
+```{r blrmdx,w=8,h=15}
+#| column: screen-right
 # Look at convergence of only 2 parameters
 stanDxplot(bt, c('sex=male', 'pclass=3rd', 'age'), rev=TRUE)
 ```
@@ -428,16 +473,39 @@ P(`age 5 M-F` < -2 & `age 30 M-F` < -2)
 P(`age 5 M-F` <  0 | `age 30 M-F` <  0)
 ```
 
+* Show posterior distribution of predicted survival probability for a 21 year old male in third class with `sibsp=0`
+* `Predict` summarizes with a posterior mean (set `posterior.summary='median'` to use posterior median)
+* Frequentist multiple imputation estimate was 0.1342
+
+```{r}
+#| fig.height: 3.5
+#| fig.width: 4.75
+pmean <- Predict(bt, age=21, sex='male', pclass='3rd', sibsp=0,
+                 fun=plogis, funint=FALSE)
+pmean
+p <- predict(bt,
+             data.frame(age=21, sex='male', pclass='3rd', sibsp=0),
+             posterior.summary='all', fun=plogis, funint=FALSE)
+plot(density(p), main='',
+     xlab='Pr(survival) For One Covariate Combination')
+abline(v=with(pmean, c(yhat, lower, upper)), col=alpha('blue', 0.5))
+```
+
+* Compute Pr(survival probability > 0.2) for this man
+
+```{r}
+mean(p > 0.2)
+```
 
 | Package   |   Purpose | Functions   |
 |-----|-----|-----|
 | `Hmisc`  |  Miscellaneous functions  | `summary,plsmo,naclus,llist,latex, summarize,Dotplot,describe` |
 | `Hmisc`  | Imputation | `transcan,impute,fit.mult.impute,aregImpute,stackMI`   |
-| `rms` | Modeling           | `datadist,lrm,blrm,rcs`  |
+| `rms` | Modeling           | `datadist,lrm,rcs`  |
 |          | Model presentation | `plot,summary,nomogram,Function,anova`  |
 |          | Estimation         | `Predict,summary,contrast`  |
 |          | Model validation   | `validate,calibrate`  |
-|          | Misc. Bayesian    | `stanDx`,`stanDxplot`,`plot`   |
+| `rmsb`   | Misc. Bayesian    | `blrm`, `stanDx`,`stanDxplot`,`plot`   |
 | `rpart`^[Written by Atkinson and Therneau]  | Recursive partitioning | `rpart` |
 
 : `R` software used

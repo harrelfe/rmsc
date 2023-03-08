@@ -1,8 +1,7 @@
 ```{r include=FALSE}
 require(Hmisc)
 options(qproject='rms', prType='html')
-getRs('reptools.r')
-getRs('hashCheck.r')   # defines runifChanged function
+require(qreport)
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
@@ -123,19 +122,17 @@ solving for $\hat{\beta}$ to minimize $\sum (Y_{i} - X \hat{\beta})^{2}$.
 ```{r lookdist,w=5.5,h=5.5,cap='Examination of normality and constant variance assumption, and assumptions for various ordinal models',scap='Examining normality and ordinal model assumptions'}
 #| label: fig-cony-lookdist
 f <- ols(gh ~ rcs(age,5) + sex + re + rcs(bmi, 3), data=w)
-pgh <- fitted(f)
-p <- function(fun, row, col) {
-  f <- substitute(fun); g <- function(F) eval(f)
-  z <- Ecdf(~ gh, groups=cut2(pgh, g=6),
-            fun=function(F) g(1 - F),
-            ylab=as.expression(f), xlim=c(4.5, 7.75), data=w,
-            label.curve=FALSE)
-  print(z, split=c(col, row, 2, 2), more=row < 2 | col < 2)
-}
-p(log(F/(1-F)),   1, 1)
-p(qnorm(F),       1, 2)
-p(-log(-log(F)),  2, 1)
-p(log(-log(1-F)), 2, 2)
+setDT(w)    # make w a data.table
+w[, pgh  := fitted(f)]
+w[, pgh6 := cut2(pgh, g=6)]
+u <- w[, ecdfSteps(gh, extend=FALSE), by=pgh6]    # ecdfSteps is in Hmisc
+v <- rbind(data.table(trans='paste(Phi^-1, (F[n](x)))', u[, z := qnorm(1 - y)     ]),
+           data.table(trans='logit(F[n](x))',           u[, z := qlogis(1 - y)    ]),
+           data.table(trans='-log(-log(F[n](x)))',      u[, z := -log(-log(1 - y))]),
+           data.table(trans='log(-log(1-F[n](x)))',     u[, z := log(-log(y))     ]))
+ggplot(v, aes(x, z, color=pgh6)) + geom_step() +
+  facet_wrap(~ trans, label='label_parsed', scales='free_y')
+
 # Get slopes of pgh for some cutoffs of Y
 # Use glm complementary log-log link on Prob(Y < cutoff) to
 # get log-log link on Prob(Y >= cutoff)
@@ -149,7 +146,7 @@ for(link in c('logit','probit','cloglog'))
 print(r, row.names=FALSE)
 ```
 
-* Upper right curves are not linear, implying that a normal `r ipacue()`
+* Lower right curves are not linear, implying that a normal `r ipacue()`
   conditional distribution cannot work for `gh`^[They are not parallel either.]
 * There is non-parallelism for the logit model
 * Other graphs will be used to guide selection of an ordinal model below
@@ -373,6 +370,7 @@ quantile regression(discussed below) and for means we compare to OLS.
 ```{r comparemany,h=6.5,w=6.75,cap='Three estimated quantiles and estimated mean using 6 methods, compared against caliper-matched sample quantiles/means (circles).  Numbers are mean absolute differences between predicted and sample quantities using overlapping intervals of age and caliper matching.  QR:quantile regression.',scap='Six methods for estimating quantiles or means.'}
 #| label: fig-cony-comparemany
 require(data.table)
+require(ggplot2)
 estimands  <- .q(q2, q3, p90, mean)
 links      <- .q(logistic, probit, loglog, cloglog)
 estimators <- c(.q(empirical, ols, QR), links)
@@ -475,13 +473,13 @@ of predicted `r hba` by OLS and plot predicted distributions of actual
 
 ```{r predobs,w=5.5,h=5,cap='Observed (dashed lines, open circles) and predicted (solid lines, closed circles) exceedance probability distributions from a model using 6-tiles of OLS-predicted $\\text{HbA}_{1c}$.  Key shows quantile group intervals of predicted mean $\\text{HbA}_{1c}$.',scap='Observed and predicted distributions'}
 #| label: fig-cony-predobs
-w$pghg <- cut2(pgh, g=6)
-f  <- orm(gh ~ pghg, family=loglog, data=w)
-lp <- predict(f, newdata=data.frame(pghg=levels(w$pghg)))
+###w$pghg <- cut2(pgh, g=6)
+f  <- orm(gh ~ pgh6, family=loglog, data=w)
+lp <- predict(f, newdata=data.frame(pgh6=levels(w$pgh6)))
 ep <- ExProb(f)  # Exceedance prob. functn. generator in rms
 z  <- ep(lp)
-j  <- order(w$pghg)  # puts in order of lp (levels of pghg)
-plot(z, xlim=c(4, 7.5), data=w[j,c('pghg', 'gh')]) 
+j  <- order(w$pgh6)  # puts in order of lp (levels of pghg)
+plot(z, xlim=c(4, 7.5), data=w[j,c('pgh6', 'gh')]) 
 ```
 
 Agreement between predicted and observed exceedance probability
@@ -668,8 +666,29 @@ v <- runifChanged(g)
 
 ```{r prval}
 # Show number of variables selected in first 30 boots
-v
+print(v, B=30)
 ```
+
+Develop multiple imputations then repeat the bootstrap validation process, but separately for each completed dataset.  The overall validation averages the bootstrap-corrected model performance measures over five validations.
+
+```{r aregi}
+set.seed(11)
+a <- aregImpute(~ gh + age + sex + re + wt + leg + arml + armc + waist +
+                  tri + sub, data=w, n.impute=5, pr=FALSE)
+a
+v <- function(fit)
+  list(validate=validate(fit, B=100, bw=TRUE, estimates=FALSE, 
+                         prmodsel=FALSE, rule='p', pr=FALSE))
+h <- function()
+  fit.mult.impute(gh ~ rcs(age,5) + sex + re + rcs(wt,3) + rcs(leg,3) + arml +
+                  rcs(armc,3) + rcs(waist,4) + tri + rcs(sub,3),
+                  orm, a, data=w,
+                  fun=v, fitargs=list(x=TRUE, y=TRUE, family='loglog'), pr=FALSE)
+f <- runifChanged(h, a, v)  # 11m
+print(processMI(f, 'validate'), B=10, digits=3)
+```
+
+There is no `calibrate` method for `orm` model fits. 
 
 Next fit the reduced model.  Use multiple imputation to impute missing
  `r ipacue()`  predictors.
@@ -677,14 +696,12 @@ Do an ANOVA for the reduced model,  `r ipacue()`  taking imputation into account
 
 
 ```{r sanova}
-h <- function() {
-  a <- aregImpute(~ gh + wt + ht + bmi + leg + arml + armc + waist +
-                  tri + sub + age +re, data=w, n.impute=5, pr=FALSE)
+h <- function()
   fit.mult.impute(gh ~ rcs(age,5) + re + rcs(leg,3) +
                        rcs(waist,4) + tri + rcs(sub,4),
-                  orm, a, family=loglog, data=w, pr=FALSE)
-}
-g <- runifChanged(h)
+                  orm, a, fitargs=list(family='loglog'),
+                  data=w, pr=FALSE)
+g <- runifChanged(h, a)
 g
 an <- anova(g)
 print(an, caption='ANOVA for reduced model after multiple imputation, with addition of a combined effect for four size variables')
@@ -696,6 +713,7 @@ class(s) <- 'anova.rms'
 
 ```{r sanovaplot,cap="ANOVA for reduced model after multiple imputation"}
 #| label: fig-cony-sanova
+#| fig-height: 3
 spar(top=1)
 plot(s)
 ```

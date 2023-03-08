@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 require(Hmisc)
 options(qproject='rms', prType='html')
-getRs('reptools.r')
+require(qreport)
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
@@ -240,6 +240,7 @@ other predictors are held to constants^[Setting them to other constants will yie
 
 ```{r pred,h=3.5,w=4.75,cap='Predicted median (left panel) and mean (right panel) `y` as a function of `x2` and `x3`.  True population curves are pointed.',scap='Predicted `y` as a function of `x2` and `x3`'}
 #| label: fig-areg-pred
+require(ggplot2)
 newdat <- expand.grid(x2=seq(.05, .95, length=200),
                       x3=c('a','b','c'), x1=.5,
                       statistic=c('median', 'mean'))

@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 require(Hmisc)
 options(qproject='rms', prType='html')
-getRs('reptools.r')
+require(qreport)
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
@@ -151,6 +151,7 @@ f.short <- cph(S ~ z, x=TRUE, y=TRUE)
 
 ```{r rx-ph,cap='Raw and spline-smoothed scaled Schoenfeld residuals for dose of estrogen, nonlinearly coded from the Cox model fit, with $\\pm$ 2 standard errors.',scap='Schoenfeld residuals for dose of estrogen in Cox model'}
 #| label: fig-coxcase-rx-ph
+require(survival)   # or use survival::cox.zph(...)
 phtest <- cox.zph(f, transform='identity')
 phtest
 plot(phtest[1])  # plot only the first variable

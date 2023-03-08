@@ -2,7 +2,7 @@
 
 ```{r echo=FALSE}
 require(Hmisc)
-getRs('reptools.r')
+require(qreport)
 printCap(book=TRUE)
 ```
 

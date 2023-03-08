@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 require(Hmisc)
 options(qproject='rms', prType='html')
-getRs('reptools.r')
+require(qreport)
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
@@ -203,6 +203,7 @@ d[, .(ddif=if(any(y == 'Dead')) min(day[y == 'Dead']) -
 ```{r trans,h=7,w=7}
 #| label: fig-markov-trans
 #| fig-cap: "Transition proportions from data simulated from VIOLET"
+require(ggplot2)
 propsTrans(y ~ day + id, data=d, maxsize=4, arrow='->') +
     theme(axis.text.x=element_text(angle=90, hjust=1))
 ```
@@ -407,13 +408,15 @@ p[[2]]
 **Add Random Effects**
 
 * Bayesian models handle random effects more naturally than frequentist models $\rightarrow$ use a Bayesian partial PO first-order Markov model (`R` `rmsb` package)
+* Use `cmdstan` software in place of the default of `rstan`
 
 
 
 ```{r bayesre}
 require(rmsb)
 options(prType='html')
-stanSet()   # sets to use all but one core
+# Use all but one core
+options(mc.cores = parallel::detectCores() - 1, rmsb.backend='cmdstan')
 seed <- 2   # The following took 15m using 4 cores
 b <- blrm(y ~ yprev + lsp(day, 2) + age + sofa + tx + cluster(id),
           ~ lsp(day, 2), data=d, file='markov-bppo.rds')

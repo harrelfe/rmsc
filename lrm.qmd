@@ -714,6 +714,7 @@ plot(Predict(f, cholesterol, age.tertile),
 ```{r h=5,w=7,cap='Local regression fit for the logit of the probability of significant coronary disease vs. age and cholesterol for males, based on the `loess` function.',scap='Local regression fit for log odds of significant coronary disease vs. age and cholesterol'}
 #| label: fig-lrm-iacholxage-loess
 # Re-do model with continuous age
+require(lattice)   # provides wireframe
 f <- loess(sigdz ~ age * (sx + cholesterol), data=acath,
            parametric="sx", drop.square="sx")
 ages  <- seq(25,   75, length=40)

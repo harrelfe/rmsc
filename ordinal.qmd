@@ -1,7 +1,7 @@
 ```{r include=FALSE}
 require(Hmisc)
 options(qproject='rms', prType='html')
-getRs('reptools.r')
+require(qreport)
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
@@ -206,6 +206,7 @@ Example: re-do the assessment above.  Note that the `VGAM` package `vglm` functi
 #| label: fig-ordinal-po-assumpts-impact
 spar(ps=7)
 require(rms)
+require(ggplot2)
 # One headache: since using a non-rms fitting function need to hard
 # code knots in splines.  This is not necessary in rms 6.5-0 and later
 kq   <- seq(0.05, 0.95, length=4)
@@ -254,7 +255,7 @@ exclude 0, in line with the other evidence for non-PO.
 
 See
 [fharrell.com/post/impactpo](https://fharrell.com/post/impactpo)
-for a similar example but with proportional odds clearly violated.
+for a similar example.
 
 When $Y$ is continuous or almost continuous and $X$ is discrete, the
 PO model assumes that the logit of the cumulative distribution
@@ -269,17 +270,19 @@ distribution of log glycohemoglobin across subjects' body frames.
 ```{r glyhb,h=3.25,w=6.5,cap='Transformed empirical cumulative distribution functions stratified by body frame in the `diabetes` dataset.  Left panel: checking all assumptions of the parametric ANOVA.  Right panel: checking all assumptions of the PO model (here, Kruskal--Wallis test).',scap='Checking assumptions of PO and parametric model'}
 #| label: fig-ordinal-glyhb
 getHdata(diabetes)
-a <- Ecdf(~ log(glyhb), group=frame, fun=qnorm, xlab='log(HbA1c)',
-          label.curves=FALSE, data=diabetes,
-          ylab=expression(paste(Phi^-1, (F[n](x)))))
-b <- Ecdf(~ log(glyhb), group=frame, fun=qlogis, xlab='log(HbA1c)',
-          label.curves=list(keys='lines'), data=diabetes,
-          ylab=expression(logit(F[n](x))))
-print(a, more=TRUE, split=c(1,1,2,1))
-print(b, split=c(2,1,2,1))
+d <- subset(diabetes, ! is.na(frame))
+setDT(d)  # make it a data table
+w <- d[, ecdfSteps(glyhb, extend=c(2.6, 16.2)), by=frame]
+# ecdfSteps is in Hmisc
+# Duplicate ECDF points for trying 2 transformations
+u <- rbind(data.table(trans='paste(Phi^-1, (F[n](x)))', w[, z := qnorm(y) ]),
+           data.table(trans='logit(F[n](x))',           w[, z := qlogis(y)]))
+# See https://hbiostat.org/rflow/graphics.html#sec-graphics-ggplot2
+ggplot(u, aes(x, z, color=frame)) + geom_step() +
+  facet_wrap(~ trans, label='label_parsed', scale='free_y') +
+  ylab('Transformed ECDF') +
+  xlab(hlab(glyhb))   # hlab is in Hmisc; looks up label in d
 ```
-
-
 
 ### Quantifying Predictive Ability
 
