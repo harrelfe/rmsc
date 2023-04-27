@@ -117,8 +117,10 @@ f8   <- lrm(cvd ~ pc8, data=psub)
 pc8t <- princmp(trans, k=8, sw=TRUE, kapprox=2, orig=FALSE)
 f8t  <- lrm(cvd ~ pc8t, data=psub)
 # Fit binary logistic model on original variables
+# x=TRUE y=TRUE are for test='LR', validate, calibrate
 f <- lrm(cvd ~ sz + sg + log(ap) + sbp + dbp + age +
-         wt + hg + ekg + pf + bm + hx + rx + dtime, data=psub)
+         wt + hg + ekg + pf + bm + hx + rx + dtime,
+				 x=TRUE, y=TRUE, data=psub)
 # Expand continuous variables using splines
 g <- lrm(cvd ~ rcs(sz,4) + rcs(sg,4) + rcs(log(ap),4) +
          rcs(sbp,4) + rcs(dbp,4) + rcs(age,4) + rcs(wt,4) +
@@ -144,19 +146,19 @@ model will have competitive mean squared errors.
 
 ## Description of Fitted Model
 Here we describe the simple all-linear full model.
-Summary statistics and a Wald-ANOVA table are below, followed by
-partial effects plots with pointwise confidence bands, and odds ratios
+Summary statistics and Wald and likelihood ratio ANOVA tables are below, followed by partial effects plots with pointwise confidence bands, and odds ratios
 over default ranges of predictors.
 
 ```{r}
 f
-an <- anova(f)
+anova(f)
+an <- anova(f, test='LR')
 an
 ```
 
-```{r h=3.5,w=3.5,cap='Ranking of apparent importance of predictors of cause of death'}
+```{r h=2.75,w=3.5,cap='Ranking of apparent importance of predictors of cause of death using LR statistics'}
 #| label: fig-lrcase1-full
-spar(ps=8)
+spar(ps=8,top=0.5)
 plot(an)
 s <- f$stats
 gamma.hat <- (s['Model L.R.'] - s['d.f.'])/s['Model L.R.']
@@ -223,7 +225,6 @@ obvious that the set of "significant" variables, i.e., the final
 model, is somewhat arbitrary.
 
 ```{r results='hide'}
-f <- update(f, x=TRUE, y=TRUE)
 v <- validate(f, B=200, bw=TRUE)
 ```
 

@@ -187,6 +187,8 @@ kableExtra, pcaPP, VGAM, MASS, leaps, rpart
 
 | Date | Sections | Changes |
 |:---|:-|:--------|
+| 2023-04-22 | [-@sec-mle-hd]    | New section on Hauck-Donner effect ruining Wald statistics |
+| 2023-04-22 | [-@sec-lrm;-@sec-titanic-cd] | Added new `anova(..., test='LR')` |
 | 2023-03-06 | [-@sec-cony]      | Several changes; replaced lattice graphics with ggplot2 and added validation with simultaneous multiple imputation |
 | 2023-03-01 | [-@sec-val-mival] | New section on simultaneous validation and imputation |
 | 2023-02-20 | [-@sec-impred;-@sec-lrcase1]     | Used new Hmisc 5.0-0 function princmp for principal components |

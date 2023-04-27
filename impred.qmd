@@ -44,16 +44,17 @@ heterogeneity.  See Chapter @sec-coxcase for such analyses.
 The data reductions developed here are
 general and can be used for a variety of dependent variables.
 
-The variable names, labels, and a summary of the data are printed below.
+The variable names, labels, and a summary of the data are printed below.  Because of extreme skewness, `ap` is log-transformed for the purpose of making its spike histogram.
 
-
-```{r}
+```{r results='asis'}
 require(Hmisc)
 getHdata(prostate)  # Download and make prostate accessible
 # Convert an old date format to R format
 prostate$sdate <- as.Date(prostate$sdate)
-d <- describe(prostate[2:17])
-d
+d <- describe(prostate[2:17],
+       trans=list(ap=list('log', log, exp)))
+sparkline::sparkline(0)   # load sparkline javascript dependencies
+maketabs(print(d, 'both'), initblank=TRUE, wide=TRUE)
 ```
 
 

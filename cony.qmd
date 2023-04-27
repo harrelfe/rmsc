@@ -74,14 +74,17 @@ ordinary linear models.
   [www.cdc.gov/nchs/nhanes.htm](http://www.cdc.gov/nchs/nhanes.htm) [@nhanes2010]
 * age $\geq 80$ coded as 80 by CDC
 * Subset with age $\geq 21$, neither diagnosed nor treated for DM
+* Transform `bmi`, just for the spike histograms
 
-
-```{r desc}
+```{r desc,results='asis'}
 require(rms)
 options(prType='html')   # for print, summary, anova, describe
 getHdata(nhgh)
 w <- subset(nhgh, age >= 21 & dx==0 & tx==0, select=-c(dx,tx))
-describe(w)
+des <- describe(w, trans=list(bmi= list('log', log, exp)))
+																			
+sparkline::sparkline(0)   # loads jQuery javascript for sparklines
+maketabs(print(des, 'both'), wide=TRUE, initblank=TRUE)
 dd <- datadist(w); options(datadist='dd')
 ```
 
@@ -119,7 +122,7 @@ solving for $\hat{\beta}$ to minimize $\sum (Y_{i} - X \hat{\beta})^{2}$.
    ECDF before inverse transforming
 
 
-```{r lookdist,w=5.5,h=5.5,cap='Examination of normality and constant variance assumption, and assumptions for various ordinal models',scap='Examining normality and ordinal model assumptions'}
+```{r lookdist,w=6.5,h=5.5,cap='Examination of normality and constant variance assumption, and assumptions for various ordinal models',scap='Examining normality and ordinal model assumptions'}
 #| label: fig-cony-lookdist
 f <- ols(gh ~ rcs(age,5) + sex + re + rcs(bmi, 3), data=w)
 setDT(w)    # make w a data.table
@@ -130,8 +133,10 @@ v <- rbind(data.table(trans='paste(Phi^-1, (F[n](x)))', u[, z := qnorm(1 - y)   
            data.table(trans='logit(F[n](x))',           u[, z := qlogis(1 - y)    ]),
            data.table(trans='-log(-log(F[n](x)))',      u[, z := -log(-log(1 - y))]),
            data.table(trans='log(-log(1-F[n](x)))',     u[, z := log(-log(y))     ]))
-ggplot(v, aes(x, z, color=pgh6)) + geom_step() +
-  facet_wrap(~ trans, label='label_parsed', scales='free_y')
+v <- v[! is.infinite(z)]
+ggplot(v, aes(x, z, color=pgh6)) + geom_step() + 
+  facet_wrap(~ trans, label='label_parsed', scales='free_y') +
+  xlab(expression(HbA[`1c`])) + theme(legend.position='bottom')
 
 # Get slopes of pgh for some cutoffs of Y
 # Use glm complementary log-log link on Prob(Y < cutoff) to
@@ -590,7 +595,7 @@ Next allocate d.f. according to generalized Spearman  `r ipacue()`
 `r mrg(sound("ord-cont-8"))`
 $\rho^{2}$ ^[Competition between collinear size measures hurts interpretation of partial tests of association in a saturated additive model.].
 
-```{r allocadf,h=3.5, w=4,cap='Generalized squared rank correlations'}
+```{r allocadf,h=3, w=4,cap='Generalized squared rank correlations'}
 #| label: fig-cony-allocadf
 spar(top=1, ps=9)
 s <- spearman2(gh ~ age + sex + re + wt + leg + arml + armc +
@@ -607,7 +612,7 @@ stepdown to arrive at a set of predictors.  The bootstrap will be used
 to penalize predictive ability for variable selection.  First the full
 model is fit using
 casewise deletion, then we do a composite test to assess whether any
-of the frequently-missing predictors is important.
+of the frequently-missing predictors is important.  Use likelihood ratio $\chi^2$ tests.
 
 ```{r fitfullcasewise}
 f <- orm(gh ~ rcs(age,5) + sex + re + rcs(wt,3) + rcs(leg,3) + arml +
@@ -615,7 +620,7 @@ f <- orm(gh ~ rcs(age,5) + sex + re + rcs(wt,3) + rcs(leg,3) + arml +
          family=loglog, data=w, x=TRUE, y=TRUE)
 print(f, coefs=FALSE)
 ## Composite test:
-anova(f, leg, arml, armc, waist, tri, sub)
+anova(f, leg, arml, armc, waist, tri, sub, test='LR')
 ```
 
 <!-- s <- f$stats--->
@@ -692,7 +697,7 @@ There is no `calibrate` method for `orm` model fits.
 
 Next fit the reduced model.  Use multiple imputation to impute missing
  `r ipacue()`  predictors.
-Do an ANOVA for the reduced model,  `r ipacue()`  taking imputation into account.
+Do a LR ANOVA for the reduced model,  `r ipacue()`  taking imputation into account.
 
 
 ```{r sanova}
@@ -700,10 +705,15 @@ h <- function()
   fit.mult.impute(gh ~ rcs(age,5) + re + rcs(leg,3) +
                        rcs(waist,4) + tri + rcs(sub,4),
                   orm, a, fitargs=list(family='loglog'),
+                  lrt=TRUE,
                   data=w, pr=FALSE)
 g <- runifChanged(h, a)
 g
-an <- anova(g)
+an <- processMI(g, 'anova')
+# Show penalty-type parameters for imputation
+prmiInfo(an)
+# Correct likelihood-based statistics for imputation
+g <- LRupdate(g, an)
 print(an, caption='ANOVA for reduced model after multiple imputation, with addition of a combined effect for four size variables')
 b  <- anova(g, leg, waist, tri, sub)
 # Add new lines to the plot with combined effect of 4 size var.

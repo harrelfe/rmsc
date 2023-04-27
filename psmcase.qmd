@@ -29,12 +29,14 @@ categories
 Create a variable `acute` to flag categories of
 interest; print univariable descriptive statistics.
 
-```{r}
+```{r results='asis'}
 require(rms)
-options(prType='html')    # for print, summary, anova
+options(prType='html')     # for print, summary, anova
 getHdata(support)          # Get data frame from web site
 acute <- support$dzclass %in% c('ARF/MOSF','Coma')
-describe(support[acute,])
+des <- describe(support[acute,])
+sparkline::sparkline(0)    # load sparkline dependencies
+maketabs(print(des, 'both'), wide=TRUE, initblank=TRUE)
 ```
 
  `r ipacue()` 

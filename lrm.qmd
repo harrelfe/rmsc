@@ -8,7 +8,7 @@ knitr::set_alias(w   = 'fig.width', h    = 'fig.height',
                  cap = 'fig.cap',   scap ='fig.scap')
 ```
 
-# Binary Logistic Regression
+# Binary Logistic Regression {#sec-lrm}
 `r ipacue()`
 
 * $Y=0, 1$ 
@@ -172,6 +172,7 @@ d <- sex.age.response
 dd <- datadist(d); options(datadist='dd')
 f <- lrm(response ~ sex + age, data=d)
 fasr <- f   # Save for later
+require(lattice)
 w <- function(...)
   with(d, {
     m <- sex=='male'
@@ -368,9 +369,20 @@ Likelihood ratio tests are obtained from the information below.
 
 
 The 14.1 should be compared with the Wald statistic of 8.47, and  `r ipacue()` 
-9.954 should be compared with 6.58.
+9.954 should be compared with 6.58.  Likelihood ratio tests may be obtained automatically starting in `rms` version 6.7-0, as follows.
+<!-- NEW -->
+
+```{r}
+f <- update(f, x=TRUE, y=TRUE)   # LR tests require raw data in fits
+anova(f, test='LR')
+```
+
+
 The fitted logistic model is plotted separately for females and
-males in  @fig-lrm-lrmodel .  The fitted model is
+males in  @fig-lrm-lrmodel .
+
+
+The fitted model is
 
 $$\Pr(\text{Response=1}|\text{sex,age}) = \text{expit}(-9.84+3.49\times \text{sex} +.158\times \text{age})$$
 
@@ -616,6 +628,14 @@ lrtest(c, d)
 | $H_{0}:$ age linear, no interaction    | 16.6 | 5 | .005 | ($d-a$)  |
 | $H_{0}:$ age linear, product form interaction  | 14.4 | 4 | .006 | ($d-b$)  |
 | $H_{0}:$ no interaction, allowing for nonlinearity in age  | 13.1 | 3 | .004 | ($d-c$)  |
+
+<!-- NEW -->
+Obtain all the fully adjusted likelihood ratio $\chi^2$ tests automatically.
+
+```{r}
+f <- lrm(sigdz ~ sex * rcs(age,4), data=acath, x=TRUE, y=TRUE)
+anova(f, test='LR')
+```
 
 
 * Example of finding transform. of a single continuous predictor 

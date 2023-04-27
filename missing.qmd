@@ -5,6 +5,7 @@ require(qreport)
 getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
+hooktime()
 ```
 
 # Missing Data {#sec-missing-data}
@@ -294,13 +295,14 @@ values as done with multiple imputation (would steal info from $Y$)
    observations by matching those predictions to predictions from potential
    donors using the regression fit from the original sample
    of complete observations
+   + Uses Rubin's rule to estimate variances of $\hat{\beta}$, involving between- and within-imputation variance combination
     + When a predictor of the target variable is missing, it is first
    imputed from its last imputation when it was a target variable
     + First 3 iterations of process are ignored ("burn-in")
     + Compares favorably to `R` `MICE` approach
     + Example:
     
-```{r eval=FALSE}
+```{r eval=FALSE,timeit=FALSE}
 a <- aregImpute(~ age + sex + bp + death + heart.attack.before.death,
                 data=mydata, n.impute=5)
 f <- fit.mult.impute(death ~ rcs(age,3) + sex +
@@ -345,6 +347,81 @@ flexible and easy to use
 * However, simulation studies [@buu06ful] demonstrate
 very good performance of imputation based on chained equations
 
+<!-- NEW -->
+
+## Likelihood Ratio Tests and Multiple Imputation {#sec-missing-lrt}
+
+* For frequentist-based analysis Wald tests are ultimately unsatisfying for reasons detailed in @sec-mle-hd
+   + Also it was never clear that simple averaging of $\hat{\beta}$ over completed datasets is the best approach
+* @cha22mul have developed the most promising approach to obtaining approximate LRT (likelihood ratio tests) in the presence of missing data
+   + [Web site](https://sites.google.com/site/kwchankeith/publications/milrt)
+   + [arXiv paper](https://arxiv.org/abs/1711.08822)
+   + [R code](https://drive.google.com/file/d/1mHVT3yV2oX1TCHR9zZgC6XIIwAaB3Gtv/view?usp=sharing)
+* Instead of averaging $M$ $\hat{\beta}$ from multiple separate analyses of completed datasets, stacks all completed datasets into one large dataset and computes maximum likelihood estimates on the one large stacked dataset
+* Divide LR $\chi^2$ by $M$ to get a rough estimate of the more correct LR described below; need to multiply by a discounting factor to take imputation into account
+* Individual fit LRs are used to derive imputation correction factors and the fraction of missing information
+* Chan and Meng have a formula that provides more accuate $p$-values by solving for denominator degrees of freedom for an $F$ distribution
+   + The degrees of freedom must be computed separately for each hypothesis test
+   + Accounts for heavier tail problem mentioned earlier
+   + $F$ test denominator d.f. is $\frac{k (M - 1)}{\hat{f}^{2}}$ where $k$ is the numerator d.f. (number of parameters being tested simultaneously), the fraction of missing information $\hat{f} = \frac{\hat{r}}{1+\hat{r}}$, $\hat{r} = \max(0, \frac{M+1}{k(M-1)} (\bar{d} - \hat{d}))$, where $\bar{d}$ is the mean over imputed datasets of the individual LR statistics and $\hat{d}$ is LR on the stacked dataset, divided by $M$
+   + Use large $M$ to make the $\chi^2$ approximation better by making the denominator d.f. larger.  E.g., if $k=1$ and $\hat{f}=0.5$, $M=26$ already yields more than 100 denominator d.f. for $F$, making it hard to distinguish from a $\chi_{1}^{2}$ distribution.  If the test statistic is 4.0, the $p$-value $\chi_{1}^{2}$ is 0.0455 and is 0.048 from $F_{1, 100}$.
+* `Hmisc` `fit.mult.impute` function run with `lrt=TRUE` runs and saves all the needed LR tests to allow `rms` `processMI` to compute everything else
+* `processMI` computes $\hat{f}$, the $F$ test denominator d.f., and the $\chi^2$ discount factor and uses these to get the final imputation-adjusted LR tests
+* `fit.mult.impute` computes approximate Wald statistics by multiplying the variance-covariance matrix computed on the stacked data by $M$ if individual completed dataset analyses are not done (not recommended)
+* Chan and Meng approach uses $\hat{\beta}$ computed once on stacked data as the MLE in the multiple imputation context; `fit.mult.impute` computes the final $\hat{\beta}$ this way if stacking is done; however the variance-covariance matrix is estimated from Rubin's rule as in the Wald approach first used in this chapter
+* Imputation-adjusted LRTs can be a large computational burden for large datasets---for $M$ imputations, $j$ effects being tested requires $(M+1) j$ model fits.  For each imputation, the `rms` `anova` function has very litle overhead though, due to it only computing the design matrix once, and calling low-level fitting functions for all LRTs once the overall model is fitted with a high-level function.
+
+**Example**
+
+```{r}
+require(rms)
+set.seed(1)
+n <- 500
+x1 <- runif(n)
+x2 <- runif(n)
+L  <- x1 + 2*x2
+y  <- rbinom(n, 1, plogis(L))
+x2[1:300] <- NA   # make 300 observations have missing x2
+d <- data.frame(x1, x2, y)
+a <- aregImpute(~ y + x1 + x2, n.impute=10, data=d, pr=FALSE)
+f <- fit.mult.impute(y ~ x1 + x2, lrm, a, data=d, pr=FALSE)
+f
+```
+
+In the above results, the LR $\chi^2$ did not account for imputation and is too high.  So are the $R^2$ measures derived from it.
+
+Compute Wald $\chi^2$ test statistics accounting for imputation
+
+```{r}
+anova(f)
+```
+
+Now compute LR test statistics accounting for imputation
+
+```{r timeit=TRUE}
+# lrt=TRUE makes fit.mult.impute set up all the arguments needed for LR tests
+h <- fit.mult.impute(y ~ x1 + x2, lrm, a, data=d, lrt=TRUE, pr=FALSE)
+h
+processMI(h, which='anova')  # LR tests accounting for imputation
+```
+
+The Chan & Meng $F$ approximation (`processMI` uses the $\chi^2$ version of it) is needed for `x2` as the denominator d.f. of 14.5 is too low for $p$-values from the $\chi^2$ distribution to well approximate those from the $F$ distribution.  Increase the number of imputations to increase the denominator d.f.
+
+```{r timeit=TRUE}
+a <- aregImpute(~ y + x1 + x2, n.impute=50, data=d, pr=FALSE)
+h <- fit.mult.impute(y ~ x1 + x2, lrm, a, data=d, lrt=TRUE, pr=FALSE)
+h
+processMI(h, which='anova')
+```
+
+What happens if we use an extremely high number of imputations?
+
+```{r timeit=TRUE}
+a <- aregImpute(~ y + x1 + x2, n.impute=500, data=d, pr=FALSE)
+h <- fit.mult.impute(y ~ x1 + x2, lrm, a, data=d, lrt=TRUE, pr=FALSE)
+h
+processMI(h, which='anova')
+```
 
 
 ## Diagnostics

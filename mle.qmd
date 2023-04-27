@@ -49,9 +49,9 @@ for(i in seq_along(p)){
   ll2[i] <- binom.loglik(p[i], y2)
 }
 plot(p, ll1, type = "l", ylab = "logL", xlab = expression(theta), 
-     main = "Likelihood Function (N = 3)")
+     main = "N = 3")
 plot(p, ll2, type = "l", ylab = "logL", xlab = expression(theta), 
-     main = "Likelihood Function (N = 3000)")
+     main = "N = 3000")
 ```
 
 
@@ -86,11 +86,30 @@ knitr::include_graphics('mle-liktest.png')
 
 * The decision on which test to use is based on statistical and computational properties.
 
-* From the **statistical point of view**: LR is the best statistic followed by S and W. In logistic regression problems, W is sensitive to problems in the estimated variance-covariance matrix of the full model
+* From the **statistical point of view**: LR is the best statistic followed by S and W. In logistic regression problems, W is sensitive to problems in the estimated variance-covariance matrix of the full model (see below)
 
 * From the **computational point of view**: Estimation of LR and W requires estimating all the unknown parameters. Additionally, estimation of LR requires two models. 
 
 ---
+
+## The Hauck-Donner Effect {#sec-mle-hd}
+
+Especially for categorical regression models such as the binary and polytomous logistic models, problems arise when a part of the covariate space yields an outcome probability of zero or one so that there is _perfect separation_ in a covariate distribution.  Infinite regression coefficient estimates are fine, but Wald statistics become too small because as $\hat{\beta} \rightarrow \infty$ the estimated standard error of $\hat{\beta} \rightarrow \infty$ even faster.  Here is a binary logistic model example where a binary predictor has a true coefficient of 25 which corresponds to an outcome probability within $10^{-11}$ of 1.0.
+
+```{r}
+set.seed(3)
+n  <- 200
+x1 <- sample(0:1, n, TRUE)
+x2 <- sample(0:1, n, TRUE)
+L  <- 0.4 * x1 + 25 * x2
+y  <- rbinom(n, 1, prob=plogis(L))
+f  <- lrm(y ~ x1 + x2, x=TRUE, y=TRUE)
+f
+anova(f)
+anova(f, test='LR')
+```
+
+The Wald $\chi^2$ for `x2` is 0.26 but the much better LR $\chi^2$ is very large as one would expect from a variable having a large estimated coefficient.  The standard error for the `x2` log odds ratio blew up.
 
 ## Confidence Intervals {#sec-mle-ci}
 
