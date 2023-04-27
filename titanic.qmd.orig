@@ -98,73 +98,73 @@ p2 <- ggplot(t3, aes(x=age, y=survived, color=cut2(parch,
 gridExtra::grid.arrange(p1, p2, ncol=2)
 ```
 
-## Binary Logistic Model with Casewise Deletion of Missing Values {#sec-titanic-cd}
+## Binary Logistic Model with Casewise Deletion of Missing Values
 `r mrg(sound("titanic-3"))`
-
-<!-- NEW -->
-
-* First fit a model that is saturated with respect to `age, sex, pclass`
-* Insufficient variation in `sibsp`, `parch` to fit complex interactions or nonlinearities.
-* With `age` appearing in so many terms, giving too many parameters to `age` creates instabilities and makes many bootstrap repetitions fail to converge or to yield singular covariance matrices
-* Use AIC to determine the global number of knots for `age` that is "best for the money" in terms of being the most likely to cross-validate well
+First fit a model that is saturated with respect to `age, sex, pclass`.  Insufficient variation in `sibsp`, `parch` to fit
+complex interactions or nonlinearities.
 
 ```{r anova3}
-for(k in 3 : 5) {
-  f <- lrm(survived ~ sex*pclass*rcs(age, k) +
-           rcs(age, k)*(sibsp + parch), data=t3)
-  cat('k=', k, '  AIC=', AIC(f), '\n')
-}
-```
-
-* 4 knots has best (lowest) AIC and we'll use that going forward
-* Refit that model with x=TRUE, y=TRUE so can do likelihood ratio (LR) tests
-* But start with Wald tests
-
-```{r}
-f1 <- lrm(survived ~ sex*pclass*rcs(age,4) +
-          rcs(age,4)*(sibsp + parch), data=t3, x=TRUE, y=TRUE)
-print(f1, r2=1:4)   # print all 4 R^2 measures that use only the global LR chi-square
+f1 <- lrm(survived ~ sex*pclass*rcs(age,5) +
+          rcs(age,5)*(sibsp + parch), data=t3)
+print(f1, coefs=FALSE)
 anova(f1)
 ```
 
-Compute the slightly more time-consuming LR tests
+3-way interactions, `parch` clearly insignificant, so drop
 
-```{r}
-af1 <- anova(f1, test='LR')
-print(af1, which='subscripts')
+```{r ia2}
+f <- lrm(survived ~ (sex + pclass + rcs(age,5))^2 +
+         rcs(age,5)*sibsp, data=t3)
+f
 ```
 
-* In the RMS text, 5 knots were used for `age` and only Wald tests were performed
-* Large $p$-value for the 3rd order interaction was used to justify exclusion of these highest-order interactions from the model (and one other term)
-* More evidence for 3rd order interaction from the more accurate LR test
-* Keep this model
+Note that the adjusted Maddala-Cox-Snell $R^2$ using an effective sample
+size of 758.1 is only 0.004 smaller than the full model.
+
+```{r anova2}
+anova(f)
+```
 
 Show the many effects of predictors.  `r ipacue()`
 
-```{r plot1, h=3, w=6, cap='Effects of predictors on probability of survival of Titanic passengers, estimated for zero siblings/spouses and zero parents/children',scap='Effects of predictors on probability of surviving the Titanic'}
+```{r plot1, h=3, w=6, cap='Effects of predictors on probability of survival of Titanic passengers, estimated for zero siblings or spouses',scap='Effects of predictors on probability of surviving the Titanic'}
 #| label: fig-titanic-plota
-p <- Predict(f1, age, sex, pclass, sibsp=0, parch=0, fun=plogis)
+p <- Predict(f, age, sex, pclass, sibsp=0, fun=plogis)
 ggplot(p)
 ```
 
 ```{r plot2,cap='Effect of number of siblings and spouses on the log odds of surviving, for third class males',scap='Effect of number of siblings/spouses on survival'}
 #| label: fig-titanic-plotb
-ggplot(Predict(f1, sibsp, age=c(10,15,20,50), conf.int=FALSE))
+ggplot(Predict(f, sibsp, age=c(10,15,20,50), conf.int=FALSE))
 #
 ```
 Note that children having many siblings apparently had lower
 survival.  Married adults had slightly higher survival than unmarried
 ones.
-`r ipacue()`
+Validate the model using the bootstrap to check overfitting.  Ignoring two very  `r ipacue()`
+insignificant pooled tests.  Validation of a complete case analysis when there are so many incomplete observations is not a very good idea.  We do this just for comparison with a later validation incorporating multiple imputation.
 
-**But** moderate problem with missing data must be dealt with
+```{r val}
+f <- update(f, x=TRUE, y=TRUE)
+# x=TRUE, y=TRUE adds raw data to fit object so can bootstrap
+set.seed(131)                  # so can replicate re-samples
+print(validate(f, B=300), digits=3)
+```
+
+```{r calibrate,cap='Bootstrap overfitting-corrected loess nonparametric calibration curve for casewise deletion model'}
+#| label: fig-titanic-calibrate
+spar(ps=10, bot=1)
+cal <- calibrate(f, B=300)
+plot(cal, subtitles=FALSE)
+```
+But moderate problem with missing data
 
 ## Examining Missing Data Patterns {#sec-titanic-naclus}
 `r mrg(sound("titanic-4"))`
 
 
 ```{r napatterns,h=5,w=7,cap='Patterns of missing data.  Upper left panel shows the fraction of observations missing on each predictor.  Lower panel depicts a hierarchical cluster analysis of missingness combinations.  The similarity measure shown on the $Y$-axis is the fraction of observations for which both variables are missing.  Right panel shows the result of recursive partitioning for predicting `is.na(age)`.  The `rpart` function found only strong patterns according to passenger class.',scap='Patterns of missing Titanic data'}
-#| label: fig-titanic-napatterns
+#|label: fig-titanic-napatterns
 spar(mfrow=c(2,2), top=1, ps=11)
 na.patterns <- naclus(titanic3)
 require(rpart)      # Recursive partitioning package
@@ -182,15 +182,16 @@ plot(summary(is.na(age) ~ sex + pclass + survived +
              sibsp + parch, data=t3))
 ```
 
-But models almost always provide better descriptive statistics
-
 ```{r nalrm}
 m <- lrm(is.na(age) ~ sex * pclass + survived + sibsp + parch,
          data=t3)
 m
-anova(m)
 ```
 
+
+```{r anova.na}
+anova(m)
+```
 `pclass` and `parch` are the important predictors of missing age.
 
 ## Single Conditional Mean Imputation
@@ -204,10 +205,10 @@ Single imputation is not the preferred approach here.  Click below to see this s
 First try: conditional mean imputation <br>
 Default spline transformation for age caused distribution of
   imputed values to be much different from non-imputed ones; constrain
-  to linear.  Also force discrete numeric variables to be linear because knots are hard to determine for them.
+  to linear
 
 ```{r transcan}
-xtrans <- transcan(~ I(age) + sex + pclass + I(sibsp) + I(parch),
+xtrans <- transcan(~ I(age) + sex + pclass + sibsp + parch,
                    imputed=TRUE, pl=FALSE, pr=FALSE, data=t3)
 summary(xtrans)
 # Look at mean imputed values by sex,pclass and observed means
@@ -220,20 +221,23 @@ with(t3, tapply(age, list(sex,pclass), mean, na.rm=TRUE))
 
 ```{r fit.si}
 dd   <- datadist(dd, age.i)
-f.si <- lrm(survived ~ sex * pclass * rcs(age.i, 4) +
-            rcs(age.i, 4) * (sibsp + parch), data=t3, x=TRUE, y=TRUE)
+f.si <- lrm(survived ~ (sex + pclass + rcs(age.i,5))^2 +
+            rcs(age.i,5)*sibsp, data=t3)
 print(f.si, coefs=FALSE)
 ```
 
 ```{r h=6, w=6, cap='Predicted probability of survival for males from fit using casewise deletion (bottom) and single conditional mean imputation (top).  `sibsp` is set to zero for these predicted values.',scap='Predicted log odds of survival in Titanic using casewise deletion'}
 #| label: fig-titanic-nasingle
 spar(ps=12)
-p1 <- Predict(f1,   age,   pclass, sex, sibsp=0, fun=plogis)
+p1 <- Predict(f,    age,   pclass, sex, sibsp=0, fun=plogis)
 p2 <- Predict(f.si, age.i, pclass, sex, sibsp=0, fun=plogis)
 p  <- rbind('Casewise Deletion'=p1, 'Single Imputation'=p2,
             rename=c(age.i='age'))   # creates .set. variable
 ggplot(p, groups='sex', ylab='Probability of Surviving')
-anova(f.si, test='LR')
+```
+
+```{r anova.si}
+anova(f.si)
 ```
 
 :::
@@ -246,12 +250,12 @@ default, `aregImpute` does not transform `age` when it is being
 predicted from the other variables.  Four knots are used to transform
 `age` when used to impute other variables (not needed here as no
 other missings were present).  Since the fraction of observations with
-missing age is $\frac{263}{1309} = 0.2$ we use 20 imputations. [Force `sibsp` and `parch` to be linear for imputation, because their highly discrete distributions make it difficult to choose knots for splines.]{.aside}
+missing age is $\frac{263}{1309} = 0.2$ we use 20 imputations.
 
 ```{r aregi}
 set.seed(17)         # so can reproduce random aspects
 mi <- aregImpute(~ age + sex + pclass +
-                 I(sibsp) + I(parch) + survived,
+                 sibsp + parch + survived,
                  data=t3, n.impute=20, nk=4, pr=FALSE)
 mi
 # Print the first 10 imputations for the first 10 passengers
@@ -268,80 +272,49 @@ Ecdf(t3$age, add=TRUE, col='gray', lwd=2,
      subtitles=FALSE)
 ```
 
-* Fit logistic models for 20 completed datasets and print the ratio  `r ipacue()`
+Fit logistic models for 20 completed datasets and print the ratio  `r ipacue()`
  of imputation-corrected variances to average ordinary variances.
-* Use method of [Chan & Meng](missing#lrt) to get LR tests
-* This method takes final $\hat{\beta}$ from a single model fit on 20 stacked completed datasets
-* But standard errors come from the usual Rubin's rule and the 20 fits
-* `rms::processMI` computes the LR statistics from special information saved by `fit.mult.impute` triggered by `lrt=TRUE`
-* The `Hmisc` package `runifChanged` function is used to save the result and not spend 1m running it again until an input changes
-* The `rms` `LRupdate` function is run to fix likelihood ratio-related statistics (LR test, its $p$-value, various $R^2$ measures) using the overall Chan & Meng model LR $\chi^2$ computed by `processMI`
-* Two of the $R^2$ printed use an effective sample size of 927 for the unbalanced binary `survived` variable
+
+For each completed dataset run bootstrap validation of model performance indexes and the nonparametric calibration curve.  Because the 20 analyses of completed datasets help to average out some of the noise in bootstrap estimates we can use fewer bootstrap repetitions (100) than usual (300 or so).  [The `Hmisc` package `runifChanged` function is used to save the result and not spend 1m running it again until an input changes.]{.aside}
 
 ```{r fmi}
-runmi <- function()
-  fit.mult.impute(survived ~ sex * pclass * rcs(age, 4) + rcs(age, 4) * (sibsp + parch),
-                  lrm, mi, data=t3, pr=FALSE, lrt=TRUE)  # lrt implies x=TRUE y=TRUE + more
-seed <- 17
-f.mi <- runifChanged(runmi, seed, mi, t3)
-afmi <- processMI(f.mi, 'anova')
-# Print imputation penalty indexes
-prmiInfo(afmi)
-```
-
-* None of the denominator d.f. is small enough for us to worry about the $\chi^2$ approximation
-* Take the ratio of selected LR statistics after multiple imputation to that from casewise deletion
-
-```{r}
-afmi
-f.mi <- LRupdate(f.mi, afmi)
-print(f.mi, r2=1:4)   # print all 4 imputation-adjusted R^2
-round(afmi[c(1,3,5,30), 'Chi-Square'] / af1[c(1,3,5,30), 'Chi-Square'], 3)
-```
-
-`r ipacue()`
-
-* Using all available data resulted in increases in predictive information for `sex, pclass` and strangely a reduction for `age`
-
-For each completed dataset run bootstrap validation of model performance indexes and the nonparametric calibration curve.  Because the 20 analyses of completed datasets help to average out some of the noise in bootstrap estimates we can use fewer bootstrap repetitions (100) than usual (300 or so).
-
-```{r fmival}
 val <- function(fit)
-  list(validate  = validate (fit, B=100),
+  list(validate  = validate(fit,  B=100),
        calibrate = calibrate(fit, B=100) )
 
 runmi <- function()
   fit.mult.impute(       # 1m
-    survived ~ sex * pclass * rcs(age,4) +
-    rcs(age,4) * (sibsp + parch),
+    survived ~ (sex + pclass + rcs(age,5))^2 +
+    rcs(age,5)*sibsp,
     lrm, mi, data=t3, pr=FALSE,
     fun=val, fitargs=list(x=TRUE, y=TRUE))
 seed <- 19
-f <- runifChanged(runmi, seed, mi, t3, val)
+f.mi <- runifChanged(runmi, seed, mi, t3, g, val)
+anova(f.mi)
 ```
 
+The Wald $\chi^2$ for age is reduced by accounting for imputation  `r ipacue()`
+but is increased by using patterns of association with survival status
+to impute missing age.
+Show estimated effects of age by classes.
 `r mrg(sound("titanic-6"))`
 
 * Display the 20 bootstrap internal validations averaged over the multiple imputations.
 * Show the 20 individual calibration curves then the first 3 in more detail followed by the overall calibration estimate
 
 ```{r}
-val <- processMI(f, 'validate')
+val <- processMI(f.mi, 'validate')
 print(val, digits=3)
 ```
 
 ```{r}
-#| label: fig-titanic-calibrate
-#| fig.cap: "Estimated calibration curves for the Titanic risk model, accounting for multiple imputation"
 #| fig.width: 8.5
 #| fig.height: 6
 #| column: screen-inset-right
 spar(mfrow=c(2,2), top=1, bot=2)
-cal <- processMI(f, 'calibrate', nind=3)
+cal <- processMI(f.mi, 'calibrate', nind=3)
 # plot(cal) for full-size final calibration curve
 ```
-
-Return to the stacked fit and compare it to the fit from single imputation
 
 ```{r namult, h=6, w=6, cap='Predicted probability of survival for males from fit using single conditional mean imputation again (top) and multiple random draw imputation (bottom).  Both sets of predictions are for `sibsp`=0.',scap='Predicted Titanic survival using multiple imputation'}
 #| label: fig-titanic-namult
@@ -370,7 +343,7 @@ phat <- predict(f.mi,
                 combos <-
          expand.grid(age=c(2,21,50),sex=levels(t3$sex),
                      pclass=levels(t3$pclass),
-                     sibsp=0, parch=0), type='fitted')
+                     sibsp=0), type='fitted')
 # Can also use Predict(f.mi, age=c(2,21,50), sex, pclass,
 #                      sibsp=0, fun=plogis)$yhat
 options(digits=1)
@@ -378,13 +351,18 @@ data.frame(combos, phat)
 options(digits=5)
 ```
 
-We can also get predicted values by creating an R function that will  `r ipacue()`
-evaluate the model on demand, but that only works if there are no 3rd-order interactions.
+We can also get predicted values by creating an S function that will  `r ipacue()`
+evaluate the model on demand.
 
 
-```{r pred.logit,eval=FALSE}
+```{r pred.logit}
 pred.logit <- Function(f.mi)
 # Note: if don't define sibsp to pred.logit, defaults to 0
+pred.logit
+```
+
+```{r plogis}
+# Run the newly created function
 plogis(pred.logit(age=c(2,21,50), sex='male', pclass='3rd'))
 ```
 
@@ -419,8 +397,8 @@ require(rmsb)
 options(mc.cores=parallel::detectCores() - 1, rmsb.backend='cmdstan')
 # 10 Bayesian analyses took 3m on 11 cores
 set.seed(21)
-bt <- stackMI(survived ~ sex * pclass * rcs(age, 4) +
-          rcs(age, 4) * (sibsp + parch),
+bt <- stackMI(survived ~ (sex + pclass + rcs(age, 5)) ^ 2 +
+          rcs(age, 5) * sibsp,
           blrm, mi, data=t3, n.impute=10, refresh=25,
           file='bt.rds')
 bt
@@ -467,7 +445,7 @@ ggplot(p)
 * Compute approximate measure of explained outcome variation for predictors `r ipacue()`
 
 
-```{r bev,w=5.25,h=3.75}
+```{r bev,w=5.25,h=3}
 plot(anova(bt))
 ```
 
@@ -502,11 +480,11 @@ P(`age 5 M-F` <  0 | `age 30 M-F` <  0)
 ```{r}
 #| fig.height: 3.5
 #| fig.width: 4.75
-pmean <- Predict(bt, age=21, sex='male', pclass='3rd', sibsp=0, parch=0,
+pmean <- Predict(bt, age=21, sex='male', pclass='3rd', sibsp=0,
                  fun=plogis, funint=FALSE)
 pmean
 p <- predict(bt,
-             data.frame(age=21, sex='male', pclass='3rd', sibsp=0, parch=0),
+             data.frame(age=21, sex='male', pclass='3rd', sibsp=0),
              posterior.summary='all', fun=plogis, funint=FALSE)
 plot(density(p), main='',
      xlab='Pr(survival) For One Covariate Combination')
@@ -524,7 +502,6 @@ mean(p > 0.2)
 | `Hmisc`  |  Miscellaneous functions  | `summary,plsmo,naclus,llist,latex, summarize,Dotplot,describe` |
 | `Hmisc`  | Imputation | `transcan,impute,fit.mult.impute,aregImpute,stackMI`   |
 | `rms` | Modeling           | `datadist,lrm,rcs`  |
-|          | Accounting for imputation | `processMI, LRupdate` |
 |          | Model presentation | `plot,summary,nomogram,Function,anova`  |
 |          | Estimation         | `Predict,summary,contrast`  |
 |          | Model validation   | `validate,calibrate`  |
