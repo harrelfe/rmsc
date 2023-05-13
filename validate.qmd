@@ -121,7 +121,7 @@ $$
 * Example: sample of size $n=30$ from a normal distribution with
   mean 100 and SD 10
 
-```{r cdf-ecdf,cap='Empirical and population cumulative distribution function'}
+```{r cap='Empirical and population cumulative distribution function'}
 #| label: fig-val-cdf
 spar()
 set.seed(6)
@@ -163,7 +163,7 @@ Example: Data $(1,5,6,7,8,9)$, obtain 0.80 confidence interval for  `r ipacue()`
 
 <!--  In 1st edition used .Random.seed <- c(1,11,4,9,61,2,29,53,34,4,16,3)--->
 
-```{r boot, h=3, w=6, cap='Estimating properties of sample median using the bootstrap'}
+```{r h=3, w=6, cap='Estimating properties of sample median using the bootstrap'}
 #| label: fig-val-boot
 spar(ps=9, mfrow=c(1,2))
 options(digits=3)
@@ -607,8 +607,9 @@ cal <- processMI(f, 'calibrate', nind=3)
   of partial $\chi^2$ - d.f.
 * Example using OLS
 
-```{r bootrank,cap='Bootstrap percentile 0.95 confidence limits for ranks of predictors in an OLS model.  Ranking is on the basis of partial $\\chi^2$ minus d.f.  Point estimates are original ranks',scap='Bootstrap confidence limits for ranks of predictors'}
+```{r cap='Bootstrap percentile 0.95 confidence limits for ranks of predictors in an OLS model.  Ranking is on the basis of partial $\\chi^2$ minus d.f.  Point estimates are original ranks',scap='Bootstrap confidence limits for ranks of predictors'}
 #| label: fig-val-bootrank
+#| fig-height: 3
 # Use the plot method for anova, with pl=FALSE to suppress actual
 # plotting of chi-square - d.f. for each bootstrap repetition.
 # Rank the negative of the adjusted chi-squares so that a rank of

@@ -496,6 +496,8 @@ the normal distribution.
 
 ```{r lookprobit,cap='Estimated intercepts from probit model'}
 #| label: fig-cony-lookprobit
+#| fig-height: 2.75
+#| fig-width: 3.5
 spar(bty='l')
 f <- orm(gh ~ rcs(age,6), family=probit, data=w)
 g <- ols(gh ~ rcs(age,6), data=w)

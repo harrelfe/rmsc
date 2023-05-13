@@ -273,7 +273,7 @@ $$A = \frac{LR^s}{LR}$$
 
 * $LR^s$ is - 2 log-likelihood for testing the importance of the subset of predictors of interest (excluding the other predictors from the model).
 
-* $LR^s$ is - 2 log-likelihood for testing the full model (i.e., the model with both sets of predictors)
+* $LR$ is - 2 log-likelihood for testing the full model (i.e., the model with both sets of predictors)
 
 * $A$ is the proportion of the log likelihood explained by the subset of predictors compared to the proportion of likelihood explained by the full set of predictors
 
@@ -281,7 +281,7 @@ $$A = \frac{LR^s}{LR}$$
 
 * When $A = 0$, the subset does not have predictive information by itself
 
-* When $A = 1$ the subset contains all the predictive information found in the wholw set of predictors
+* When $A = 1$ the subset contains all the predictive information found in the whole set of predictors
 
 ---
 

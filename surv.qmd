@@ -7,6 +7,8 @@ hookaddcap()
 knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
 ```
 
+<!-- NEW: base graphics -> ggplot2 -->
+
 # Introduction to Survival Analysis
 
 ## Background
@@ -65,9 +67,8 @@ $$
 S(t) = \Pr(T > t)  = 1 - F(t)
 $$
 
-```{r fun-example,h=3.5,w=4.25,cap='Survival function'}
+```{r fun-example,h=2.5,w=3.5,cap='Survival function'}
 #| label: fig-surv-fun-example
-spar(ps=12,bty='l')
 tt <- c(seq(.0001,.002,by=.001),seq(.002,.02,by=.001),
         seq(.02,1,by=.01))
 # Note: bb,dd not stated in usual Weibull form
@@ -78,15 +79,15 @@ dd <- 4
 cumhaz <- (aa/(bb+1))*tt^(bb + 1) + (cc/(dd+1))*tt^(dd + 1)
 survival <- exp(-cumhaz)
 hazard <- ifelse(tt>.001, aa*tt^bb + cc*tt^dd, NA)
-plot(tt, survival, type="l", xlab="t", ylab="Survival Function")
+ggplot(mapping=aes(x=tt, y=survival)) + geom_line() +
+  xlab(expression(t)) + ylab('Survival Function')
 ```
 
 
-```{r cumhaz-example,h=3.5,w=4.25,cap='Cumulative hazard function'}
+```{r cumhaz-example,h=2.5,w=3.5,cap='Cumulative hazard function'}
 #| label: fig-surv-cumhaz-example
-spar(ps=12,bty='l')
-plot(tt, cumhaz, type="l", xlab="t",
-     ylab="Cumulative Hazard Function")
+ggplot(mapping=aes(x=tt, y=cumhaz)) + geom_line() +
+  xlab(expression(t)) + ylab('Cumulative Hazard Function')
 ```
 
 
@@ -97,10 +98,10 @@ plot(tt, cumhaz, type="l", xlab="t",
         over time
 
 
-```{r hazard-example,h=3.5,w=4.25,cap='Hazard function'}
+```{r hazard-example,h=2.5,w=3.5,cap='Hazard function'}
 #| label: fig-surv-hazard-example
-spar(ps=12,bty='l')
-plot(tt, hazard, type="l", xlab="t", ylab="Hazard Function")
+ggplot(mapping=aes(x=tt, y=hazard)) + geom_line() +
+  xlab(expression(t)) + ylab('Hazard Function')
 ```
 
 
@@ -190,18 +191,17 @@ S(t) &=& \exp(-\alpha t^{\gamma}) \nonumber
 
 
 
-```{r weibull-shapes,cap='Some Weibull hazard functions with $\\alpha=1$ and various values of $\\gamma$'}
+```{r weibull-shapes,h=2.75,w=3.5,cap='Some Weibull hazard functions with $\\alpha=1$ and various values of $\\gamma$'}
 #| label: fig-surv-weibull-shapes
-spar(bty='l')
-tt <- seq(1e-5, 1.2, length=100)
-plot(tt, rep(0,100), ylim=c(0,7), type="n", xlab="t", ylab="")
+tt <- seq(1e-3, 1.2, length=100)
+w <- NULL
 a <- 1
-i <- 0
-for(b in c(.5,1,2,4)) {
-	i <- i + 1
-	lines(tt, a*b*tt^(b-1), lty=i)
-}
-legend(.4, 6, c(".5","1","2","4"), lty=1:4, cex=.9, bty="n")
+for(b in c(.5, 1, 2, 4))
+	w <- rbind(w, data.frame(gamma=b, tt=tt, y= a * b * tt ^ (b-1)))
+ggplot(w, aes(x=tt, y=y, color=factor(gamma))) + geom_line() +
+  xlab(expression(t)) + ylab('Hazard Function') +
+	guides(color=guide_legend(title=expression(gamma))) +
+  theme(legend.position='bottom')
 ```
 
 

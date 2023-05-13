@@ -221,9 +221,9 @@ model using all possible subsets regression to maximize $R^{2}_{adj}$ (all possi
 
 **Note**: The audio was made using stepAIC with collinearities in predictors.  The code below allows for several options.  Here we use all possible subsets of predictors and force predictors to be uncorrelated, which is the easiest case for variable selection.
 
-```{r }
-require(MASS)
-require(leaps)
+```{r}
+require(MASS)    # provides stepAIC function
+require(leaps)   # provides regsubsets function
 sim <- function(n, sigma=2.5, method=c('stepaic', 'leaps'),
                 pr=FALSE, prcor=FALSE, dataonly=FALSE) {
   method <- match.arg(method)
@@ -306,7 +306,7 @@ rsim <- function(B, n, method=c('stepaic', 'leaps')) {
 
 Show the correlation matrix being assumed for the $X$s:
 
-```{r }
+```{r}
 uncorrelated <- TRUE
 sim(50000, prcor=TRUE)
 ```
@@ -463,7 +463,7 @@ discussed here but applied to time series modeling.
 * Result generalizes to general problems in plotting $Y$ vs.\
   $X\hat{\beta}$
   
-```{r shrink-groupmeans,ps=7,cap='Sorted means from 20 samples of size 50 from a uniform $[0,1]$ distribution.  The reference line at 0.5 depicts the true population value of all of the means.',scap='Means from 20 $U(0,1)$ samples'}
+```{r ps=7,cap='Sorted means from 20 samples of size 50 from a uniform $[0,1]$ distribution.  The reference line at 0.5 depicts the true population value of all of the means.',scap='Means from 20 $U(0,1)$ samples'}
 #| label: fig-multivar-shrink-groupmeans
 set.seed(123)
 n <- 50
@@ -693,9 +693,11 @@ Example:  @fig-cony-redun
    + Heart rate not monotonically related to blood pressure
    + See @fig-multivar-physiol-transcan and @fig-multivar-physiol-transcan2
 
+<!-- NEW replaced plot with ggplot added trantab=TRUE -->
 
-```{r physiol-transcan,cap='Transformations fitted using `transcan`.  Tick marks indicate the two imputed values for blood pressure.',scap='`transcan` transformations for two physiologic variables'}
+```{r cap='Transformations fitted using `transcan`.  Tick marks indicate the two imputed values for blood pressure.',scap='`transcan` transformations for two physiologic variables'}
 #| label: fig-multivar-physiol-transcan
+#| fig-height: 2.75
 require(Hmisc)
 getHdata(support)   # Get data frame from web site
 heart.rate     <- support$hrt
@@ -703,9 +705,9 @@ blood.pressure <- support$meanbp
 blood.pressure[400:401]
 blood.pressure[400:401] <- NA  # Create two missings
 d <- data.frame(heart.rate, blood.pressure)
-spar(mfrow=c(1,2), ps=9, pch=46)
 w <- transcan(~ heart.rate + blood.pressure, transformed=TRUE,
-              imputed=TRUE, show.na=TRUE, data=d)
+              imputed=TRUE, show.na=TRUE, data=d, trantab=TRUE, pl=FALSE)
+ggplot(w)
 w$imputed$blood.pressure
 t <- w$transformed
 spe <- round(c(spearman(heart.rate, blood.pressure),
@@ -717,11 +719,14 @@ spe <- round(c(spearman(heart.rate, blood.pressure),
 #| fig-cap: !expr paste('Relationship between heart rate and blood pressure.  The lower left plot contains raw data (Spearman $\\rho=',spe[1],'$); the lower right is a scatterplot of the corresponding transformed values ($\\rho=',spe[2],'$).  Data courtesy of the SUPPORT study [@kna95sup].')
 -->
 
-```{r physiol-transcan2,h=3,w=6}
+`r this <- 'and that'`
+
+```{r}
 #| label: fig-multivar-physiol-transcan2
 #| fig-cap: "Relationship between heart rate and blood pressure: untransformed data (left) and transformed data (right).  Data courtesy of the SUPPORT study [@kna95sup]."
 #| fig-scap: 'HR vs. BP before and after `transcan` transformations'
-spar(ps=9, mfrow=c(1,2))
+#| fig-height: 3
+spar(mfrow=c(1,2))
 plot(heart.rate, blood.pressure)
 plot(t[,'heart.rate'], t[,'blood.pressure'],
      xlab='Transformed hr', ylab='Transformed bp')

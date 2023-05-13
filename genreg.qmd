@@ -1257,7 +1257,7 @@ The `B` $\times$ `sampleAge` interaction effects have 6 d.f. and tests whether t
 * Show $d(y)$ does not interact with $X$
 
 
-## Complex Curve Fitting Example
+## Complex Curve Fitting Example {#sec-genreg-gtrans}
 
 * Restricted cubic spline `r ipacue()`
 * Discontinuity (interrupted time series analysis)
@@ -1331,11 +1331,15 @@ ggplot(Predict(f, fun=g, offset=off)) + w + v + yl
 Now make the slow trend simpler (6 knots) but add a discontinuity at the intervention. More finely control times at which predictions are requested, to handle discontinuity.
 
 ```{r sic4}
-h <- function(x) cbind(rcspline.eval(x, k),
-                       sin=sin(2*pi*x/12), cos=cos(2*pi*x/12),
-                       jump=x >= 37)
+h <- function(x) {
+  z <- cbind(rcspline.eval(x, k),
+             sin=sin(2*pi*x/12), cos=cos(2*pi*x/12),
+             jump=x >= 37)
+  attr(z, 'nonlinear') <- 2 : ncol(z)
+  z
+	}
 f <- Glm(aces ~ offset(log(stdpop)) + gTrans(time, h),
-         data=d, family=poisson)
+         data=d, family=poisson, x=TRUE, y=TRUE) # x, y for LRTs
 f$aic
 times <- sort(c(seq(0, 60, length=200), 36.999, 37, 37.001))
 ggplot(Predict(f, time=times, fun=g, offset=off)) + w + v + yl
@@ -1353,6 +1357,20 @@ f
 * Evidence for an intervention effect (jump) `r ipacue()`
 * Evidence for seasonality
 * Could have analyzed rates using a semiparametric model
+
+Compute likelihood ratio $\chi^2$ test statistics for this model
+
+```{r}
+anova(f, test='LR')
+```
+
+Get a joint LR test of seasonality and discontinuity by omitting 3 terms from the model
+
+```{r}
+g <- Glm(aces ~ offset(log(stdpop)) + rcs(time, k),
+         data=d, family=poisson)
+lrtest(f, g)
+```
 
 ## Study Questions
 

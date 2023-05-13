@@ -185,7 +185,7 @@ best used with RStudio Rmarkdown html output.
 | `effective.df`| Print effective d.f. for each type of variable in model, for penalized fit or `pentrace` results | |
 | `summary`    | Summary of effects of predictors                      | |
 | `plot.summary` | Plot continuously shaded confidence bars for results of `summary`| |
-| `anova`  | Wald tests of most meaningful hypotheses                  | |
+| `anova`  | Wald and LR tests of most meaningful hypotheses                | |
 | `plot.anova` | Graphical depiction of anova                          | |
 | `contrast`   | General contrasts, C.L., tests                        | |
 | `gendata` | Easily generate predictor combinations             | |
@@ -263,6 +263,7 @@ Example:
     estimate effects (e.g. inter-quartile range odds ratios), plot
     estimated transformations
 
+<!-- NEW: x=TRUE y=TRUE and LR tests -->
 
 ```{r eval=FALSE}
 require(rms)                     # make new functions available
@@ -275,7 +276,8 @@ ddist <- datadist(cholesterol, treat, num.diseases, age)
 options(datadist="ddist")        # defines data dist. to rms
 cholesterol <- impute(cholesterol)
 fit <- lrm(y ~ treat + scored(num.diseases) + rcs(age) +
-                 log(cholesterol+10) + treat:log(cholesterol+10))
+                 log(cholesterol+10) + treat:log(cholesterol+10),
+					 x=TRUE, y=TRUE)  # needed for robcov, anova test='LR'
 fit    # outputs plain, LaTeX, or html markup
 describe(y ~ treat + scored(num.diseases) + rcs(age))
 # or use describe(formula(fit)) for all variables used in fit
@@ -284,7 +286,8 @@ describe(y ~ treat + scored(num.diseases) + rcs(age))
                                  # use a robust covariance matrix
                                  # would need x=T, y=T in lrm()
 specs(fit)                       # Describe the design characteristics
-anova(fit)                       # plain, LaTex, or html
+anova(fit)                       # Wald tests, plain, LaTex, or html
+anova(fit, test='LR')            # Likelihood ratio tests
 anova(fit, treat, cholesterol)   # Test these 2 by themselves
 plot(anova(fit))                 # Summarize anova graphically
 summary(fit)                     # Estimate effects using default ranges
@@ -350,7 +353,7 @@ logit <- predict(fit, expand.grid(treat="a", num.dis=0, age=ag,
 plot(ag^.5, logit)               # try square root vs. spline transform.
 plot(ag^1.5, logit)              # try 1.5 power
 
-latex(fit)                       # invokes latex.lrm, creates fit.tex
+latex(fit)                       # fit in math notation
 # Draw a nomogram for the model fit
 plot(nomogram(fit))
 
@@ -373,6 +376,7 @@ fit <- lrm(y ~ age.tertile * rcs(cholesterol))
 
 ## Other Functions
 
+* `processMI`: works with `Hmisc::fit.mult.impute` to process resampling validation statistics and likelihood ratio $\chi^2$ statistics accounting for multiple imputation
 * `supsmu`: Friedman's "super smoother" 
 * `lowess`: Cleveland's scatterplot smoother
 * `glm`: generalized linear models (see `Glm`)

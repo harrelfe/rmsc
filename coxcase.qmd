@@ -116,9 +116,9 @@ f <- cph(S ~ rx + rcs(age,4) + rcs(wt,3) + pf.coded +
          rcs(sg,3) + rcs(sz,3) + rcs(log(ap),5) + bm,
          x=TRUE, y=TRUE, surv=TRUE, time.inc=5*12)
 print(f, coefs=FALSE)
-# x, y for predict, validate, calibrate;
+# x, y for anova LR, predict, validate, calibrate;
 # surv, time.inc for calibrate
-anova(f)
+anova(f, test='LR')
 ```
 
 * Savings of 12 d.f.  `r ipacue()`
@@ -175,8 +175,8 @@ plot(phtest[1])  # plot only the first variable
 ```{r}
 z.dose <- z[,"rx"]  # same as saying z[,1] - get first column
 z.other <- z[,-1]   # all but the first column of z
-f.ia <- cph(S ~ z.dose * z.other)
-anova(f.ia)
+f.ia <- cph(S ~ z.dose * z.other, x=TRUE, y=TRUE)
+anova(f.ia, test='LR')
 ```
 
 

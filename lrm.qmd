@@ -6,6 +6,8 @@ getRs('qbookfun.r')
 hookaddcap()
 knitr::set_alias(w   = 'fig.width', h    = 'fig.height',
                  cap = 'fig.cap',   scap ='fig.scap')
+require(ggplot2)
+require(data.table)
 ```
 
 # Binary Logistic Regression {#sec-lrm}
@@ -30,11 +32,10 @@ $$
 
 ```{r echo=FALSE,w=3.5,h=2.5,cap='Logistic function'}
 #| label: fig-lrm-fun
-## @knitr logistic-fun
-spar(bty='l')
 x <- seq(-4, 4, by=.05)
 p <- 1/(1 + exp(-x))
-plot(x, p, xlab="X", ylab="P", type="l")
+ggplot(mapping=aes(x=x, y=p)) + geom_line() +
+  xlab(expression(x)) + ylab(expression(P))
 ```
 
 `r ipacue()`
@@ -163,40 +164,25 @@ where $R=\Pr(Y=1|X_{1}=0, A)$.
 | Age: Males | 34 | 38 | 40 | 40 | 41 | 43 | 43 | 43 | 44 | 46 | 47 | 48 | 48 | 50 | 50 | 52 | 55 | 60 | 61 | 61  |
 | Response: | 1 | 1 | 0 | 0 | 0 | 1 | 1 | 1 | 0 | 0 | 1 | 1 | 1 | 0 | 1 | 1 | 1 | 1 | 1 | 1 |
 
-```{r w=5.5,h=4.5,cap='Data, subgroup proportions, and fitted logistic model, with 0.95 pointwise confidence bands',scap='Data, subgroup proportions, and fitted logistic model'}
+<!-- NEW ggplot2 instead of lattice -->
+
+```{r w=5.5,h=4.5,cap='Data, subgroup proportions (triangles), and fitted logistic model, with 0.95 pointwise confidence bands',scap='Data, subgroup proportions, and fitted logistic model'}
 #| label: fig-lrm-lrmodel
 require(rms)
 options(prType='html')     # output format for certain rms functions
 getHdata(sex.age.response)
-d <- sex.age.response
+d <- as.data.table(sex.age.response)  # so can do easy aggregation
 dd <- datadist(d); options(datadist='dd')
 f <- lrm(response ~ sex + age, data=d)
 fasr <- f   # Save for later
-require(lattice)
-w <- function(...)
-  with(d, {
-    m <- sex=='male'
-    f <- sex=='female'
-    lpoints(age[f], response[f], pch=1)
-    lpoints(age[m], response[m], pch=2)
-    af <- cut2(age, c(45,55), levels.mean=TRUE)
-    prop <- tapply(response, list(af, sex), mean,
-                   na.rm=TRUE)
-    agem <- as.numeric(row.names(prop))
-    lpoints(agem, prop[,'female'],
-            pch=4, cex=1.3, col='green')
-    lpoints(agem, prop[,'male'],
-            pch=5, cex=1.3, col='green')
-    x <- rep(62, 4); y <- seq(.25, .1, length=4)
-    lpoints(x, y, pch=c(1, 2, 4, 5),
-            col=rep(c('blue','green'),each=2))
-    ltext(x+5, y,
-          c('F Observed','M Observed',
-            'F Proportion','M Proportion'), cex=.8)
-  } )
-
-plot(Predict(f, age=seq(34, 70, length=200), sex, fun=plogis),
-     ylab='Pr(response)', ylim=c(-.02, 1.02), addpanel=w)
+p <- Predict(f, age=seq(34, 70, length=200), sex, fun=plogis)
+# Function to bin a variable and represent bin by mean x within bin
+mb <- function(x, ...) as.numeric(as.character(cut2(x, ..., levels.mean=TRUE)))
+d[, ageg := mb(age, cuts=c(45, 55))]
+props <- d[, .(prop = mean(response)), by=.(ageg, sex)]
+ggplot(p, ylab='Pr(response)') +
+  geom_point(data=d, aes(x=age, y=response, color=sex)) +
+  geom_point(data=props, aes(x=ageg, y=prop, color=sex, shape=I(2)))
 ```
 
 ```{r}
@@ -432,6 +418,8 @@ $$\text{expit}(X_{i}\hat{\beta}\pm zs)$$
 
 `r ipacue()`
 
+**Categorical Predictor Case**
+
 * Simplest case: no covariates, only an intercept
 * Consider margin of error of 0.1 in estimating
   $\theta = \Pr(Y=1)$ with 0.95 confidence
@@ -440,26 +428,30 @@ $$\text{expit}(X_{i}\hat{\beta}\pm zs)$$
 * Single binary predictor with prevalence $\frac{1}{2}$: need
   $n=96$ for each value of $X$
 * For margin of error of $\pm 0.05, n=384$ is required (if true probabilities near 0.5 are possible); $n=246$ required if true probabilities are only known not to be in $[0.2, 0.8]$.
-* Single continuous predictor $X$ having a normal distribution  `r ipacue()`
+
+**Single Continuous Predictor**
+
+* Predictor $X$ has a normal distribution  `r ipacue()`
   with mean zero and standard deviation $\sigma$, with true $P = \text{expit}(X)$ so that the expected number of events is
-  $\frac{n}{2}$.  Compute mean of $\max_{X \in [-1.5,1.5]} |P - \hat{P}|$ over 1000 simulations for varying $n$ and $\sigma$^[An average absolute error of 0.05 corresponds roughly to a 0.95 confidence interval margin of error of 0.1.]
+  $\frac{n}{2}$.  Compute mean and 0.9 quantile of $\max_{X \in [-1.5,1.5]} |P - \hat{P}|$ over 1000 simulations for varying $n$ and $\sigma$^[An average absolute error of 0.05 corresponds roughly to a 0.95 confidence interval margin of error of 0.1.] [See [this](https://hbiostat.org/rflow/sim.html#sec-sim-array) for more about R coding for simulations of this type.]{.aside}
 
+<!-- NEW generalized to 2 error summaries and xYplot -> ggplot2 -->
 
-```{r w=5,h=4,cap='Simulated expected maximum error in estimating probabilities for $x \\in [-1.5, 1.5]$ with a single normally distributed $X$ with mean zero',scap='Average maximum error with continuous predictor'}
+```{r cap='Simulated expected and 0.9 quantile of the maximum error in estimating probabilities for $x \\in [-1.5, 1.5]$ with a single normally distributed $X$ with mean zero',scap='Average and 0.9 quantile of maximum error with continuous predictor'}
 #| label: fig-lrm-simerr
 require(rms)
-getRs('hashCheck.r')  # also defines runifChanged
+require(ggplot2)
 
 g <- function() {
 set.seed(12)
 sigmas  <- c(.5, .75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4)
-ns      <- seq(25, 300, by=25)
+ns      <- seq(25, 500, by=25)
 nsim    <- 1000
 xs      <- seq(-1.5, 1.5, length=200)
 pactual <- plogis(xs)
 
-dn <- list(sigma=format(sigmas), n=format(ns))
-maxerr <- N1 <- array(NA, c(length(sigmas), length(ns)), dn)
+dn     <- list(sigma=format(sigmas), n=format(ns), sim=NULL)
+maxerr <- array(NA, c(length(sigmas), length(ns), nsim), dn)
 
 i <- 0
 for(s in sigmas) {
@@ -467,37 +459,36 @@ for(s in sigmas) {
   j <- 0
   for(n in ns) {
     j <- j + 1
-    n1 <- maxe <- 0
     for(k in 1:nsim) {
       x <- rnorm(n, 0, s)
       P <- plogis(x)
       y <- ifelse(runif(n) <= P, 1, 0)
-      n1 <- n1 + sum(y)
       beta <- lrm.fit(x, y)$coefficients
       phat <- plogis(beta[1] + beta[2] * xs)
-      maxe <- maxe + max(abs(phat - pactual))
+      maxerr[i, j, k] <- max(abs(phat - pactual))
     }
-    n1   <- n1/nsim
-    maxe <- maxe/nsim
-    maxerr[i,j] <- maxe
-    N1[i,j] <- n1
   }
 }
-maxerr
+f  <- function(x) c(Mean=mean(x), Q90=unname(quantile(x, probs=0.9)))
+apply(maxerr, 1:2, f)   # summarize over 3rd dimension (1000 simulations)
 }
 
-maxerr <- runifChanged(g)
-maxe   <- reShape(maxerr)
-xYplot(maxerr ~ n, groups=sigma, data=maxe,
-       ylab=expression(paste('Average Maximum  ',
-           abs(hat(P) - P))),
-       type='l', lty=rep(1:2, 5), label.curve=FALSE,
-       abline=list(h=c(.15, .1, .05), col=gray(.85)))
-Key(.8, .68, other=list(cex=.7,
-               title=expression(~~~~~~~~~~~sigma)))
+me    <- runifChanged(g)
+# Function to create a variable holding value for ith dimension
+slice <- function(a, i) {
+  dn <- all.is.numeric(dimnames(a)[[i]], 'vector')   # all.is.numeric in Hmisc
+  dn[as.vector(slice.index(a, i))]
+}
+u <- data.frame(maxerr = as.vector(me),
+                stat   = slice(me, 1),
+                sigma  = slice(me, 2),
+                n      = slice(me, 3))
+ggplot(u, aes(x=n, y=maxerr, color=factor(sigma))) + geom_line() +
+  facet_wrap(~ stat) +
+  ylab(expression(max(abs(hat(P) - P)))) +
+  guides(color=guide_legend(title=expression(sigma))) +
+  theme(legend.position='bottom')
 ```
-
-
 
 ## Test Statistics
 `r mrg(sound("lrm-6"))`
@@ -551,22 +542,26 @@ kn <- paste(kn, collapse=', ')
 ```
 
 ```{r}
-#| fig-cap: "Logit proportions of significant coronary artery disease by sex and deciles of age for n=3504 patients, with spline fits (smooth curves). Spline fits are for $k=4$ knots at age=36, 48, 56, and 68 years, and interaction between age and sex is allowed.  Shaded bands are pointwise 0.95 confidence limits for predicted log odds.  Smooth nonparametric estimates are shown as dotted curves. Data courtesy of the Duke Cardiovascular Disease Databank."
+#| fig-cap: "Logit proportions of significant coronary artery disease by sex and deciles of age for n=3504 patients, with spline fits (smooth curves). Spline fits are for $k=4$ knots at age=36, 48, 56, and 68 years, and interaction between age and sex is allowed.  Shaded bands are pointwise 0.95 confidence limits for predicted log odds.  Smooth nonparametric estimates are shown as dashed lines. Data courtesy of the Duke Cardiovascular Disease Databank."
 #| fig-scap: "Logit proportions of significant CAD by sex and age"
 #| label: fig-lrm-emp-age-sex-pl
-w <- function(...)
-  with(acath, {
-    plsmo(age, sigdz, group=sex, fun=qlogis, lty='dotted',
-          add=TRUE, grid=TRUE)
-    af <- cut2(age, g=10, levels.mean=TRUE)
-    prop <- qlogis(tapply(sigdz, list(af, sex), mean,
-                          na.rm=TRUE))
-    agem <- as.numeric(row.names(prop))
-    lpoints(agem, prop[,'female'], pch=4, col='green')
-    lpoints(agem, prop[,'male'],   pch=2, col='green')
-  } )
-plot(Predict(f, age, sex), ylim=c(-2,4), addpanel=w,
-     label.curve=list(offset=unit(0.5, 'cm')))
+d <- as.data.table(acath)
+d[, ageg := mb(age, g=10)]   # bin into deciles of age
+# Compute logit of proportion of disease in each decile and sex group
+binned <- d[, .(logitprop = qlogis(mean(sigdz))), by=.(ageg, sex)]
+# Estimate loess curves separately by sex
+# Function to compute logit of loess nonparametric estimates for binary y
+loel <- function(x, y, xlim) {
+  j <- ! is.na(x + y)
+  x <- x[j]; y <- y[j]
+  z <- lowess(x, y, iter=0)
+  i <- if(missing(xlim)) TRUE else z$x >= xlim[1] & z$x <= xlim[2]
+  list(x=z$x[i], y=qlogis(z$y[i]))
+}
+loe <- d[, loel(age, sigdz, xlim=c(25, 78)), by=.(sex)]
+ggplot(Predict(f, age, sex)) +
+  geom_point(data=binned, aes(x=ageg, y=logitprop, color=sex, shape=I(2))) +
+  geom_line(data=loe, aes(x=x, y=y, color=sex, linetype=I(2)))
 ```
 
 `r ipacue()`
@@ -577,8 +572,7 @@ plot(Predict(f, age, sex), ylim=c(-2,4), addpanel=w,
 * Plot $\log \hat{O}$ (scale on which linearity is assumed)
 * Stratified estimates are noisy
 * 1 or 2 $X$s $\rightarrow$ nonparametric smoother
-* `plsmo` function makes it easy to use loess to compute logits
-  of nonparametric estimates (`fun=qlogis`)
+* Use loess to compute logits of nonparametric estimates (`fun=qlogis`)
 * General: restricted cubic spline expansion of one or more predictors  `r ipacue()`
 
 \begin{array}{ccc}
@@ -655,37 +649,26 @@ anova(f, test='LR')
 
 
 
-```{r cap='Estimated relationship between duration of symptoms and the log odds of severe coronary artery disease for $k=5$. Knots are marked with arrows. Solid line is spline fit; dotted line is a nonparametric loess estimate.',scap='Duration of symptoms and severe CAD'}
+```{r cap='Estimated relationship between duration of symptoms and the log odds of severe coronary artery disease for $k=5$. Knots are marked with arrows. Solid line is spline fit; dashed line is a nonparametric loess estimate.  Triangles are logits of proportions after binning duration.',scap='Duration of symptoms and severe CAD'}
 #| label: fig-lrm-dur
-dz <- subset(acath, sigdz==1)
-dd <- datadist(dz)
-f <- lrm(tvdlm ~ rcs(cad.dur, 5), data=dz)
-w <- function(...)
-  with(dz, {
-    plsmo(cad.dur, tvdlm, fun=qlogis, add=TRUE,
-          grid=TRUE, lty='dotted')
-    x <- cut2(cad.dur, g=15, levels.mean=TRUE)
-    prop <- qlogis(tapply(tvdlm, x, mean, na.rm=TRUE))
-    xm <- as.numeric(names(prop))
-    lpoints(xm, prop, pch=2, col='green')
-  } )
-plot(Predict(f, cad.dur), addpanel=w)
+d  <- as.data.table(acath)[sigdz == 1]
+dd <- datadist(d)
+f <- lrm(tvdlm ~ rcs(cad.dur, 5), data=d)
+d[, durg := mb(cad.dur, g=15)]   # bin into 15-tiles of age
+# Compute logit of proportion of severe dz in each bin
+binned <- d[, .(logitprop = qlogis(mean(tvdlm))), by=.(durg)]
+loe <- d[, loel(cad.dur, tvdlm, xlim=c(0, 326))]
+ggplot(Predict(f, cad.dur)) +
+  geom_point(data=binned, aes(x=durg, y=logitprop, shape=I(2))) +
+  geom_line(data=loe, aes(x=x, y=y, linetype=I(2)))
 ```
-
-
 
 ```{r cap='Fitted linear logistic model in $\\log_{10}(\\text{duration + 1})$, with subgroup estimates using groups of 150 patients. Fitted equation is $\\Pr(\\text{tvdlm})$ = $\\text{expit}(-.9809+.7122 \\log_{10}(\\text{months}+1))$.',scap='Duration of symptoms and $\\log_{10}(\\text{months}+1$)'}
 #| label: fig-lrm-problog
-f <- lrm(tvdlm ~ log10(cad.dur + 1), data=dz)
-w <- function(...)
-  with(dz, {
-    x <- cut2(cad.dur, m=150, levels.mean=TRUE)
-    prop <- tapply(tvdlm, x, mean, na.rm=TRUE)
-    xm <- as.numeric(names(prop))
-    lpoints(xm, prop, pch=2, col='green')
-  } )
-plot(Predict(f, cad.dur, fun=plogis), ylab='P',
-     ylim=c(.2, .8), addpanel=w)
+f <- lrm(tvdlm ~ log10(cad.dur + 1), data=d)
+binned <- d[, .(prop = mean(tvdlm)), by=.(durg)]
+ggplot(Predict(f, cad.dur, fun=plogis), ylab='P') +
+  geom_point(data=binned, aes(x=durg, y=prop, shape=I(2)))
 ```
 
 
@@ -704,7 +687,7 @@ plot(Predict(f, cad.dur, fun=plogis), ylab='P',
 ```{r lrm-acath}
 acath <- transform(acath,
                    cholesterol = choleste,
-                   age.tertile = cut2(age,g=3),
+                   age.tertile = cut2(age, g=3),
                    sx = as.integer(acath$sex) - 1)
 # sx for loess, need to code as numeric
 dd <- datadist(acath); options(datadist='dd')
@@ -723,8 +706,8 @@ print(anova(f), caption='Crudely categorizing age into tertiles')
 ```{r cap='Log odds of significant coronary artery disease modeling age with two dummy variables'}
 #| label: fig-lrm-cholxage
 yl <- c(-1,5)
-plot(Predict(f, cholesterol, age.tertile),
-     adj.subtitle=FALSE, ylim=yl)
+ggplot(Predict(f, cholesterol, age.tertile),
+       adj.subtitle=FALSE, ylim=yl)
 ```
 
 
@@ -833,7 +816,8 @@ $\chi^{2}=7.99$ with 1 d.f., p=.005.
 mean.age <-
   with(acath,
        as.vector(tapply(age, age.tertile, mean, na.rm=TRUE)))
-plot(Predict(f, cholesterol, age=round(mean.age,2),
+mean.age <- unique(mb(acath$age, g=3))
+ggplot(Predict(f, cholesterol, age=round(mean.age, 2),
              sex="male"),
      adj.subtitle=FALSE, ylim=yl) #3 curves
 ```
@@ -846,11 +830,11 @@ plot(Predict(f, cholesterol, age=round(mean.age,2),
 ```{r h=4,w=6.5,cap='Partial residuals for duration and $\\log_{10}$(duration+1).  Data density shown at top of each plot.',scap='Partial residuals for binary logistic model'}
 #| label: fig-lrm-dur-partial-resid
 spar(mfrow=c(1,2), ps=10)
-f <- lrm(tvdlm ~ cad.dur, data=dz, x=TRUE, y=TRUE)
+f <- lrm(tvdlm ~ cad.dur, data=d, x=TRUE, y=TRUE)
 resid(f, "partial", pl="loess", xlim=c(0,250), ylim=c(-3,3))
-scat1d(dz$cad.dur)
-log.cad.dur <- log10(dz$cad.dur + 1)
-f <- lrm(tvdlm ~ log.cad.dur, data=dz, x=TRUE, y=TRUE)
+scat1d(d$cad.dur)
+log.cad.dur <- log10(d$cad.dur + 1)
+f <- lrm(tvdlm ~ log.cad.dur, data=d, x=TRUE, y=TRUE)
 resid(f, "partial", pl="loess", ylim=c(-3,3))
 scat1d(log.cad.dur)
 ```
@@ -1040,6 +1024,7 @@ print(v4,
 `r mrg(sound("lrm-12"))`
 
 ```{r}
+#| fig-height: 2.75
 s <- summary(f.linia)
 s
 ```

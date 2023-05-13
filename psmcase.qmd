@@ -190,16 +190,17 @@ Better approach to gauging predictive potential and allocating d.f.:
 * Had to limit to 4 knots, force `scoma` to be linear, and omit
       `ph.i` to avoid singularity
 
+<!-- NEW Wald -> LR -->
 
-```{r anovasat,cap='Partial $\\chi^{2}$ statistics for association of each predictor with response from saturated main effects model, penalized for d.f.',scap='Partial $\\chi^{2}$ statistics from saturated main effects model'}
+```{r anovasat,cap='Partial likelihood ratio $\\chi^{2}$ statistics for association of each predictor with response from saturated main effects model, penalized for d.f.',scap='Partial $\\chi^{2}$ statistics from saturated main effects model'}
 #| label: fig-psmcase-anovasat
 #| fig-height: 3.5
 k <- 4
 f <- psm(S ~ rcs(age,k)+sex+dzgroup+pol(num.co,2)+scoma+
          pol(adlsc,2)+race+rcs(meanbp,k)+rcs(hrt,k)+rcs(resp,k)+
          rcs(temp,k)+rcs(crea,k)+rcs(sod,k)+rcs(wblc.i,k)+
-         rcs(pafi.i,k), dist='lognormal', data=ac)
-plot(anova(f))
+         rcs(pafi.i,k), dist='lognormal', data=ac, x=TRUE, y=TRUE)
+plot(anova(f, test='LR'))
 ```
 
 
@@ -222,9 +223,9 @@ f <- psm(S ~ rcs(age,5) + sex + dzgroup + num.co +
              scoma + pol(adlsc,2) + race2 + rcs(meanbp,5) +
              rcs(hrt,3) + rcs(resp,3) + temp +
              rcs(crea,4) + sod + rcs(wblc.i,3) + rcs(pafi.i,4),
-         dist='lognormal', data=ac)
+         dist='lognormal', data=ac, x=TRUE, y=TRUE)
 f
-a <- anova(f)
+a <- anova(f, test='LR')
 ```
 
 ## Summarizing the Fitted Model
@@ -234,7 +235,7 @@ a <- anova(f)
 * Plot the shape of the effect of each predictor on log `r ipacue()`
 survival time.
 * All effects centered: can be placed on common scale
-* Wald $\chi^2$ statistics, penalized for d.f., plotted in descending order
+* LR $\chi^2$ statistics, penalized for d.f., plotted in descending order
 
 ```{r plot, h=7, w=7, cap='Effect of each predictor on log survival time.  Predicted values have been centered so that predictions at predictor reference values are zero.  Pointwise 0.95 confidence bands are also shown.  As all $Y$-axes have the same scale, it is easy to see which predictors are strongest.',scap='Effect of predictors on log survival time in SUPPORT'}
 #| label: fig-psmcase-plot
