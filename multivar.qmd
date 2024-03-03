@@ -425,7 +425,8 @@ discussed here but applied to time series modeling.
   account for all of these issues
 * To just estimate $\sigma$ in a linear model with a multiplicative margin of error of 1.2 with 0.95 confidence requires $n=70$
 
-`r fa <- '^[If one considers the power of a two-sample binomial test compared with a Wilcoxon test if the response could be made continuous and the proportional odds assumption holds, the effective sample size for a binary response is $3 n_{1}n_{2}/n \\approx 3 \\min(n_{1}, n_{2})$ if $\\frac{n_{1}}{n}$ is near 0 or 1 [@whi93sam, Eq. 10, 15].  Here $n_{1}$ and $n_{2}$ are the marginal frequencies of the two response levels [@ped96sim].]'`
+<!-- NEW changed eff sample size for binary -->
+`r fa <- '^[If one considers the power of a two-sample binomial test compared with a Wilcoxon test if the response could be made continuous and the proportional odds assumption holds, the effective sample size for a binary response is $3 n_{1}n_{2}/n \\approx 3 \\min(n_{1}, n_{2})$ if $\\frac{n_{1}}{n}$ is near 0 or 1 [@whi93sam, Eq. 10, 15].  Here $n_{1}$ and $n_{2}$ are the marginal frequencies of the two response levels [@ped96sim].  The effective sample size is a maximum ($0.75n$) when $n_{1}=n_{2}$, i.e. $p=\\frac{1}{2}$ .]'`
 `r fb <- '^[Based on the power of a proportional odds model two-sample test when the marginal cell sizes for the response are $n_{1}, \\ldots, n_{k}$, compared with all cell sizes equal to unity (response is continuous) [@whi93sam, Eq. 3].  If all cell sizes are equal, the relative efficiency of having $k$ response categories compared to a continuous response is $1 - \\frac{1}{k^{2}}$ [@whi93sam, Eq. 14], e.g., a 5-level response is almost as efficient as a continuous one if proportional odds holds across category cutoffs.]'`
 `r fc <- '^[This is approximate, as the effective sample size may sometimes be boosted somewhat by censored observations, especially for non-proportional hazards methods such as Wilcoxon-type tests [@ben82eff].]'`
 
@@ -434,7 +435,7 @@ discussed here but applied to time series modeling.
 | Type of Response Variable | Limiting Sample Size $m$   |
 |-----|-----|
 | Continuous                | $n$ (total sample size)  |
-| Binary                    | $\min(n_{1}, n_{2})$ `r fa`  |
+| Binary                    | $3np(1-p), p=\frac{n_{2}}{n}$ `r fa`  |
 | Ordinal ($k$ categories)  | $n - \frac{1}{n^{2}} \sum_{i=1}^{k} n_{i}^{3}$ `r fb`  |
 | Failure (survival) time   | number of failures `r fc` |
 
@@ -447,7 +448,14 @@ discussed here but applied to time series modeling.
 * Univariable screening (graphs, crosstabs, etc.) **in no way**
         reduces multiple comparison problems of model building [@sun96ina]
 
+<!-- NEW -->
 
+::: {.callout-note collapse="true"}
+## More About the Binary $Y$ Case
+
+To derive the effective sample size for binary $Y$ we compare two samples of equal size $\frac{n}{2}$ by testing whether the log odds ratio is zero.  When the two samples come from populations with equal $\Pr(Y=1) = p$, the variance of the log odds ratio is approximately $2 \times \frac{1}{\frac{n}{2}p(1-p)} = \frac{4}{np(1-p)}$.  When $Y$ is continuous with no ties and a Wilcoxon or proportional odds model test is used, the reciprocal of the variance of the proportional odds model's log odds ratio is $\frac{n^{3}}{12 (n+1)^{2}} \times (1 - \frac{1}{n^{2}}) \approx \frac{n}{12}$ so the variance is approximately $\frac{12}{n}$.  The ratio of this to the binary $Y$ variance is $3p(1-p)$.
+
+:::
 
 ## Shrinkage {#sec-multivar-est-use-shrink}
 `r mrg(movie("https://youtu.be/yWoKLDy8IQA"), sound("mv-7"))`
@@ -559,7 +567,8 @@ between variables.
     + For others create clusters: socioeconomic, risk factors/history, and physiologic function
     + Summarize each cluster with its first principal component $PC_{1}$, i.e., the linear combination of characteristics that maximizes variance of the score across subjects subject to an overall constraint on the coefficients
     + Fit outcome model with 5 predictors
-
+* See [this](https://stats.stackexchange.com/questions/5774) for useful resources related to principal component analysis of mixed continuous and categorical variables
+* See [this](https://stats.stackexchange.com/questions/239898) for an excellent discussion of whether data reduction (unsupervised learning) steps need to be included in resampling for model validation
 
 
 
@@ -967,7 +976,7 @@ result of using a bad modeling strategy:
 
 
 
-## Summary: Possible Modeling Strategies
+## Summary: Possible Modeling Strategies {#sec-multivar-strategy}
 
 ### Developing Predictive Models
 `r mrg(sound("mv-15"))`
@@ -1024,7 +1033,7 @@ result of using a bad modeling strategy:
         the randomness inherent in the multiple steps.
 1. Develop simplifications to the final model as needed.
 
-
+<!-- NEW confounding 2023-05-30 -->
 
 ### Developing Models for Effect Estimation
 `r mrg(sound("mv-16"))`
@@ -1039,7 +1048,7 @@ result of using a bad modeling strategy:
   compromise between variance and bias
 1. Don't penalize terms for variable of interest
 1. Model validation less necessary
-
+1. Like the hypothesis testing scenario covered next, when one is attempting to apply a causal interpretation to the effect being estimated, consideration of pathways and confounding are all-important.  Collider bias and backdoor pathways can ruin interpretation, and so can the omission of confounder variables that would have provided alternate explanations for observed effects of interest.  In pure prediction mode we don't care very much how we got here, but in isolating the effect of a specific variable in the model, e.g., in estimating the effect of treatment in an observational treatment comparison study, measuring and adjusting for nearly all confounding in play are very important.  Sometimes adjusting for confounding requires overfitting the model from a prediction standpoint, but that is OK.  Overfitting can result in widering confidence intervals for the effect of interest, and that is a proper price to pay.
 
 
 ### Developing Models for Hypothesis Testing

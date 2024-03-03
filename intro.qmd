@@ -10,7 +10,7 @@ getRs('qbookfun.r')
 
 `r mrg(movie("https://youtu.be/IiJ6pMs2BiA"))`
 
-## Hypothesis Testing, Estimation, and Prediction
+## Hypothesis Testing, Estimation, and Prediction {#sec-intro-tep}
 
 ```{mermaid}
 flowchart LR
@@ -22,24 +22,24 @@ estimat --> festimat[Point and interval<br>estimation of one<br>predictor's effe
 pred --> fpred[Estimated outcome<br>or outcome<br>tendency for<br>a subject]
 ```
 
+<!-- 1-sample t-test and Wilcoxon signed-rank added 2023-07-28 -->
+
 Even when only testing $H_{0}$ a model based approach has advantages:
 
 * Permutation and rank tests not as useful for estimation `r ipacue()`
 * Cannot readily be extended to cluster sampling or repeated measurements
 * Models generalize tests
     + 2-sample $t$-test, ANOVA $\rightarrow$ <br> multiple linear regression
-    + Wilcoxon, Kruskal-Wallis, Spearman $\rightarrow$ <br> proportional odds
-            ordinal logistic model
-    + log-rank $\rightarrow$ Cox
+    + paired $t$-test $\rightarrow$ <br> linear regression with fixed effects for subjects (block on subjects); linear mixed model with random per-subject intercepts
+    + Wilcoxon, Kruskal-Wallis, Spearman $\rightarrow$ <br> proportional odds (PO) ordinal logistic model
+    + Wilcoxon signed-rank test $\rightarrow$ <br> replace with [rank-difference test](https://hbiostat.org/bbr/nonpar.html#sec-nonpar-rd) $\rightarrow$ <br> PO model blocking on subject; ordinal mixed model
+    + log-rank $\rightarrow$ Cox 
 
 * Models not only allow for multiplicity adjustment but for
         shrinkage of estimates
     + Statisticians comfortable with $P$-value adjustment
             but fail to recognize that the difference between the most
             different treatments is badly biased
-
-
-
 
 Statistical estimation is usually model-based
 

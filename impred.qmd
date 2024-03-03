@@ -57,7 +57,6 @@ sparkline::sparkline(0)   # load sparkline javascript dependencies
 maketabs(print(d, 'both'), initblank=TRUE, wide=TRUE)
 ```
 
-
 `stage` is defined by `ap` as well as X-ray results.  Of the
 patients in stage 3, 0.92 have `ap` $\leq$ 0.8.  Of those in stage 4,
 0.93 have `ap` > 0.8.  Since `stage` can be predicted almost
@@ -263,25 +262,37 @@ spar(top=1, ps=7)
 imputed <- impute(ptrans, data=prostate, list.out=TRUE)
 imputed <- as.data.frame(imputed)
 
-# Compute principal components on imputed data.
-# Create a design matrix from ekg categories
-Ekg <- model.matrix(~ ekg, data=imputed)[, -1]
+# Compute principal components on imputed data.  princmp will expand
+# the categorical variable EKG into indicator variables.
 # Use correlation matrix
 pfn <- prostate$pfn
 prin.raw <- princmp(~ sz + sg + ap + sbp + dbp + age +
           wt + hg + ekg + pfn + bm + hx,
-          k=16, sw=TRUE, ylim=c(0, 4), offset=1, data=imputed)
-
-prin.trans <- princmp(ptrans$transformed, k=12, add=TRUE, col='red', offset=-1.3)
+          k=16, sw=TRUE, data=imputed)
+prin.raw
+plot(prin.raw, ylim=c(0,4), offset=1)
+prin.trans <- princmp(ptrans$transformed, k=12)
+prin.trans
+plot(prin.trans, add=TRUE, col='red', offset=-1.3)
 ```
 
-The resulting plot shown in  @fig-impred-pc is called a
+The plot shown in  @fig-impred-pc is called a
 "scree" plot [@jolBookpca; pp. 96--99, 104, 106].  It shows the variation
 explained by the first $k$ principal components as $k$ increases all
 the way to 16 parameters (no data reduction).  It requires 10
 of the 16 possible components to explain $> 0.8$ of the variance,
 and the first 5 components explain $0.49$ of the variance of the
 system.  Two of the 16 dimensions are almost totally redundant.
+
+```{r}
+#| fig-height: 7
+plot(prin.raw, 'loadings', k=6)
+```
+
+```{r}
+#| fig-height: 5.5
+plot(prin.trans, 'loadings', k=6)
+```
 
 After repeating this process when transforming all predictors via
 `transcan`,  we have only 12 degrees of freedom for the 12
@@ -308,7 +319,7 @@ spar(bty='l')
 S <- with(prostate, Surv(dtime, status != "alive"))
 # two-column response var.
 
-pcs <- prin.raw         # pick off all PCs
+pcs <- prin.raw$scores         # pick off all PCs
 aic <- numeric(16)
 for(i in 1:16) {
   ps <- pcs[,1:i]
@@ -345,11 +356,12 @@ transformed variables.
 ```{r}
 # Compute PC1 on a subset of transcan-transformed predictors
 pco <- function(v) {
-  f <- princmp(ptrans$transformed[,v], pl=FALSE, scoef=FALSE, orig=FALSE)
-  vars <- attr(f, 'vars')
+  f <- princmp(ptrans$transformed[,v])
+	print(f)
+  vars <- attr(f, 'results')$vars
   cat('Fraction of variance explained by PC1:',
       round(vars[1] / sum(vars),2), '\n')
-  f[,1]
+  f$scores[,1]
 }
 tumor   <- pco(c('sz','sg','ap','bm'))
 bp      <- pco(c('sbp','dbp'))
@@ -385,8 +397,7 @@ components combines some elements of variable clustering, scoring of
 variables within clusters,  and
 redundancy analysis.
 
-@pcaPP have written a nice
-`R` package `pcaPP` for doing sparse PC
+@pcaPP have written a nice `R` package `pcaPP` for doing sparse PC
 analysis.^[The `spcr` package is another sparse PC package that should also be considered.]
 The following example uses the prostate data again.
 To allow for nonlinear transformations and to score the `ekg`
@@ -397,6 +408,13 @@ variable in the prostate dataset down to a scalar, we use the
 ```{r spca,cap='Variance explained by individual sparse principal components (lines) along with cumulative proportion of variance explained (text)',scap='Sparse principal components'}
 #| label: fig-impred-spca
 s <- princmp(ptrans$transformed, k=10, method='sparse', sw=TRUE, nvmax=3)
+s
+plot(s)
+```
+
+```{r}
+#| fig-height: 3.5
+plot(s, 'loadings', nrow=1)
 ```
 
 <!-- # Computing loadings on the original transcan scales--->
@@ -415,7 +433,7 @@ regression predicts time until death.
 ```{r spc,cap='Performance of sparse principal components in Cox models',scap='Performance of sparse principal components'}
 #| label: fig-impred-spc
 spar(bty='l')
-pcs <- s         # pick off sparse PCs
+pcs <- s$scores         # pick off sparse PCs
 aic <- numeric(10)
 for(i in 1:10) {
   ps <- pcs[,1:i]
@@ -447,13 +465,11 @@ are restricted to be monotonically transformed.
 
 ```{r ace,h=4.5,w=6,cap='Simultaneous transformation of all variables using ACE.',scap='Transformation of variables using ACE'}
 #| label: fig-impred-ace
-spar(mfrow=c(4,3), left=-2)
-x <- with(imputed,
-          cbind(sz, sg, ap, sbp, dbp, age, wt, hg, ekg, pf,
-                bm, hx))
-monotonic <- c("sz","sg","ap","sbp","dbp","age","pf")
-transace(x, monotonic,
-         categorical="ekg", binary=c("bm","hx"))
+f <- transace(~ monotone(sz) + monotone(sg) + monotone(ap) + monotone(sbp) +
+                monotone(dbp) + monotone(age) + monotone(pf) + wt + hg +
+                ekg + bm + hx, data=imputed)
+f
+ggplot(f)
 ```
 
 Except for `ekg`, `age`, and for arbitrary sign reversals, the

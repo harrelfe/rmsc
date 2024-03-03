@@ -93,7 +93,7 @@ psub  <- prostate[subset,]
 ```
 
 
-## Regression on Original Variables, Principal Components and Pretransformations
+## Regression on Original Variables, Principal Components and Pretransformations {#sec-lrcase1-pc}
 
 We first examine the performance of data reduction in predicting the
 cause of death, similar to what we did for survival time in
@@ -110,11 +110,33 @@ its extreme distribution.  We use `Hmisc::princmp`.
 ```{r}
 # Compute the first 8 PCs on raw variables then on
 # transformed ones
-pc8 <- princmp(~ sz + sg + log(ap) + sbp + dbp + age +
-           wt + hg + ekg.norm + pfn + bm + hx + rxn + dtime,
-           data=psub, k=8, sw=TRUE, kapprox=2, orig=FALSE)
-f8   <- lrm(cvd ~ pc8, data=psub)
-pc8t <- princmp(trans, k=8, sw=TRUE, kapprox=2, orig=FALSE)
+p <- princmp(~ sz + sg + log(ap) + sbp + dbp + age +
+             wt + hg + ekg.norm + pfn + bm + hx + rxn + dtime,
+             data=psub, k=8, sw=TRUE, kapprox=2)
+p
+plot(p)
+```
+
+```{r}
+#| fig-height: 6
+plot(p, 'loadings')
+```
+
+```{r}
+pc8 <- p$scores
+f8  <- lrm(cvd ~ pc8, data=psub)
+p   <- princmp(trans, k=8, sw=TRUE, kapprox=2)
+p
+plot(p)
+```
+
+```{r}
+#| fig-height: 6
+plot(p, 'loadings')
+```
+
+```{r}
+pc8t <- p$scores
 f8t  <- lrm(cvd ~ pc8t, data=psub)
 # Fit binary logistic model on original variables
 # x=TRUE y=TRUE are for test='LR', validate, calibrate

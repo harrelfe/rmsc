@@ -15,10 +15,12 @@ hooktime()
 
 * Missing completely at random (MCAR) `r ipacue()`
 * Missing at random (MAR)^["Although missing at random (MAR) is a non-testable assumption, it has been pointed out in the literature that we can get very close to MAR if we include enough variables in the imputation models" @har07mul.]
-* Informative missing (non-ignorable non-response)
+* Informative missing (non-ignorable non-response; missing not at random; MNAR)
 
 See @car21mis, @sch02mis, @don06rev, @har07mul, @all01mis, @whi11mul, @buu12fle for an
 introduction to missing data and imputation concepts.
+<!-- NEW: -->
+See @haz23tri for a way to indirectly detect MNAR by comparing variances of response variables between treatments.
 
 ## Prelude to Modeling
 
@@ -34,6 +36,8 @@ introduction to missing data and imputation concepts.
 <!-- TODO twi13mul is epub--->
 * $Y$=time to event, follow-up curtailed: covered under survival
   analysis^[@whi09imp provide a method for multiply imputing missing covariate values using censored survival time data.]
+<!-- NEW following: -->
+* Missing time-dependent covariates in longitudinal data: @mam23lon
 * Often discard observations with completely missing $Y$ but sometimes wasteful^[$Y$ is so valuable that if one is only missing a $Y$ value, imputation is not worthwhile, and imputation of $Y$ is not advised if MCAR or MAR.]
 * Characterize missings in $Y$ before dropping obs.
 
@@ -130,6 +134,9 @@ several advantages [@erl16dea].
 
 Exactly how are missing values estimated?
 
+* Predictive model for each target uses any outcomes, all
+    predictors in the final model other than the target, plus
+    auxiliary variables not in the outcome model
 * Could ignore all other information --- random or grand mean `r ipacue()`
   fill-in
 * Can use external info not used in response model (e.g., zip
@@ -172,36 +179,7 @@ Exactly how are missing values estimated?
 * `aregImpute` and `transcan` work with `r ipacue()`
   `fit.mult.impute` to make final analysis of response variable
   relatively easy
-* Predictive mean matching [@littlerubin]: replace missing
-        value with observed value of subject having closest predicted
-        value to the predicted value of the subject with the `NA`.
-        Key considerations are how to
-   
-1. model the target when it is not `NA`
-1. match donors on predicted values
-1. avoid overuse of "good" donors to disallow excessive ties in
-     imputed data
-1. account for all uncertainties
-
-* Predictive model for each target uses any outcomes, all
-    predictors in the final model other than the target, plus
-    auxiliary variables not in the outcome model
-* No distributional assumptions; nicely handles target variables
-    with strange distributions [@vin14pre]
-* Predicted values need only be monotonically related to real
-    predictive values
-    + PMM can result in some donor observations being used repeatedly `r ipacue()`
-    + Causes lumpy distribution of imputed values
-    + Address by sampling from multinomial distribution,
-   probabilities = scaled distance of all predicted values to
-   predicted value ($y^{*}$) of observation needing imputing
-    + Tukey's tricube function is a good weighting function (used in
-   loess): $w_{i} = (1 - \min(d_{i}/s, 1)^{3})^{3}$, <br>
-   $d_{i} = |\hat{y_{i}} - y^{*}|$ <br>
-   $s = 0.2\times\text{mean} |\hat{y_{i}} - y^{*}|$ is a good default
-   scale factor <br>
-   scale so that $\sum w_{i} = 1$
-
+* Predictive mean matching
 * Recursive partitioning with surrogate splits --- handles case
   where a predictor of a variable needing imputation is missing
   itself.  But there are problems [@pen18pro] even with completely
@@ -240,6 +218,54 @@ values as done with multiple imputation (would steal info from $Y$)
 
 
 ## Predictive Mean Matching
+
+* Developed by @littlerubin
+* Replace missing value with observed value of subject having closest predicted
+        value to the predicted value of the subject with the `NA`.
+        Key considerations are how to
+   
+1. model the target when it is not `NA`
+1. match donors on predicted values
+1. avoid overuse of "good" donors to disallow excessive ties in
+     imputed data
+1. account for all uncertainties
+
+* No distributional assumptions; nicely handles target variables
+    with strange distributions [@vin14pre]
+* Predicted values need only be monotonically related to real
+    predictive values
+    + PMM can result in some donor observations being used repeatedly `r ipacue()`
+    + Causes lumpy distribution of imputed values
+    + Address by sampling from multinomial distribution,
+   probabilities = scaled distance of all predicted values to
+   predicted value ($y^{*}$) of observation needing imputing
+    + Tukey's tricube function is a good weighting function (used in
+   loess): $w_{i} = (1 - \min(d_{i}/s, 1)^{3})^{3}$, <br>
+   $d_{i} = |\hat{y_{i}} - y^{*}|$ <br>
+   $s = 0.2\times\text{mean} |\hat{y_{i}} - y^{*}|$ is a good default
+   scale factor <br>
+   scale so that $\sum w_{i} = 1$
+
+<!-- NEW -->
+
+### Predictive Mean Matching With Constraints {#sec-missing-constraints}
+
+* PMM is empirical so it is relatively easy to add constraints
+   + Need sample size to be large enough so that there are several donor observations meeting the constraints
+* Implemented in `Hmisc` 5.1-1
+* For each variable to be imputed the user can specify an R expression that is a logical TRUE/FALSE condition specifying which observations qualify
+* Constraint can involve relationships between potential donor observations (variables prefixed by `d$`) and the recipient (target) observation (variables prefixed by `r$`) having the missing value
+* PMM on the qualifying donor observations
+* Example
+   + time 0 corresponds to the day a patient is admitted to the hospital
+   + day of discharge is missing for some patients
+   + every patient had at least one follow-up visit
+   + constrain the day of discharge to be before the day of the first follow-up visit
+
+```{r eval=FALSE}
+a <- aregImpute(~ age + day_dis + day_follow_up, data=d,
+                constraint=list(day_dis=expression(d$day_dis < r$day_follow_up)))
+```
 
 
 ## Multiple Imputation
@@ -284,7 +310,7 @@ values as done with multiple imputation (would steal info from $Y$)
    non-missing values for the target variable for the current imputation
     + Uses flexible parametric additive regression models to impute
     + There is an option to allow target variables to be optimally
- transformed, even non-mono\-ton\-ical\-ly (but this can overfit)
+ transformed, even non-monotonically (but this can overfit)
     + By default uses predictive mean matching for imputation; no residuals
    required (can also do more parametric regression imputation)
     + By default uses weighted PMM; many other matching options
@@ -347,16 +373,18 @@ flexible and easy to use
 * However, simulation studies [@buu06ful] demonstrate
 very good performance of imputation based on chained equations
 
-<!-- NEW -->
+
+<!-- NEW  -->
 
 ## Likelihood Ratio Tests and Multiple Imputation {#sec-missing-lrt}
 
 * For frequentist-based analysis Wald tests are ultimately unsatisfying for reasons detailed in @sec-mle-hd
    + Also it was never clear that simple averaging of $\hat{\beta}$ over completed datasets is the best approach
-* @cha22mul have developed the most promising approach to obtaining approximate LRT (likelihood ratio tests) in the presence of missing data
+* @cha22mul have developed a promising approach to obtaining approximate LRT (likelihood ratio tests) in the presence of missing data
    + [Web site](https://sites.google.com/site/kwchankeith/publications/milrt)
    + [arXiv paper](https://arxiv.org/abs/1711.08822)
    + [R code](https://drive.google.com/file/d/1mHVT3yV2oX1TCHR9zZgC6XIIwAaB3Gtv/view?usp=sharing)
+   + See @woo08how for related work
 * Instead of averaging $M$ $\hat{\beta}$ from multiple separate analyses of completed datasets, stacks all completed datasets into one large dataset and computes maximum likelihood estimates on the one large stacked dataset
 * Divide LR $\chi^2$ by $M$ to get a rough estimate of the more correct LR described below; need to multiply by a discounting factor to take imputation into account
 * Individual fit LRs are used to derive imputation correction factors and the fraction of missing information
@@ -402,7 +430,9 @@ Now compute LR test statistics accounting for imputation
 # lrt=TRUE makes fit.mult.impute set up all the arguments needed for LR tests
 h <- fit.mult.impute(y ~ x1 + x2, lrm, a, data=d, lrt=TRUE, pr=FALSE)
 h
-processMI(h, which='anova')  # LR tests accounting for imputation
+as <- processMI(h, which='anova')  # LR tests accounting for imputation
+as
+prmiInfo(as)
 ```
 
 The Chan & Meng $F$ approximation (`processMI` uses the $\chi^2$ version of it) is needed for `x2` as the denominator d.f. of 14.5 is too low for $p$-values from the $\chi^2$ distribution to well approximate those from the $F$ distribution.  Increase the number of imputations to increase the denominator d.f.
@@ -411,7 +441,9 @@ The Chan & Meng $F$ approximation (`processMI` uses the $\chi^2$ version of it) 
 a <- aregImpute(~ y + x1 + x2, n.impute=50, data=d, pr=FALSE)
 h <- fit.mult.impute(y ~ x1 + x2, lrm, a, data=d, lrt=TRUE, pr=FALSE)
 h
-processMI(h, which='anova')
+as <- processMI(h, which='anova')
+as
+prmiInfo(as)
 ```
 
 What happens if we use an extremely high number of imputations?
@@ -420,9 +452,10 @@ What happens if we use an extremely high number of imputations?
 a <- aregImpute(~ y + x1 + x2, n.impute=500, data=d, pr=FALSE)
 h <- fit.mult.impute(y ~ x1 + x2, lrm, a, data=d, lrt=TRUE, pr=FALSE)
 h
-processMI(h, which='anova')
+as <- processMI(h, which='anova')
+as
+prmiInfo(as)
 ```
-
 
 ## Diagnostics
 `r mrg(sound("missing-5"))` 
@@ -499,7 +532,7 @@ multiple imputation, because alternatives are worse [@jan10mis; @mad19pro].
 
 
 ### Effective Sample Size 
-It is useful to look look at examples of effective sample sizes in the presence of missing data.  If a sample of 1000 subjects contains various amounts and patterns of missings what size $n_c$ of a complete sample would have equivalent information for the intended purpose of the analysis?
+It is useful to look at examples of effective sample sizes in the presence of missing data.  If a sample of 1000 subjects contains various amounts and patterns of missings what size $n_c$ of a complete sample would have equivalent information for the intended purpose of the analysis?
 
 
 1. A new marker was collected on a random sample of 200 of the subjects and one wants to estimate the added predictive value due to the marker: $n_{c}=200$ `r ipacue()`
@@ -512,7 +545,7 @@ It is useful to look look at examples of effective sample sizes in the presence 
 1. The outcome variable was assessed by emailing the 1000 subjects, for which 800 responded, and we don't know what made subjects respond: $n_{c}=0$ (model will possibly be very biased---at least the intercept)
 
 
-
+<!-- NEW -->
 
 ## Bayesian Methods for Missing Data
 
@@ -523,7 +556,7 @@ It is useful to look look at examples of effective sample sizes in the presence 
 * See [this case study](https://github.com/paul-buerkner/brms/blob/master/vignettes/brms_missings.Rmd) for an example
 * The case study also shows how to do "posterior stacking" if
   you want to avoid having to specify a full model for missings, and
-  instead use usual multiple imputations as described in this chapter
+  instead use usual multiple imputations as described in this chapter. See @zho12not.
     + Run a multiple imputation algorithm
     + For each completed dataset run the Bayesian analysis and draw
     thousands of samples from the posterior distribution of the parameters

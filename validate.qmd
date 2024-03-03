@@ -28,11 +28,46 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 * Subtract estimates, anti-log, e.g., to get inter-quartile-range  `r ipacue()`
         odds or hazards ratios.  Base C.L. on s.e. of difference. See  @fig-coxcase-summary.
 * Partial effect plot: Plot effect of each predictor on $X\beta$ or some transformation.  See  @fig-coxcase-shapes.
-        See also @kar09vis.
+        See also @kar09vis.  Fox and Weisberg have [other excellent approaches](https://cran.r-project.org/web/packages/effects/vignettes/predictor-effects-gallery.pdf) to displaying predictor effects
 * Nomogram.  See  @fig-coxcase-nomogram
 * Use regression tree to approximate the full model
 
+#### Contrasts {#sec-val-contrast}
 
+Forming contrasts through differences in predicted values is the most general and easy way to estimate effects of interest in a model.  This is because
+
+* One needs only to specify two or more sets of predictor settings to contrast
+* Predictor coding, nonlinear terms, and interactions are automatically taken into account
+* Unspecified predictors can default to reference values such as medians for continuous predictors and modes for categorical ones.  The values used for unspecified predictors only matter if they interact with predictors that are changing in the contrast.
+* Approximate methods are available for getting simultaneous confidence intervals over a whole sequence of contrasts (e.g., simultaneous confidence bands for an entire range of ages) when contrasts produce more than one estimate
+* The approach extends to any order of differences.  E.g., interaction contrasts are formed with double differences.
+* Contrasts allow assessment of linearity over a given predictor range in a spline fit
+* Contrasts allow assessment of "partial interactions", i.e., whether there is an interaction between one predictor and a subset of the levels of another predictor
+* The R `predict` function provides the $X$ (design matrix) that goes along with each requested prediction, and simple matrix algebra provides needed covariance matrices once differences in design matrices are formed
+
+On the latter point, a single difference contrast such as one comparing 30 year old males with 40 year old males would generate two design matrices $X_{1}, X{2}$, and the contrast $X_{1}\beta - X_{2}\beta = (X_{1} - X_{2})\beta$.
+
+Consider a series of examples in which predicted values from a fitted model are symbolized by a function $f$ of the predictor settings, with continuous predictors $A$ and $B$ and a categorical predictor $C$ with levels $i, j, k$.  Let the reference (detault) values of the predictors be $a$ (median of $A$), $b$ (median of $B$), and $c$ (modal (most frequent) category of $C$).  [The term "average slope" used below will be **the** slope if the predictor has a linear effect, otherwise it is the average slope over the indicated interval. See [here](https://stats.stackexchange.com/questions/639430) for more information.]{.aside}
+
+##### Single Difference Contrasts
+
+* Average slope of $A$ over $A \in [1, 2]$: $f(2, b, c) - f(1, b, c)$
+* Difference between categories $j$ and $k$ in $C$: $f(a, b, j) - f(a, b, k)$
+* Effect of an entire range of predictor values against a single reference value: $f(1:10, b, c) - f(5, b, c)$ (a simultaneous confidence band would be useful here)
+
+##### Double Difference Contrasts
+
+* Linearity in $A$ over $A \in [1, 3]$: $f(3, b, c) - f(2, b, c) - [f(2, b, c) - f(1, b, c)] = f(3, b, c) - 2f(2, b, c) + f(1, b, c)$
+* Interaction between $A$ and $C$ with respect to only two levels of $C$: $f(2, b, j) - f(1, b, j) - [f(2, b, k) - f(1, b, k)]$
+* Interaction between $A$ and $B$ when $A$ varies from 1 to 3 and $B$ varies from 5 to 6: $f(3, 5, c) - f(1, 5, c) - [f(3, 6, c) - f(1, 6, c)]$
+* Effect of $C=i$ vs. $C=j$ over a regular grid of values of $B$: $f(a, 5:15, i) - f(a, 5:15, j)$ (with possible simultaneous band; this is often a better way of getting hazard ratios in a Cox proportional hazards model, as the user has control of the reference value)
+
+##### Triple Difference Contrasts
+
+* Third-order interactions
+* Assessment of nonlinearity in the $A\times B$ interaction (differences in double differences)
+
+The R `rms` package [`contrast` function](https://www.rdocumentation.org/packages/rms/versions/6.7-1/topics/contrast.rms) (full name `contrast.rms`) provides predicted values, differences, and double difference contrasts.  The latter is specified by providing four lists of predictor settings.
 
 ### Indexes of Model Performance {#sec-val-index}
 `r mrg(sound("v-2"))`
@@ -57,10 +92,11 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
        - $R^{2}_{\mathrm{adj}}$---overfitting corrected if model pre-specified
     + Brier score can be decomposed into discrimination and
     calibration components
-    + Discrimination measures based on variation in $\hat{Y}$
+    + Discrimination measures based on variation in $\hat{Y}$ 
     
        - regression sum of squares
        - $g$--index
+       - see [here](https://fharrell.com/post/addvalue) for related information			 
 
 
 * Calibration measures  `r ipacue()`
@@ -97,7 +133,97 @@ likelihood of errors in decision making.
   risk differences
 * Can define partial $g$
 
+<!-- NEW 2023-09-16 -->
 
+### Relative Explained Variation {#sec-val-rev}
+
+* In OLS linear models $R^2$ is an excellent measure of explained variation in $Y$
+* Fraction of variance of $Y$ that is explained by $X$
+* SSR = $\sum_{i=1}^{n} (\hat{Y}_{i} - \bar{\hat{Y}})^2$ = regression sum of squares
+   + proportional to variance of $\hat{Y}$
+* SSE = $\sum_{i=1}^{n} (Y_{i} - \hat{Y}_{i})^2$ = error sum of squares = residual sum of squares
+   + proportional to error variance
+* SST = $\sum_{i=1}^{n} (Y_{i} - \bar{Y})^2$ = total sum of squares
+   + proportion to variance of $Y$
+* SST = SSR + SSE
+* $R^{2} =$ SSR/SST = 1 - SSE/SST
+* For each part of the model can compute its partial SSR = loss in SSR after refitting the model upon removing the part of the model being assessed
+* Partial $R^{2}$ = (partial SSR)/SST
+* Relative partial $R^{2} = \frac{\text{partial } R^{2}}{R^{2}} =$ partial SSR divided by full model SSR
+* Relative partial $R^{2}$ = portion of **explainable** (by $X$) variation in $Y$ that is explained by one or more terms in the model
+* Relative explained variation: REV
+* REVs do not need to sum to 1.0
+   + collinearities
+   + computing REVs for overlapping model terms
+* When a predictor interacts with another predictor, the predictor's REV is taken from the combined predictive information in
+   + the predictor main effect (including any nonlinear terms)
+   + any interaction terms involving that effect
+
+#### Extension to Other Models
+
+* For models fitted using maximum likelihood estimation, can compute the partial likelihood ratio $\chi^2$ statistic for each set and divide that by the total model LR $\chi^2$
+* See also @sec-mle and the example below
+* This is an excellent measure but requires more computation and doesn't extend to models not having a likelihood or to Bayesian modeling
+* Need a general purpose REV measure that works on virtually all models using all estimation techniques
+* Letting $\hat{Y} = X\hat{\beta}$ be the estimated linear predictor from the model
+* Use the same design matrix $X$ used to get $\hat{Y}$
+* Predict $\hat{Y}$ from $X$ using OLS
+* The $R^{2}$ from this model is 1.0
+* SSE = 0; ignore this and take variance-covariance matrix as $(X'X)^{-1}$ since SSR is used only on a relative basis
+* REV = $\frac{\text{partial SSR }}{\text{SSR}}$
+* Identical to relative $R^2$ if original model was OLS
+* Easily lends itself to uncertainty intervals
+   + frequentist: bootstrap the original model fit and save the repeated coefficient estimates (done by R `rms` package `bootcov` function); compute bootstrap confidence intervals for REVs; see @sec-val-boot and example below
+   + Bayesian: compute REV for each posterior draw of $\beta$ and from the repeated REVs compute highest posterior density uncertainty intervals
+* Implemented in R `rms` package [`rexVar` function](https://github.com/harrelfe/rms/blob/master/R/rexVar.r)
+
+See @luc14rel for a mice review of log-likelihood-based relative importance measures.
+
+#### Example
+
+* Ordinal regression model (proportional odds model for continuous Y)
+* Allow for quadratic effects for two predictors which are allowed to interact
+* Three other predictors that are irrelevant are modeled linearly
+* Bootstrap
+* Through uncertainty intervals for REVs show that when the sample size is inadequate for fitting an accurate reproducible model it's also inadequate for measuring variable importance
+
+```{r}
+require(rms)
+options(prType='html') #<1>
+n <- 60
+set.seed(3)
+x1 <- rnorm(n)
+x2 <- rnorm(n)
+x3 <- rnorm(n)
+x4 <- rnorm(n)
+x5 <- rnorm(n)
+y  <- x1 + x2 + rnorm(n)
+d  <- data.frame(x1, x2, x3, x4, y)
+f  <- orm(y ~ pol(x1, 2) * pol(x2, 2) + x3 + x4 + x5,
+          x=TRUE, y=TRUE)  #<2>
+a <- anova(f, test='LR')   #<3>
+a
+```
+
+1. Makes `print` methods output html for prettier printing
+2. `x=TRUE, y=TRUE` are needed for later bootstrapping
+3. Computes likelihood ratio $\chi^2$ test statistics for all partial effects in the model plus for the whole model
+
+```{r}
+#| label: fig-val-lr
+#| fig-cap: Relative LR $\chi^2$ explained.  Interaction effects are added to main effects.
+#| fig-height: 3.5
+plot(a, what='proportion chisq', sort='ascending') #<1>
+```
+1. Plots ratios of partial $\chi^2$ to total model LR $\chi^2$.  `ascending` is really a misnomer.
+
+```{r}
+#| label: fig-val-rex
+#| fig-cap: Relative explained variation due to each predictor.  Interaction effects are added to main effects.  Intervals are 0.95 bootstrap percentile confidence intervals.
+#| fig-height: 3.5
+g <- bootcov(f, B=300)
+plot(rexVar(g, data=d))
+```
 
 ## The Bootstrap {#sec-val-boot}
 `r mrg(sound("v-4"))`
@@ -367,7 +493,7 @@ needed for externally validating a time-to-event model is 200 events.
    1. Results vary if split again
    1. Does not validate the final model (from recombined data)
    1. Not helpful in getting CL corrected for var. selection
-   1. Nice summary of disadvantages: @ste18vala
+   1. Nice summary of disadvantages: @ste18val
 
 
 ### Improvements on Data-Splitting: Resampling {#sec-val-resampling}
@@ -597,6 +723,19 @@ cal <- processMI(f, 'calibrate', nind=3)
 
 * Run `plot(cal)` if you want to see a full size final average calibration
 
+<!-- NEW -->
+
+### Validation of Data Reduction {#sec-val-dr}
+
+A frequently asked question is whether or not unsupervised learning (data reduction) needs to be repeated inside an internal validation loop.  See [this](https://stats.stackexchange.com/questions/239898) for some excellent discussion.  Here are are few thoughts.
+
+* To be safe, include fresh data reduction inside each loop
+* If you want to take a slight risk you can do the data reduction once on the whole dataset, because of the following
+* Principal components (especially minor components), variable and observation clustering, and redundancy analysis can be very unstable
+* They way in which they are unstable is uninformed by $Y$, so this instability can work either for or against you
+* Typically we are allowed to use procedures that don't always work in our favor
+* Contrast this with stepwise variable selection, which always attempts to work in our favor by maximizing $R^2$
+
 ## Bootstrapping Ranks of Predictors {#sec-val-bootrank}
 `r mrg(sound("v-12"))`
 
@@ -645,7 +784,7 @@ ggplot(w, aes(x=predictor, y=Rank)) + geom_point() + coord_flip() +
   geom_errorbar(aes(ymin=lim[,1], ymax=lim[,2]), width=0)
 ```
 
-
+See [this](https://biostat.app.vumc.org/wiki/pub/Main/FHHandouts/FHbiomarkers.pdf) for a higher-dimension example.
 
 
 ## Simplifying the Final Model by Approximating It {#sec-val-approx}

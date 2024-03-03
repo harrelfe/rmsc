@@ -1372,6 +1372,199 @@ g <- Glm(aces ~ offset(log(stdpop)) + rcs(time, k),
 lrtest(f, g)
 ```
 
+<!-- NEW -->
+
+## Bayesian Modeling {#sec-genreg-bayes}
+
+There are many advantages to fitting models with a Bayesian approach when compared to the frequentist / maximum likelihood approach that receives more coverage in this text.  These advantages include
+
+* the ability to use outside information, e.g. the direction or magnitude of an effect, magnitude of interaction effect, degree of nonlinearity
+* getting exact inference (to within simulation error) regarding model parameters without using any Gaussian approximations as used so heavily in frequentist inference
+* getting exact inference about derived parameters that are nonlinear transformations of the original model parameters, without using the $\delta$-method approximation so often required in frequentist procedures
+* devoting less than one degree of freedom to a parameter by borrowing information
+* getting exact inference using ordinary Bayesian procedures when penalization/shrinkage/regularization is used to limit overfitting
+* allowing one to fit [distributional models](http://paul-buerkner.github.io/brms/articles/brms_distreg.html), e.g., using a regression model for the log standard deviation in addition to one for the mean, and getting exact inference for the joint models
+* obtaining automatic inference about any interval of possible parameter values instead of just using $p$-values to bring evidence against a null value [It is just as easy to compute the Bayesian probability that an odds ratio exceeds 2.0 as it is to calculate the probability that the odds ratio exceeds 1.0.]{.aside}
+* obtaining exact inference about unions and intersections of various assertions about parameters, e.g., the probability that a treatment reduces mortality by any amount or reduces blood pressure by $\geq 5$ mmHg
+
+A major part of the arsenal of Bayesian modeling weapons is [`Stan`](https://mc-stan.org) based at Columbia University.  Very general R statistical modeling packages such as `brms` and `rstanarm` are based on `Stan`.
+
+RMS has several fully worked-out Bayesian modeling case studies.  The purpose of the remainder of this chapter is to show the power of Bayes in general regression modeling.
+
+### A General Model Specification Approach
+
+With a Bayesian approach one can include a parameter for each aspect of the model you know exists but are unsure about.  This leads to results that are not overly optimistic because uncertainty intervals will be a little wider to acknowledge what you don't know.  A good example is the [Bayesian $t$-test](https://hbiostat.org/bbr/htest#bayesian-t-test), which has a parameter for the amount of non-normality and a parameter for how unequal the variances may be in the two groups being compared.  Prior distributions can favor normality and equal variance, and modeling becomes more flexible as $n \uparrow$.
+
+Other examples of borrowing information and adding flexibility:
+
+* include a parameter for time-varying treatment effect to not assume proportional hazards
+* include a parameter for a $Y$-varying effect to not assume proportional odds
+* include an interaction effect for a treatment $\times$ sex interaction and use a prior that favors the treatment effect for females being simlar to the treatment effect for males but that allows the effects to become arbitrarily different as $n \uparrow$.
+
+Interactions bring special problems to estimation and inference.  In the best of cases, an interaction requires $4 \times$ larger sample size to estimate and may require $16 \times$ the sample size to achieve the same power as a main effect test.  We need a way to borrow information, essentially having an interaction term "half in" and "half out" of the model.  This has been elegantly described by @sim97bay who show how to put priors on interaction terms.  Using a Bayesian approach to have an interaction "half in" the model is a much more rational approach than prevailing approaches that
+
+* use a sample that was sized for estimating main effects and not interaction effects
+* use a (low power) test for interaction to decide how to analyze the treatment effect, and ignore such pre-testing when doing a statistical test (that will not preserve $\alpha$) or computing a confidence interval (that will not have the nominal $1 - \alpha$ coverage)
+* use the pre-specified model with interaction, resulting in low precision because of having no way to borrow information across levels of the interacting factor
+
+### Help in Specifying Priors
+
+To gain the advantages of Bayesian modeling described above, doing away with binary decisions and allowing the use of outside information, one must specify prior distributions for parameters.
+It is often difficult to do this, especially when there are nonlinear effects (e.g., splines) and interactions in the model.  We need a way to specify priors on the original $X$ and $Y$ scales.  Fortunately `Stan` provides an elegant solution.
+
+As discussed [here](https://discourse.mc-stan.org/t/putting-priors-on-transformed-parameters) `Stan` allows one to specify priors on transformations of model parameters, and these priors propagate back to the original parameters.  It is easier to specify a prior for the effect of increasing age from 30 to 60 that it is to specify a prior for the age slope.  It may be difficult to specify a prior for an age $\times$ treatment interaction, but much easier to specify a prior for how different the treatment effect is for a 30 year old and a 60 year old.  By specifying priors on one or more contrasts one can easily encode outside information / information borrowing / shrinkage.
+
+The `rms` [`contrast` function](https://www.rdocumentation.org/packages/rms/versions/6.7-0/topics/contrast.rms) provides a general way to implement contrasts up to double differences, and more details about computations are provided in that link.  The approach used for specifying priors for contrast in `rmsb::blrm` uses the same process but is even more general.  Both `contrast` and `blrm` compute design matrices at user-specified predictor settings, and the contrast matrices (matrices multipled by $\hat{\beta}$) are simply differences in such design matrices.  Thinking of contrasts as differences in predicted values frees the user from having to care about how parameters map to estimands, and allows an R `predict(fit, type='x')` function do the hard work.  Examples of types of differences are below. [`rmsb` implements priors on contrasts starting with versio 1.0-0.]{.aside}
+
+* no difference: compute an absolute predicted value (not implemented in `blrm` for priors)
+* single difference
+   + treatment main effect
+   + continuous predictor effects computed by subtracting predictions at two values of the predictor
+* double difference
+   + amount of nonlinearity (differences in slopes over intervals of the predictor)
+   + interaction effect (e.g., age slope for females minus age slope for males)
+* triple difference
+   + amount of nonlinearity in an interaction effect
+   
+For predictors modeled linearly, the slope is the regression coefficient.  For nonlinear effects where $x$ is transformed by $f(x)$, the slope at $x=\frac{a+b}{2}$ is proportionally approximated by $f(b) - f(a)$, and the slope at $x=\frac{b+c}{2}$ by $f(c) - f(b)$.  The amount of nonlinearity is reflected by the difference in the two slopes, or $f(c) - f(b) -[f(b) - f(a)] = f(a) + f(c) - 2f(b)$. [This is a numerical approximation to the second derivative (slope of the slope; acceleration). It would be easy to use more accurate Lagrange interpolation derivative approximators here.]{.aside}  You'll see this form specified in the `contrast` part of the `pcontrast` argument to `blrm` below.
+
+### Examples of Priors on Contrasts {#sec-genreg-pcontrast}
+
+Semiparametic models are introduced in @sec-ordinal but we will use one of the models---the proportional odds (PO) ordinal logistic model---in showcasing the utility of specifying priors on contrasts in order to use external information or to place restrictions on model fits.  The `blrm` function in the [`rmsb` package](https://hbiostat.org/R/rmsb) implements this semiparametric model using `Stan`.  Because it does not depend on knowing how to transform $Y$ I almost always use the more robust ordinal models instead of linear models.  The linear predictor $X\beta$ is on the logit (log odds) scale for the PO model.  This unitless scale typically ranges from -5 to 5, corresponding to a range of probabilities of 0.007 to 0.993.  Default plotting uses the intercept corresponding to the marginal median of $Y$, so the log odds of the probability that $Y$ exceeds or equals this level, given $X$, is plotted.  Estimates can be converted to means, quantiles, or exceedance probabilities using the `Mean`, `Quantile`, and `ExProb` functions in the `rms` and `rmsb` packages. [Ordinal models in the cumulative probability class such as the PO model have $k$ intercepts for $k+1$ distinct values of $Y$.  These intercepts encode the entire empirical distribution of $Y$ for one covariate setting, hence the term _semiparametric_ and freedom from having to choose a $Y$ distribution.]{.aside}
+
+Effects for the PO model are usually expressed as odds ratios (OR).  For the case where the prior median for the OR is 1.0 (prior mean or median log(OR)=0.0) it is useful to solve for the prior SD $\sigma$ so that $\Pr(\text{OR} > r) = a = \Pr(\text{OR} < \frac{1}{r})$, leading to $a =   \frac{|\log(r)|}{\Phi^{-1}(1-a)}$, computed by the `psigma` function below.  Another function `.` is defined as an abbreviation for `list()` for later usage.
+
+```{r}
+psigma <- function(r, a, inline=FALSE, pr=! inline) {
+  sigma <- abs(log(r)) / qnorm(1 - a)
+  dir <- if(r > 1.) '>' else '<'
+  x <- if(inline) paste0('$\\Pr(\\text{OR}', dir, r, ') =', a,
+                         ' \\Rightarrow \\sigma=', round(sigma, 3), '$')
+  else paste0('Pr(OR ', dir, ' ', r, ') = ', a, ' ⇒ σ=', round(sigma, 3))
+  if(inline) return(x)
+  if(pr) {
+    cat('\n', x, '\n\n', sep='')
+    return(invisible(sigma))
+  }
+  sigma
+}
+. <- function(...) list(...)
+```
+
+Start with a simple hypothetical example:
+
+* model has a quadratic effect of age
+* age interacts with treatment
+* sex is also in the model, not interacting with anything
+
+We wish to specify a prior on the treatment effect at age 50 so that there is only a 0.05 chance that the $\text{OR} < 0.5$.  `r psigma(0.5, 0.05, inline=TRUE)`.  The covariate settings specified in `pcontrast` below do not mention sex, so predictions are evaluated at the default sex (the mode).  Since sex does not interact with anything, the treatment difference of interest makes the sex setting irrelevant anyway. 
+
+```{r eval=FALSE}
+require(rmsb)
+f <- blrm(y ~ treatment * pol(age, 2) + sex,
+          pcontrast=list(sd=psigma(0.5, 0.05),
+                         c1=.(treatment='B', age=50),  # .() = list()
+                         c2=.(treatment='A', age=50),
+                         contrast=expression(c1 - c2) ) )
+```
+
+Note that the notation needed for `pcontrast` need not consider how age is modeled.
+
+Consider a more complicated situation.  Let's simulate data for one continuous predictor where the true model is a sine wave.  The response variable is a slightly rounded version of a conditionally normal $Y$. [The rounding is done just to lower the number of intercepts from 199 to 52 to speed up the Bayesian PO model fits.]{.aside}
+
+```{r}
+require(rmsb)
+require(ggplot2)
+options(mc.cores=4,    # See https://hbiostat.org/r/examples/blrm/blrm
+        rmsb.backend='cmdstan', rmsbdir='~/.rmsb',
+        prType='html')
+cmdstanr::set_cmdstan_path(cmdstan.loc)
+# cmdstan.loc is defined in ~/.Rprofile
+
+set.seed(3)
+n <- 200
+x <- rnorm(n)
+y <- round(sin(2*x) + rnorm(n), 1)
+dd <- datadist(x, q.display=c(.005, .995)); options(datadist='dd')
+f <- blrm(y ~ rcs(x, 6))
+f
+ggplot(Predict(f))
+# Plot predicted mean instead of log odds
+M <- Mean(f)
+ggplot(Predict(f, fun=M),
+               ylab=expression(hat(E)(Y*"|"*x))) +
+  geom_smooth(mapping=aes(x,y)) +
+  labs(caption='Black line: posterior mean of predicted means from PO model\nBlue line: loess nonparametric smoother')
+```
+
+Now suppose that there is strong prior knowledge that the effect of `x` is linear when `x` is in the interval $[-1, 0]$.  Let's reflect that by putting a very sharp prior to tilt the difference in slopes within that interval towards 0.0.  `pcontrast=` specifies two separate contrasts to pull towards zero to more finely detect nonlinearity.  [The examples that follow use atypically small prior standard deviations so that constraints will be obvious.]{.aside}
+
+```{r}
+con <- list(sd=rep(psigma(1.05, 0.01), 2),
+            c1=.(x=-1),   c2=.(x=-.75), c3=.(x=-.5),
+            c4=.(x=-.25), c5=.(x=0),
+            contrast=expression(c1 + c3 - 2 * c2, c3 + c5 - 2 * c4))
+f <- blrm(y ~ rcs(x, 6), pcontrast=con)
+f
+f$Contrast   # Print the design matrix corresponding to the two contrasts
+ggplot(Predict(f))
+```
+
+What happens if we moderately limit the acceleration (second derivative; slope of the slope) at 7 equally-spaced points?
+
+```{r}
+con <- list(sd=rep(0.5, 7),
+            c1=.(x=-2), c2=.(x=-1.5), c3=.(x=-1), c4=.(x=-.5), c5=.(x=0),
+            c6=.(x=.5), c7=.(x=1), c8=.(x=1.5), c9=.(x=2),
+            contrast=expression(c1 + c3 - 2 * c2,
+                                c2 + c4 - 2 * c3,
+                                c3 + c5 - 2 * c4,
+                                c4 + c6 - 2 * c5,
+                                c5 + c7 - 2 * c6,
+                                c6 + c8 - 2 * c7,
+                                c7 + c9 - 2 * c8) )
+f <- blrm(y ~ rcs(x, 6), pcontrast=con)
+f
+f$Contrast   # Print the design matrix corresponding to the two contrasts
+ggplot(Predict(f))
+```
+
+Next simulate data with one continuous predictor `x1` and a 3-level grouping variable `x2`.  Start with almost flat priors that allow arbitrary interaction patterns as long as `x1` has a smooth effect.
+
+```{r}
+set.seed(6)
+n <- 90
+x1 <- runif(n)
+x2 <- sample(c('a', 'b', 'c'), n, TRUE)
+y  <- round(x1 + (x1 - 0.5) ^ 2 -0.4 * (x2 == 'b') + .5 * (x2 == 'c') + runif(n), 1)
+dd <- datadist(x1, x2)
+f <- orm(y ~ rcs(x1, 4) * x2)
+ggplot(Predict(f, x1, x2))
+f <- blrm(y ~ rcs(x1, 4) * x2)
+f
+ggplot(Predict(f, x1, x2))
+```
+
+Put priors specifying that groups `b` and `c` have a similar `x1`-shape (no partial interaction between `x1` and `b` vs. `c`).  `contrast` below encodes parallelism with respect to `b` and `c`.
+
+```{r}
+con <- list(sd=rep(psigma(1.5, 0.05), 4),
+            c1=.(x1=0,   x2='b'), c2=.(x1=0,   x2='c'),
+            c3=.(x1=.25, x2='b'), c4=.(x1=.25, x2='c'),
+            c5=.(x1=.5,  x2='b'), c6=.(x1=.5,  x2='c'),
+            c7=.(x1=.75, x2='b'), c8=.(x1=.75, x2='c'),
+            c9=.(x1=1,   x2='b'), c10=.(x1=1,  x2='c'),
+            contrast=expression(c1 - c2 - (c3 - c4),  # gap between b and c curves at x1=0 vs. x1=.25
+                                c1 - c2 - (c5 - c6),
+                                c1 - c2 - (c7 - c8),
+                                c1 - c2 - (c9 - c10) ))
+f <- blrm(y ~ rcs(x1, 4) * x2, pcontrast=con)
+f
+f$Contrast
+ggplot(Predict(f, x1, x2))
+```                   
+
+
 ## Study Questions
 
 1. Contrast statistical models vs. machine learning in a few ways

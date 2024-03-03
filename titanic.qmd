@@ -417,6 +417,9 @@ is not feasible when so many interaction terms are present.
 # own core.
 require(rmsb)
 options(mc.cores=parallel::detectCores() - 1, rmsb.backend='cmdstan')
+cmdstanr::set_cmdstan_path(cmdstan.loc)
+# cmdstan.loc is defined in ~/.Rprofile
+
 # 10 Bayesian analyses took 3m on 11 cores
 set.seed(21)
 bt <- stackMI(survived ~ sex * pclass * rcs(age, 4) +

@@ -187,6 +187,17 @@ kableExtra, pcaPP, VGAM, MASS, leaps, rpart
 
 | Date | Sections | Changes |
 |:---|:-|:--------|
+| 2024-03-03 | [-@sec-val-dr]         | New section of validatiion of data reduction |
+| 2024-02-18 | [-@sec-val-contrast]        | New section on contrasts |
+| 2023-09-17 | [-@sec-val-rev]             | New subsection on relative explained variation |
+| 2023-08-02 | [-@sec-missing-constraints] | New subsection on constraints for imputed values |
+| 2023-08-01 | [-@sec-bacteremia] | New chapter for bacteremia case study |
+| 2023-07-28 | [-@sec-intro-tep] | Added paired tests |
+| 2023-07-21 | [-@sec-bodyfat]          | New chapter: linear model case study |
+| 2023-07-14 | [-@sec-mle-aic]          | New material and links for AIC/BIC |
+| 2023-05-30 | [-@sec-multivar-strategy]| Added consideration of confounding |
+| 2023-05-24 | [-@sec-multivar-overfit] | Better effective sample size for binary $Y$ |
+| 2023-05-20 | [-@sec-lrcase1-pc], [-@sec-impred-pc] | Added graphical display of PC loadings |
 | 2023-04-30 | [-@sec-lrm]       | Many improvements in graphics, and code using data.table |
 | 2023-04-29 | [-@sec-genreg-gtrans] | Add likelihood ratio tests |
 | 2023-04-22 | [-@sec-mle-hd]    | New section on Hauck-Donner effect ruining Wald statistics |

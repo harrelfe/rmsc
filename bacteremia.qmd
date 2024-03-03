@@ -1,0 +1,122 @@
+```{r include=FALSE}
+require(Hmisc)
+require(ggplot2)
+options(qproject='rms', prType='html')
+require(qreport)
+getRs('qbookfun.r')
+hookaddcap()
+knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
+```
+
+# Bacteremia: Case Study in Nonlinear Data Reduction with Imputation {#sec-bacteremia}
+
+**Data**
+
+* Study of 14,691 patients to analyze risk of bacteremia on the basis of many highly standardized blood analysis parameters
+* Vienna General Hospital 2006-2010
+* [Ratzinger et al](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0106765)
+* Data modified for public use by [Heinze](https://zenodo.org/record/7554815#.ZF-dztLMK-Y) and available for easy use in R at [hbiostat.org/data](https://hbiostat.org/data)
+
+**Methods Illustrated**
+
+* Multiple imputation
+* Variable clustering with pairwise deletion of `NA`s
+* Stacking of multiply-imputed datasets so that single analyses can be done (@mor15com)
+* Optimum unsupervised nonlinear transformations
+* Redundancy analysis
+* Sparse principal components
+* High-level statistical reporting functions in the `qreport` package (`dataOverview, missChk, vClus`)
+
+The optimum nonlinear transformations are determined form the `transace` function in the `Hmisc` package, which uses the [ACE algorithm](https://en.wikipedia.org/wiki/Alternating_conditional_expectations).  Nonlinear transformations, redundancy analysis, and sparse PCs are all done on a tall stacked multiply-imputed dataset.
+
+##  Descriptive Statistics
+
+[Click on the tabs to see the different kinds of variables.  Hover over spike histograms to see frequencies and details about binning.]{.aside}
+
+```{r results='asis'}
+getHdata(bacteremia)
+d <- bacteremia
+# Load javascript dependencies for interactive spike histograms
+sparkline::sparkline(0)
+maketabs(print(describe(d), 'both'),
+         cwidth='column-screen-inset-shaded')
+```
+
+
+```{r results='asis'}
+dataOverview(d, id = ~ id)
+missChk(d, prednmiss=TRUE, omitpred='id')
+```
+
+From the last tab, age and sex are predictors of the number of missing variables per observation, but the associations are very weak.
+
+## Variable Clustering
+
+The R `Hmisc` package `transace` function, which uses the ACE (alternating conditional expectation) algorithm, is used to transform all the continuous variables.  Transformations use nonparametric smoothers and are allowed to be non-monotonic.  Transformation solutions maximize the $R^2$ which with each variable can be predicted from the other variables, optimally transformed.  The transformed variables are used in redundancy analysis and sparse principal components analysis.  Bacteremia and subject `id` are not used in these unsupervised learning procedures.
+
+To be more efficient, use multiple (5) imputations with predictive mean matching so that `vClus` will stack all the filled-in datasets before running the redundancy and PCA which are run on the single tall dataset, which contains no `NA`s.  The correlation matrix and `varclus` results are already efficient because they use pairwise deletion of `NA`s.
+
+Because transformed variables are passed to the redundancy analysis, variables are not expanded into splines in that analysis (see `nk=0` below).
+
+Here is the order in which `vClus` does things:
+
+* clustering with pairwise `NA` deletion
+* complete datasets using `aregImpute` output, stack them, use stacked data for all that follows
+* `transace`
+* `redun`
+* sparce PCA
+
+```{r}
+n <- setdiff(names(d), 'id')   #<1>
+n[n == 'baso'] <- 'I(baso)'  #<2>
+f <- as.formula(paste('~', paste(n, collapse='+')))
+if(! file.exists('bacteremia-aregimpute.rds')) {
+  set.seed(1)   #<4>
+  a <- aregImpute(f, data=d, n.impute=5)  #<3>
+  saveRDS(a, 'bacteremia-aregimpute.rds')
+  } else a <- readRDS('bacteremia-aregimpute.rds')
+```
+1. all variables other than `id`
+2.  force `baso` to be linear in multiple imputation because of ties
+3.  `aregImpute` ran about 15 minutes when
+4.  so that multiple imputations reproduce
+
+```{r results='asis'}
+v <- vClus(d, fracmiss=0.8, corrmatrix=TRUE,
+           trans=TRUE, redundancy=TRUE, spc=TRUE,
+           exclude = ~ id + bacteremia,
+           imputed=a,
+           redunargs=list(nk=0),
+           spcargs=list(k=20, sw=TRUE, nvmax=5), # sparse PCA 5m
+           transacefile='bacteremia-transace.rds',
+           spcfile='bacteremia-spc.rds')   # uses previous run if no inputs changed
+
+htmlVerbatim(v$transace)
+saveRDS(v, '/tmp/v.rds')
+```
+
+```{r}
+#| fig-height: 12
+#| fig-width: 7
+ggplot(v$transace, nrow=12)
+```
+
+```{r}
+#| fig-height: 4
+#| fig-width: 6
+p <- v$princmp
+# Print and plot sparse PC results
+print(p)
+plot(p)
+```
+
+```{r}
+#| fig-height: 7
+#| fig-width: 8
+#| column: screen-right
+plot(v$p, 'loadings', nrow=1)
+```
+
+```{r echo=FALSE}
+saveCap('24')
+```

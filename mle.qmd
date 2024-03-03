@@ -216,7 +216,7 @@ knitr::include_graphics('mle-bootCi.png')
 
 ---
 
-## AIC & BIC
+## AIC & BIC {#sec-mle-aic}
 
 * Suppose we have data from one sample and we develop two models. The -2 log likelihood for models 1 and 2 are $L_1$ and $L_2$
 
@@ -249,6 +249,12 @@ knitr::include_graphics('mle-bootCi.png')
 * The corrected AIC improves AIC performance in small samples:
 
 $$AIC_c = AIC + \frac{2p(p+1)}{n-p-1}$$
+
+A very readable presentation about AIC and BIC by B. D. Ripley may be found [here](https://www.stats.ox.ac.uk/~ripley/Nelder80.pdf).  Briefly, when the achieved log likelihood is evaluated in another sample of the same size, with parameter estimates set to the MLEs from the original sample, the expected value of the log-likelihood gets worse by the number of parameters estimated (if penalization is not used).  Thus AIC represents an out-of-sample correction to the log likelihood, or an expected correction for overfitting.
+
+Gelman, Hwang, and Vehtari have a very useful article [here](http://www.stat.columbia.edu/~gelman/research/published/waic_understand3.pdf) that places these issues in a Bayesian context.
+
+
 ----
 
 ## Testing if model $M_1$ is better than model $M_2$

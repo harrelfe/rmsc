@@ -1,5 +1,6 @@
 project:
   type: book
+  output-dir: /Users/harrelfe/web/rmsc
 
 book:
   title: "Regression Modeling Strategies"
@@ -11,7 +12,7 @@ book:
   site-url: https://hbiostat.org/rms
   url: https://hbiostat.org/rms
 
-  google-analytics: "G-P47K0XF3SM"
+  google-analytics: "G-FN79JJ28KR"
 
   twitter-card:
     creator: "f2harrell"
@@ -41,6 +42,8 @@ book:
     - cox.qmd
     - coxcase.qmd
     - markov.qmd
+    - bodyfat.qmd
+    - bacteremia.qmd
     - figures.qmd
     - references.qmd
 
@@ -66,6 +69,7 @@ format:
     code-block-bg: "#f1f3f5"
     code-block-border-left: "#31BAE9"
     css: h.css
+    code-annotations: hover
 
 bibliography: harrelfe.bib
 csl: apa-annotated-bibliography.csl
