@@ -416,6 +416,10 @@ $$\text{expit}(X_{i}\hat{\beta}\pm zs)$$
 
 ### Minimum Sample Size Requirement {#sec-lrm-n}
 
+<!-- NEW -->
+
+* See [this](https://hbiostat.org/bbr/nonpar#sec-nonpar-popower) and [this](https://fharrell.com/post/pop) for detailed examples of power-based sample size calculations for the proportional odds model
+
 `r ipacue()`
 
 **Categorical Predictor Case**
@@ -1079,25 +1083,25 @@ plot(nom, col.grid = gray(c(0.8, 0.95)),
 
 
 
-## Bayesian Logistic Model Example
+## Bayesian Logistic Model Example {#sec-lrm-bayesex}
+
 Re-analyze data in Section @sec-lrm-dex using the `R` `rmsb`
 package.  See
 [hbiostat.org/doc/rms/lrm-brms.pdf](https://hbiostat.org/doc/rms/lrm-brms.pdf)
-for a parallel analysis using the `brms` package.
+for a parallel analysis using the `brms` package.  [See [this](https://hbiostat.org/bayes/bet/design#sec-design-popower)] for detailed examples of Bayesian power and sample size calculations for the PO model]{.aside}
 
 The `rmsb` package relies on the Stan Bayesian modeling system [@rstan; @stan17].
 
 ```{r lrm-bayes2-setup}
-dd <- datadist(sex.age.response)
-options(datadist = 'dd')
 require(rmsb)
+dd <- datadist(sex.age.response)
+options(datadist = 'dd', mc.cores=4, rmsb.backend='cmdstan')
+cmdstanr::set_cmdstan_path(cmdstan.loc)
 
 # Frequentist model
 flrm <- lrm(response ~ sex + age, data=sex.age.response)
 
 # Bayesian model
-# Distribute chains across all available cpu cores:
-options(mc.cores=parallel::detectCores())
 
 # Fit a model with all flat priors
 set.seed(8)
@@ -1109,22 +1113,12 @@ kabl(round(rbind(MLE =coef(flrm), Mode  =coef(ff, 'mode'),
 
 The frequentist model was fitted using `lrm` and the Bayesian model
 is fitted using the `rmsb` `blrm` function. For the Bayesian model, the
-intercept prior is non-informative (`iprior=1`), and Gaussian priors with
-SD=100 are used for the two slopes.  Posterior modes from
+intercept prior is non-informative (`iprior=1`), and flat priors are used for the two slopes.  Posterior modes from
 this fit are in close agreement with the maximum likelihood estimates (MLE)
 from the frequentist model fit.
 
-For `blrm` a complication arises in specifying non-default priors for regression coefficients.
-This is due to the QR decomposition being used on the design matrix to
-remove MCMC sampling problems with collinearities.  By default, priors
-correspond to the re-mixed, scaled, and centered covariates.  To keep
-predictors in raw form (and risk some posterior sampling problems),
-use the `keepsep` argument as done below on both predictors.  Then
-Gaussian priors are used.  The `age` and `sex` parameters were given mean zero
-priors with standard deviations computed to achieve specified tail
-prior probabilities. Four MCMC chains with 5000 iterations were used
-with a warm-up of 2500 iterations each, resulting in 10000 retained draws from
-the posterior distribution.
+For `blrm` the default prior for non-intercept parameters is a non-informative prior.  To use an informative Gaussian prior, the prior is applied to a contrast such as a treatment effect, a slope, or an interaction effect.  This is done using the `pcontrast` argument.  The prior for the `age` effect is set for a 10-year increase log odds for age, and for `sex` is for a the male - female difference in log odds.  Prior standard deviations are computed to satisfied specified tail probabilities.  Four MCMC chains with 5000 iterations were used
+with a warm-up of 2500 iterations each, resulting in 10000 retained draws from the posterior distribution.
 
 ```{r}
 # Set priors
@@ -1136,12 +1130,17 @@ s1 <- 5 / qnorm(0.975)
 # Solve for SD such that 10-year age effect has only 0.025 chance
 # of being above 20
 
-s2 <- (20 / qnorm(0.975)) / 10   # divide by 10 since ratio on 10b scale
+s2 <- 20 / qnorm(0.975)
 
 # Full model
 set.seed(11)
+. <- function(...) list(...)    # shortcut
+pcon <- .(sd=c(s1, s2),
+          c1=.(sex='male'), c2=.(sex='female'),
+          c3=.(age=30), c4=.(age=20),
+          contrast=expression(c1 - c2, c3 - c4) )
 f <- blrm(response ~ sex + age, data=sex.age.response,
-          priorsd=c(s1, s2), iprior=1, keepsep='age|sex', iter=5000)
+          pcontrast=pcon, iprior=1, iter=5000)
 # Elapsed time 1.7s
 f
 ```
@@ -1159,10 +1158,10 @@ The model summaries for the frequentist and Bayesian models are shown
 below, with posterior means computed as Bayesian "point estimates."
 The parameter estimates are similar for the two approaches.  The
 frequentist 0.95 confidence interval for the `age` parameter is
-0.037 - 0.279 while the Bayesian 0.95 credible interval is 0.047 -
-0.263. Similarly, the 0.95 confidence interval for `sex` is 1.14 -
+0.037 - 0.279 while the Bayesian 0.95 credible interval is 0.044 -
+0.265. Similarly, the 0.95 confidence interval for `sex` is 1.14 -
 5.84 and the corresponding Bayesian 0.95 credible interval is 1.23 -
-5.19.  The results made sense in view of the use of skeptical priors
+5.28.  The results made sense in view of the use of skeptical priors
 when the sample size is small.
 
 

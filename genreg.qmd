@@ -645,7 +645,7 @@ continuity restrictions, cubic polynomial, linear spline, cubic
 spline, and restricted cubic spline fitting is at
 [pclambert.net/interactivegraphs](https://pclambert.net/interactivegraphs).
 Jordan Gauthier
-has another nice interactive demonstration at [drjgauthier.shinyapps.io/spliny](https://drjgauthier.shinyapps.io/spliny).
+has another nice interactive demonstration at [drjgauthier.shinyapps.io/spliny](https://drjgauthier.shinyapps.io/spliny). [See also the excellent resources from Michael Clark [here](https://m-clark.github.io/workshops/stars/building-up-to-gams.html) and [here](https://m-clark.github.io/workshops/stars/technical-details.html#technical-details).]{.aside}
 
 
 Once $\beta_{0}, \ldots, \beta_{k-1}$ are estimated, the restricted
@@ -1291,7 +1291,8 @@ off <- list(stdpop=mean(d$stdpop))    # offset for prediction (383464.4)
 w   <- geom_point(aes(x=time, y=rate), data=d)
 v   <- geom_vline(aes(xintercept=37, col=I('red')))
 yl  <- ylab('Acute Coronary Cases Per 100,000')
-f   <- Glm(aces ~ offset(log(stdpop)) + rcs(time, 6), data=d, family=poisson)
+f   <- Glm(aces ~ offset(log(stdpop)) + rcs(time, 6),
+           data=d, family=poisson)
 f$aic
 ggplot(Predict(f, fun=g, offset=off)) + w + v + yl
 ```

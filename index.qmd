@@ -187,6 +187,7 @@ kableExtra, pcaPP, VGAM, MASS, leaps, rpart
 
 | Date | Sections | Changes |
 |:---|:-|:--------|
+| 2024-04-21 | [-@sec-lrm-bayesex]    | Updated `blrm` from using `keepsep` to `pcontrast` |
 | 2024-03-03 | [-@sec-val-dr]         | New section of validatiion of data reduction |
 | 2024-02-18 | [-@sec-val-contrast]        | New section on contrasts |
 | 2023-09-17 | [-@sec-val-rev]             | New subsection on relative explained variation |

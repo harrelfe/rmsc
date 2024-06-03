@@ -566,8 +566,10 @@ v <- varclus(~ wt + ht + bmi + leg + arml + armc + waist +
              tri + sub + age + sex + re, data=w)
 plot(v)   
 # Omit wt so it won't be removed before bmi
-redun(~ ht + bmi + leg + arml + armc + waist + tri + sub,
-      data=w, r2=.75)
+r <- redun(~ ht + bmi + leg + arml + armc + waist + tri + sub,
+           data=w, r2=.75)
+r
+r2describe(r$scores, nvmax=5)   # show strongest predictors of each variable
 ```
 
 Six size measures adequately capture the entire set.  Height and BMI

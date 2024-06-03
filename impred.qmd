@@ -107,9 +107,11 @@ prostate <-
 # Force pfn, rxn to be linear because of difficulty of placing
 # knots with so many ties in the data
 # Note: all incomplete cases are deleted (inefficient)
-redun(~ stage + I(rxn) + age + wt + I(pfn) + hx +
-      sbp + dbp + ekg.norm + hg + sz + sg + ap + bm,
-      r2=.3, type='adjusted', data=prostate)
+r <- redun(~ stage + I(rxn) + age + wt + I(pfn) + hx +
+           sbp + dbp + ekg.norm + hg + sz + sg + ap + bm,
+           r2=.3, type='adjusted', data=prostate)
+r
+r2describe(r$scores, nvmax=4)   # show strongest predictors of each variable
 ```
 
 By any reasonable criterion on $R^2$, none of the predictors is

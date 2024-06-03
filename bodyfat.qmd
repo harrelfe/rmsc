@@ -19,7 +19,7 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 
 **Statistical Analysis Attack**
 
-* Response variable is proportion of body mass that composed of fat
+* Response variable is proportion of body mass that is fat
 * Display descriptive statistics and variable clustering pattern
 * Run a redundancy analysis
 * Knowing that abdomen circumference is a dominating predictor and that height must be taken into account when interpreting it, learn about the transformations of the variables from a linear model with predictors abdomen, height, and age
@@ -31,17 +31,21 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 ```{r}
 getHdata(bodyfat)
 d   <- bodyfat
-dd <- datadist(d); options(datadist='dd')
+dd  <- datadist(d); options(datadist='dd')
 des <- describe(d)
 sparkline::sparkline(0)   # load jQuery javascript for sparklines
 print(des, which='continuous')
-plot(varclus(~ . - fat, data=d))
+plot(varclus(~ . - fat, data=d))  # remove Y from clustering
 ```
 
 Do a redundancy analysis
 
 ```{r}
-redun(fat ~ ., data=d)
+# Don't allow response variable to be used
+r <- redun(~ . -fat, data=d)
+r
+# Show strongest relationships among transformed predictors
+r2describe(r$scores, nvmax=4)
 ```
 
 `weight` could be dispensed with but we will keep it for historical reasons.

@@ -174,9 +174,11 @@ values to be imputed so as to not greatly reduce the sample size.
 
 
 ```{r }
-redun(~ crea + age + sex + dzgroup + num.co + scoma + adlsc + race2 +
-      meanbp + hrt + resp + temp + sod + wblc.i + pafi.i + ph.i,
-      data=ac, nk=4)
+r <- redun(~ crea + age + sex + dzgroup + num.co + scoma + adlsc + race2 +
+           meanbp + hrt + resp + temp + sod + wblc.i + pafi.i + ph.i,
+           data=ac, nk=4)
+r
+r2describe(r$scores, nvmax=4)   # show top 4 strongest predictors of each var.
 ```
 
 
