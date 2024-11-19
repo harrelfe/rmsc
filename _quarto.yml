@@ -50,7 +50,7 @@ book:
   page-footer:
     background: light
     left:
-      - text: "Copyright 2023, Frank E Harrell Jr"
+      - text: "Copyright 2024, Frank E Harrell Jr"
     right:
       - text: "License"
         href: http://creativecommons.org/licenses/by-nc-sa/4.0

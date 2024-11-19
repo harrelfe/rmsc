@@ -9,9 +9,11 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 
 # Semiparametric Ordinal Longitudinal Models
 
+Key reference: @roh24bay; 2024 Statistics in Medicine tutorial
+
 ## Longitudinal Ordinal Models as Unifying Concepts
 This material in this section is taken from [hbiostat.org/talks/rcteff.html](https://hbiostat.org/talks/rcteff.html).
-See also [hbiostat.org/proj/covid19/ordmarkov.html](http://hbiostat.org/proj/covid19/ordmarkov.html)
+See also [hbiostat.org/proj/covid19/ordmarkov.html](http://hbiostat.org/proj/covid19/ordmarkov.html) and [hbiostat.org/endpoint](https://hbiostat.org/endpoint) and [Ordinal state transition models as a unifying risk prediction framework](https://www.fharrell.com/talk/icsa).
 
 
 ### General Outcome Attributes
@@ -240,9 +242,6 @@ propsPO(y ~ day + Tx, data=u) +
 f <- vglm(ordered(y) ~ yprev + lsp(day, 2) + age + sofa + tx,
           cumulative(reverse=TRUE, parallel=FALSE ~ lsp(day, 2)), data=d)
 summary(f)
-# Note: vglm will handle rcs() but not in getting predictions since
-# it doesn't know where to find the computed knot locations
-# Linear splines have knots explicitly stated at all times
 g <- vglm(ordered(y) ~ yprev + lsp(day, c(2, 4, 8, 15)) +
             lsp(age, c(35, 60, 75)) + lsp(sofa, c(2, 6, 10)) + tx,
           cumulative(reverse=TRUE, parallel=FALSE ~ lsp(day, c(2, 4, 8, 15))),
@@ -253,7 +252,7 @@ AIC(f); AIC(g)
 ```
 
 
-We will use the simpler model, which has the better (smaller) AIC.  Check to PO assumption on time by comparing the simpler model's AIC to the AIC from a fully PO model.
+We will use the simpler model, which has the better (smaller) AIC.  Check the PO assumption on time by comparing the simpler model's AIC to the AIC from a fully PO model.
 
 
 ```{r testpo}
@@ -302,7 +301,7 @@ round(b, 3)
 ```
 
 
-The maximum likelihood estimate of the OR compares favorably with the true OR of 0.75 on which the simulations were based.
+The maximum likelihood estimate of the OR is somewhat at odds with the true OR of 0.75 on which the simulations were based.
 
 
 ### Covariate Effects
@@ -414,6 +413,7 @@ p[[2]]
 
 ```{r bayesre}
 require(rmsb)
+cmdstanr::set_cmdstan_path(cmdstan.loc)   # cmdstan.loc is defined in ~/.Rprofile
 options(prType='html')
 # Use all but one core
 options(mc.cores = parallel::detectCores() - 1, rmsb.backend='cmdstan')
@@ -429,9 +429,10 @@ b
 
 
 * Note that `blrm` parameterizes the partial PO parameters differently than `vglm`.
-* Posterior median of the standard deviation of the random effects $\sigma_\gamma$ is 0.22
-* This is quite small on the logit scale in which most of the action takes place in $[-4, 4]$
+* Posterior median of the standard deviation of the random effects $\sigma_\gamma$ is 0.39
+* This is fairly small on the logit scale in which most of the action takes place in $[-4, 4]$
 * Random intercepts add an inconsequential improvement in the fit, justifying the Markov process' conditional (on prior state) independence assumption
+* Another useful analysis would entail comparing the SD of the posterior distributions for the main parameters with and without inclusion of the random effects
 
 
 **Second-order Markov Process**

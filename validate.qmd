@@ -736,6 +736,14 @@ A frequently asked question is whether or not unsupervised learning (data reduct
 * Typically we are allowed to use procedures that don't always work in our favor
 * Contrast this with stepwise variable selection, which always attempts to work in our favor by maximizing $R^2$
 
+### Validation of Bayesian Models {#sec-val-bayes}
+
+Ideas about model validation can be much different in a Bayesian modeling context.  If a prior distribution on a regression coefficient is somewhat flat, that implies that very large values of the parameter are likely.  So overfitting cannot officially occur in that setting.  Valuable discussions about Bayesian validation issues can be found [here](https://t.co/KfZVwGfbJb) and [here](https://t.co/BmUhOLNvEu).
+
+On the other hand, overfitting can damage out-of-sample predictive accuracy, and there are Bayesian Markov chain Monte Carlo shortcuts that provide leave-out-one cross-validation statistics on the gold standard log-likelihood metric.  This is elegantly covered in [this Richard McElreath video](https://youtu.be/odGAAJDlgp8?si=F6gpXe1-h2BybBs1).
+
+
+
 ## Bootstrapping Ranks of Predictors {#sec-val-bootrank}
 `r mrg(sound("v-12"))`
 
@@ -784,7 +792,7 @@ ggplot(w, aes(x=predictor, y=Rank)) + geom_point() + coord_flip() +
   geom_errorbar(aes(ymin=lim[,1], ymax=lim[,2]), width=0)
 ```
 
-See [this](https://biostat.app.vumc.org/wiki/pub/Main/FHHandouts/FHbiomarkers.pdf) for a higher-dimension example.
+See [this](https://fharrell.com/post/badb) and [this](https://hbiostat.org/talks/older/FHbiomarkers.pdf) for a higher-dimension example.
 
 
 ## Simplifying the Final Model by Approximating It {#sec-val-approx}

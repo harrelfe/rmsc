@@ -8,6 +8,31 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 ```
 
 # Multivariable Modeling Strategies {#sec-multivar}
+
+<!-- NEW -->
+
+**Scientific Big Picture**[Thanks to Drew Levy for key contributions]{.aside}
+
+* Rigorous judgements about information quality and sufficiency for explicit objectives should precede any modeling
+   + Undertaking modeling and inference and subsequently apologizing for analysis deficiencies results in scientific noise
+* Study design and measurement of key variables are $\frac{9}{10}$ of the problem
+* Distinguish predictive vs. causitive effects of $X$
+* Is the current sample size large enough to do an analysis whose goal is to find definitive answers that do not need to be independently validated?
+   + In other words is $N$ large enough to submit a paper where the results of the analysis do not require external validation to be credible and actionable?
+   + Near futility of analyses with $p > N$
+* Poor quality data in abundant quantity are readily available
+   + Data in sufficient quantity **and** quality are much less available
+   + High quality data in sufficient quantity are rare
+   + Be clear-eyed and honest about your data resources
+* Is $N$ even large enough to do exploratory analyses?
+* If $N$ is insufficient and you want to proceed, you must replace the unavailable data with assumptions or knowledge to make the _effective_ sample size adequate
+   + All-or-nothing assumptions (how treatments and humans function, which variables are relevant, which variables have linear effects, which interactions are real, etc.), or
+   + Informative Bayesian prior distributions
+
+<br>
+
+**Modeling Strategy in a Nutshell**
+
 `r mrg(sound("mv-1"))`
 
 * "Spending d.f.": examining or fitting parameters in models, or `r ipacue()`
@@ -18,11 +43,15 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 * If a scatterplot suggests linearity and you fit a linear model,
   how many d.f. did you actually spend (i.e., the d.f. that when put
   into a formula results in accurate confidence limits or $P$-values)?
+
+----
+
 * Decide number of d.f. that can be spent  `r ipacue()`
 * Decide where to spend them
 * Spend them
 * General references: [@nic99reg; @ste01pro; @har96mul; @giu11spe]
 
+----
 
 There are many choices to be made when deciding upon a global modeling
 strategy, including choice between
@@ -442,7 +471,7 @@ discussed here but applied to time series modeling.
 : Limiting Sample Sizes for Various Response Variable Types
 
 
-* Narrowly distributed predictor $\rightarrow$ even higher $n$ `r ipacue()`
+* Narrowly distributed predictor $\rightarrow$ even higher $n$ `r ipacue()`[See [this](https://stats.stackexchange.com/questions/655891) and [this](https://hbiostat.org/R/glossary.html) for more information.]{.aside}
 * $p$ includes _all_ variables screened for association
         with response, including interactions
 * Univariable screening (graphs, crosstabs, etc.) **in no way**

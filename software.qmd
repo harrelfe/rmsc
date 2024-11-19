@@ -105,6 +105,16 @@ Some `R` functions:
 
 ## The `rms` Package
 
+**Big Picture**
+
+* `rms` package handles many popular standard models
+* It makes it easier to do the right thing
+* There are more extensible, general approaches, especially using Bayesian methods
+   + `brms` package
+   + `rstanarm` package
+   + `rstanarm` survival analysis system
+
+
 `r mrg(rmsdisc())`
 
 [[FAQ](http://datamethods.org/rms)]{.aside}

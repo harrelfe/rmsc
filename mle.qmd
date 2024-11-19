@@ -389,6 +389,67 @@ both$Penalty <- both$.set.
 ggplot(both, aes(x=x1, y=yhat, color=Penalty)) + geom_line() +
   geom_abline(col=gray(0.7)) + facet_grid (~ type)
 ```
+
+<!-- NEW -->
+<a name="qr"></a>
+
+## Pre-Processing of the Design Matrix {#sec-mle-qr}
+
+Consider the $n\times p$ design matrix $X$ for the right hand side of a statistical model.  $X$ may contain original predictors, spline terms, interactions, etc., in $p$ columns for $p$ regression degrees of freedom.  Some of the columns of $X$ can be collinear, e.g., some of the original predictors may be highly correlated with each other, or the basis functions (such as the truncated power basis we use in restricted cubic splines) may involve highly collinear terms, much like age and the square of age being highly correlated. Collinearities in $X$ can make iterative maximum likelihood estimation algorithms fail to converge, and the problems are even more severe in Bayesian posterior sampling where collinearities can make sampling very slow or nonconvergent.
+
+These problems can be largely solved by mean-centering the columns of $X$, and transforming $X$ using a QR decomposition to orthogonalize the columns of the resulting transformed matrix.  [See [this](https://betanalpha.github.io/assets/case_studies/qr_regression.html) for more information.]{.aside}  The R [`qr`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/qr) function efficiently does all the needed calculations, made easier using the `Hmisc` package `qrxcenter` function.  `qrxcenter` produces a matrix called `R` and a transformed $X$ matrix called `x` whose orthogonal columns have a standard deviation of 1.0.  Multiplying `R` by regression coefficients that were estimated using the transformed $X$ results in $\beta$ coefficients on the original scale. 
+
+Consider a case where things are a bit more complicated because of having multiple intercepts.  In a semiparametric model such as the proportional odds model, let $\alpha_{1}, \alpha_{2}, \ldots, \alpha_{k}$ denote the intercepts corresponding to $k + 1$ distinct values of the dependent variable $Y$.  Let $\alpha$ denote this $k$-length vector, and similarly let $\beta$ denote the $p$-length vector of regression coefficients $\beta_{1}, \beta_{2}, \ldots, \beta_{p}$.  Here we are referring to estimated parameters and not unknown parameters, but we drop the hat over the greek letters for simplicity.
+
+Suppose that MLEs on transformed $X$ are $\delta$ and $\gamma$ corresponding to the $\alpha, \beta$ on the original $X$.  It is easy to compute $\alpha, \beta$ from $\delta, \gamma$ given the matrix $R$ and the vector of means.  Let $M$ be the $k$-row row-duplicated matrix with $p$ columns containing the $p$ original column means of $X$, i.e. $M = 1_{k\times 1} \times \bar{X}$ where $\bar{X}$ is a $1\times p$ vector of means.  Then the pre-processing of $X$ is $(X - \bar{X})R$ where $R$ is from running QR on $X - \bar{X}$ (using `qrxcenter`), and the back-transforms to original parameters are
+
+$\beta = R \gamma$
+
+$\alpha = \delta - M R \gamma$
+
+What is more challenging, requiring vector calculus and Jacobians, is how to transform the Hessian $H$ (negative of the observed information matrix) on the transformed $X$ scale to the Hessian on the $(\alpha, \beta)$ scale.  This is needed so that the variance-covariance matrix $(-H)^{-1}$ can be computed on the original scale.  Let $H$ denote the $(k+p)\times (k+p)$ matrix of second partial derivatives of the log-likelihood function $\ell^{\delta, \gamma}$.  Partition $H$ as follows if you want to write out a fully expressed solution (not done here).
+
+$$
+\begin{bmatrix}
+A_{k\times k} & B_{k \times p} \newline
+B' & D_{p\times p}
+\end{bmatrix}
+$$
+
+The following solution to transforming $H$ was given [here](https://stats.stackexchange.com/questions/657210) by user `statmerkur`.
+
+Let $\ell^{\alpha, \beta} : \mathbb R^{k+p} \to \mathbb R$ denote the log-likelihood function of $(\alpha, \beta).$ Define the linear transformation $T_{\alpha, \beta}^{\delta, \gamma}: \mathbb R^{k+p} \to \mathbb R^{k+p}$ by $T_{\alpha, \beta}^{\delta, \gamma}(\alpha,\beta) = (\delta, \gamma) \mathrel{:=}(\alpha + M\beta, R^{-1}\beta)$, and $T_{\delta, \gamma}^{\alpha, \beta}: \mathbb R^{k+p} \to \mathbb R^{k+p}$ as the inverse of $T_{\alpha, \beta}^{\delta, \gamma}$, i.e., $T_{\delta, \gamma}^{\alpha, \beta}(\delta, \gamma) =  (\alpha, \beta) \mathrel{:=} (\delta - MR\gamma, R\gamma).$  
+
+We are interested in the Hessian matrix of $\ell^{\alpha, \beta}$ at $(\alpha, \beta), H_{\ell^{\alpha, \beta}}(\alpha, \beta)$.   
+Since $\ell^{\alpha, \beta} = \ell^{\delta, \gamma} \circ T_{\alpha, \beta}^{\delta, \gamma}$, where $\ell^{\delta, \gamma} \mathrel{:=} \ell^{\alpha, \beta} \circ T_{\delta, \gamma}^{\alpha, \beta}$ is the log-likelihood function of $(\delta, \gamma)$, the [chain rule](https://en.wikipedia.org/wiki/Chain_rule#General_rule:_Vector-valued_functions_with_multiple_inputs) yields 
+$$
+H_{\ell^{\alpha, \beta}}(\alpha, \beta) = J_{T_{\alpha, \beta}^{\delta, \gamma}}(\alpha, \beta)^\top H_{\ell^{\delta, \gamma}}(\delta, \gamma) J_{T_{\alpha, \beta}^{\delta, \gamma}}(\alpha, \beta),
+$$
+with $J_{T_{\alpha, \beta}^{\delta, \gamma}}(\alpha, \beta)$ the Jacobian matrix of $T_{\alpha, \beta}^{\delta, \gamma}$ at $(\alpha, \beta)$.  
+By the [inverse function theorem](https://en.wikipedia.org/wiki/Inverse_function_theorem), we have $J_{T_{\alpha, \beta}^{\delta, \gamma}}(\alpha, \beta) = J_{T_{\delta, \gamma}^{\alpha, \beta}}^{-1}(\delta, \gamma)$ and thus
+$$
+H_{\ell^{\alpha, \beta}}(\alpha, \beta) = J_{T_{\delta, \gamma}^{\alpha, \beta}}^{-1}(\delta, \gamma)^\top H_{\ell^{\delta, \gamma}}(\delta, \gamma) J_{T_{\delta, \gamma}^{\alpha, \beta}}^{-1}(\delta, \gamma).
+$$
+
+Back to the original notation, the correct Hessian matrix on the original scale, i.e. in the $(\alpha, \beta)$-parameterization, is therefore given by 
+$$
+J^{-\top} H J^{-1} = (J H^{-1} J^\top)^{-1},
+$$
+with 
+$$
+J^{-1} =
+\begin{pmatrix}
+I_{k\times k} & M_{k\times p} \\
+0_{p\times k} & R^{-1}_{p\times p}
+\end{pmatrix}.
+$$
+
+The R `rms` `lrm.fit` function implements this, and the R `rmsb` `blrm` function implements it for Bayesian posterior sampling. 
+
+When doing quadratic-penalized MLE on transformed $X$, it is easy to transform the penalty matrix $P$ so that it applies to the transformed scale.  Using the $R$ matrix above, the transformed penalty matrix is $R^{\top}PR$.
+
+The R `madness` package may help with vector calculus.
+
 ## Further Reading
 
 * [Quadratic approximation and normal asymptotics](https://strimmerlab.github.io/publications/lecture-notes/MATH20802/quadratic-approximation-and-normal-asymptotics.html) by Korbinian Strimmer

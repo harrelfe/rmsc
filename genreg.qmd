@@ -59,10 +59,11 @@ Regression modeling meets many analytic needs:
     + See
         [this article](https://hbr.org/2016/12/why-youre-not-getting-value-from-your-data-science) in _Harvard Business Review_ for more about
         regression vs. complex methods
+* Many claims about improved predictive discrimination from ML are exaggerated - see @kap23lea
 
-
-
-
+::: {.column-screen-left}
+<img src="kap23lea.jpg" width="100%">
+:::
 
 ## Notation for Multivariable Regression Models
 `r mrg(sound("genreg-1"))`
@@ -394,6 +395,8 @@ straight line and quadratic fits in OLS, with varying degree of
 nonlinearity and noise added to $X$ (must run in `RStudio`)
 
 `r mrg(movie("https://youtu.be/Q6snkhhTPnQM"))`
+
+[Interactive demonstration](https://apps.biostat.au.dk/stefan/splines/) of lack of fit after categorization of a continuosu predictor, and comparison with spline fits, by Stefan Hansen
 
 ```{r eval=FALSE}
 require(Hmisc)
@@ -938,8 +941,13 @@ Machine learning may be the better choice if
   such as treatment
 * One does not care that the model is a "black box"
 
+But see [this](https://bsky.app/profile/gscollins.bsky.social/post/3laufggkuxc2u) for navigating resources exposing problems in ML applications such as the following:
 
-
+* Weak design and methods
+* Poor reporting
+* High risk of bias
+* Spin
+* Non-open science
 
 ## Multiple Degree of Freedom Tests of Association  {#sec-multiple.df}
 `r mrg(sound("genreg-10"))` 
@@ -1380,13 +1388,26 @@ lrtest(f, g)
 There are many advantages to fitting models with a Bayesian approach when compared to the frequentist / maximum likelihood approach that receives more coverage in this text.  These advantages include
 
 * the ability to use outside information, e.g. the direction or magnitude of an effect, magnitude of interaction effect, degree of nonlinearity
-* getting exact inference (to within simulation error) regarding model parameters without using any Gaussian approximations as used so heavily in frequentist inference
-* getting exact inference about derived parameters that are nonlinear transformations of the original model parameters, without using the $\delta$-method approximation so often required in frequentist procedures
+* getting exact inference (to within simulation error) regarding model parameters without using any Gaussian approximations as used so heavily in frequentist inference[Bayesian approaches do not tempt analysts to [mistakenly assume that the central limit theorem protects them](https://hbiostat.org/bbr/htest.html?q=CLT#central-limit-theorem).]{.aside}
+* getting exact inference about derived parameters that are nonlinear transformations of the original model parameters, without using the $\delta$-method approximation so often required in frequentist procedures[The $\delta$-method fails when the sampling distribution of the parameter is not symmetric.]{.aside}
 * devoting less than one degree of freedom to a parameter by borrowing information
 * getting exact inference using ordinary Bayesian procedures when penalization/shrinkage/regularization is used to limit overfitting
 * allowing one to fit [distributional models](http://paul-buerkner.github.io/brms/articles/brms_distreg.html), e.g., using a regression model for the log standard deviation in addition to one for the mean, and getting exact inference for the joint models
-* obtaining automatic inference about any interval of possible parameter values instead of just using $p$-values to bring evidence against a null value [It is just as easy to compute the Bayesian probability that an odds ratio exceeds 2.0 as it is to calculate the probability that the odds ratio exceeds 1.0.]{.aside}
+* obtaining automatic inference about any interval of possible parameter values instead of just using $p$-values to bring evidence against a null value[It is just as easy to compute the Bayesian probability that an odds ratio exceeds 2.0 as it is to calculate the probability that the odds ratio exceeds 1.0.]{.aside}
 * obtaining exact inference about unions and intersections of various assertions about parameters, e.g., the probability that a treatment reduces mortality by any amount or reduces blood pressure by $\geq 5$ mmHg
+* getting exact uncertainty intervals for complex derived parameters such as the $c$-index or Somers' $D_{xy}$ that quantify the model's predictive discrimination
+
+::: {.callout-note collapse="true"}
+### Uncertainies in Model Performance Metrics
+
+As seen in example output form the `blrm` function below, one can automatically obtain highest posterior density uncertainty intervals for any parameter including overall model performance metrics.  These are derived from the $m$ posterior draws of the model's parameters by computing the model performance metric for each draw.  The uncertainties captured by this process relate to the ability to well-estimate model parameters, which relates also to within-training-sample model fit.  So the uncertainties reflect a similar phenomenon to what $R^{2}_\text{adj}$ measures.  [Adjusted $R^2$](https://hbiostat.org/bib/r2) other than McFadden's penalize for $p$, the number of regression parameters estimated, other than the intercept.  This is very similar to considering likelihood ratio $\chi^2$ statistics minus the number of degrees of freedom involved in the LR test.  On the other hand, AIC approximates out-of-sample model performance by using a penalty of twice the degrees of freedom (like the seldom-used McFadden $R^{2}_\text{adj}$)
+
+So uncertainties computed by the `blrm` function come solely from the spread of the posterior distributions, i.e., the inability of the analysis to precisely estimate the unknown parameters.  They condition on the observed design matrix $X$ and do not consider other samples as would be done with out-of-sample predictive accuracy assessment with AIC, the bootstrap, or cross-validation.
+
+When $p=1$ a rank measure of predictive discrimination such as $D_{xy}$ will have no uncertainty unless the sign of the one regression coefficient often flips over posterior draws.
+
+:::
+
 
 A major part of the arsenal of Bayesian modeling weapons is [`Stan`](https://mc-stan.org) based at Columbia University.  Very general R statistical modeling packages such as `brms` and `rstanarm` are based on `Stan`.
 
@@ -1394,7 +1415,7 @@ RMS has several fully worked-out Bayesian modeling case studies.  The purpose of
 
 ### A General Model Specification Approach
 
-With a Bayesian approach one can include a parameter for each aspect of the model you know exists but are unsure about.  This leads to results that are not overly optimistic because uncertainty intervals will be a little wider to acknowledge what you don't know.  A good example is the [Bayesian $t$-test](https://hbiostat.org/bbr/htest#bayesian-t-test), which has a parameter for the amount of non-normality and a parameter for how unequal the variances may be in the two groups being compared.  Prior distributions can favor normality and equal variance, and modeling becomes more flexible as $n \uparrow$.
+With a Bayesian approach one can include a parameter for each aspect of the model you know exists but are unsure about.  This leads to results that are not overly optimistic, because uncertainty intervals will be a little wider to acknowledge what you don't know.  A good example is the [Bayesian $t$-test](https://hbiostat.org/bbr/htest#bayesian-t-test), which has a parameter for the amount of non-normality and a parameter for how unequal the variances may be in the two groups being compared.  Prior distributions can favor normality and equal variance, and modeling becomes more flexible as $n \uparrow$.
 
 Other examples of borrowing information and adding flexibility:
 
@@ -1413,9 +1434,9 @@ Interactions bring special problems to estimation and inference.  In the best of
 To gain the advantages of Bayesian modeling described above, doing away with binary decisions and allowing the use of outside information, one must specify prior distributions for parameters.
 It is often difficult to do this, especially when there are nonlinear effects (e.g., splines) and interactions in the model.  We need a way to specify priors on the original $X$ and $Y$ scales.  Fortunately `Stan` provides an elegant solution.
 
-As discussed [here](https://discourse.mc-stan.org/t/putting-priors-on-transformed-parameters) `Stan` allows one to specify priors on transformations of model parameters, and these priors propagate back to the original parameters.  It is easier to specify a prior for the effect of increasing age from 30 to 60 that it is to specify a prior for the age slope.  It may be difficult to specify a prior for an age $\times$ treatment interaction, but much easier to specify a prior for how different the treatment effect is for a 30 year old and a 60 year old.  By specifying priors on one or more contrasts one can easily encode outside information / information borrowing / shrinkage.
+As discussed [here](https://discourse.mc-stan.org/t/putting-priors-on-transformed-parameters) `Stan` allows one to specify priors on transformations of model parameters, and these priors propagate back to the original parameters.  It is easier to specify a prior for the effect of increasing age from 30 to 60 that it is to specify a prior for the age slope.  It may be difficult to specify a prior for an age $\times$ treatment interaction (especially when the age effect is nonlinear), but much easier to specify a prior for how different the treatment effect is for a 30 year old and a 60 year old.  By specifying priors on one or more contrasts one can easily encode outside information / information borrowing / shrinkage.
 
-The `rms` [`contrast` function](https://www.rdocumentation.org/packages/rms/versions/6.7-0/topics/contrast.rms) provides a general way to implement contrasts up to double differences, and more details about computations are provided in that link.  The approach used for specifying priors for contrast in `rmsb::blrm` uses the same process but is even more general.  Both `contrast` and `blrm` compute design matrices at user-specified predictor settings, and the contrast matrices (matrices multipled by $\hat{\beta}$) are simply differences in such design matrices.  Thinking of contrasts as differences in predicted values frees the user from having to care about how parameters map to estimands, and allows an R `predict(fit, type='x')` function do the hard work.  Examples of types of differences are below. [`rmsb` implements priors on contrasts starting with versio 1.0-0.]{.aside}
+The `rms` [`contrast` function](https://www.rdocumentation.org/packages/rms/versions/6.7-0/topics/contrast.rms) provides a general way to implement contrasts up to double differences, and more details about computations are provided in that link.  The approach used for specifying priors for contrast in `rmsb::blrm` uses the same process but is even more general.  Both `contrast` and `blrm` compute design matrices at user-specified predictor settings, and the contrast matrices (matrices multipled by $\hat{\beta}$) are simply differences in such design matrices.  Thinking of contrasts as differences in predicted values frees the user from having to care about how parameters map to estimands, and allows an R `predict(fit, type='x')` function do the hard work.  Examples of types of differences are below. [`rmsb` implements priors on contrasts starting with version 1.0-0.]{.aside}
 
 * no difference: compute an absolute predicted value (not implemented in `blrm` for priors)
 * single difference
@@ -1431,7 +1452,7 @@ For predictors modeled linearly, the slope is the regression coefficient.  For n
 
 ### Examples of Priors on Contrasts {#sec-genreg-pcontrast}
 
-Semiparametic models are introduced in @sec-ordinal but we will use one of the models---the proportional odds (PO) ordinal logistic model---in showcasing the utility of specifying priors on contrasts in order to use external information or to place restrictions on model fits.  The `blrm` function in the [`rmsb` package](https://hbiostat.org/R/rmsb) implements this semiparametric model using `Stan`.  Because it does not depend on knowing how to transform $Y$ I almost always use the more robust ordinal models instead of linear models.  The linear predictor $X\beta$ is on the logit (log odds) scale for the PO model.  This unitless scale typically ranges from -5 to 5, corresponding to a range of probabilities of 0.007 to 0.993.  Default plotting uses the intercept corresponding to the marginal median of $Y$, so the log odds of the probability that $Y$ exceeds or equals this level, given $X$, is plotted.  Estimates can be converted to means, quantiles, or exceedance probabilities using the `Mean`, `Quantile`, and `ExProb` functions in the `rms` and `rmsb` packages. [Ordinal models in the cumulative probability class such as the PO model have $k$ intercepts for $k+1$ distinct values of $Y$.  These intercepts encode the entire empirical distribution of $Y$ for one covariate setting, hence the term _semiparametric_ and freedom from having to choose a $Y$ distribution.]{.aside}
+Semiparametic models are introduced in @sec-ordinal but we will use one of the models---the proportional odds (PO) ordinal logistic model---in showcasing the utility of specifying priors on contrasts in order to use external information or to place restrictions on model fits.  The `blrm` function in the [`rmsb` package](https://hbiostat.org/R/rmsb) implements this semiparametric model using `Stan`.  Because it does not depend on knowing how to transform $Y$, I almost always use the more robust ordinal models instead of linear models.  The linear predictor $X\beta$ is on the logit (log odds) scale for the PO model.  This unitless scale typically ranges from -5 to 5, corresponding to a range of probabilities of 0.007 to 0.993.  Default plotting uses the intercept corresponding to the marginal median of $Y$, so the log odds of the probability that $Y$ exceeds or equals this level, given $X$, is plotted.  Estimates can be converted to means, quantiles, or exceedance probabilities using the `Mean`, `Quantile`, and `ExProb` functions in the `rms` and `rmsb` packages. [Ordinal models in the cumulative probability class such as the PO model have $k$ intercepts for $k+1$ distinct values of $Y$.  These intercepts encode the entire empirical distribution of $Y$ for one covariate setting, hence the term _semiparametric_ and freedom from having to choose a $Y$ distribution.]{.aside}
 
 Effects for the PO model are usually expressed as odds ratios (OR).  For the case where the prior median for the OR is 1.0 (prior mean or median log(OR)=0.0) it is useful to solve for the prior SD $\sigma$ so that $\Pr(\text{OR} > r) = a = \Pr(\text{OR} < \frac{1}{r})$, leading to $a =   \frac{|\log(r)|}{\Phi^{-1}(1-a)}$, computed by the `psigma` function below.  Another function `.` is defined as an abbreviation for `list()` for later usage.
 
