@@ -764,7 +764,7 @@ bplot(Predict(f, cholesterol, age, np=40), perim=perim,
 
 ```{r}
 f <- lrm(sigdz ~ rcs(age,4)*(sex + rcs(cholesterol,4)),
-         data=acath, tol=1e-11)
+         data=acath)
 ltx(f)
 print(anova(f), caption='Cubic spline surface')
 ```
@@ -946,12 +946,17 @@ $$
 
 
 ```{r lrm-sex-age-response-boot}
+require(rms)
+getHdata(sex.age.response)
 d  <- sex.age.response
 dd <- datadist(d); options(datadist='dd')
 f  <- lrm(response ~ sex + age, data=d, x=TRUE, y=TRUE)
 set.seed(3)  # for reproducibility
-v1  <- validate(f, B=150)
-ap1 <- round(v1[,'index.orig'], 2)
+# Some bootstrap samples had complete separation (infinite beta) in which case 
+# the default convergence criteria results in too many iterations.  Specify
+# absolute tolerance to avoid this.
+v1  <- validate(f, B=150, maxit=20)
+ap1 <- round(v1[,'index.orig']     , 2)
 bc1 <- round(v1[,'index.corrected'], 2)
 print(v1,
       caption='Bootstrap Validation, 2 Predictors Without Stepdown',
@@ -961,11 +966,12 @@ print(v1,
 
 * Allow for step-down at each re-sample  `r ipacue()`
 * Use individual tests at $\alpha=0.10$
-* Both age and sex selected in 137 of 150, neither in 3 samples
+* Both age and sex selected in 138 of 150, neither in 1 samples
 
 ```{r lrm-sex-age-response-bootsw}
 v2 <- validate(f, B=150, bw=TRUE,
-               rule='p', sls=.1, type='individual')
+               rule='p', sls=.1, type='individual',
+               maxit=30)
 ap2 <- round(v2[,'index.orig'], 2)
 bc2 <- round(v2[,'index.corrected'], 2)
 print(v2,
@@ -987,7 +993,7 @@ x4 <- runif(n)
 x5 <- runif(n)
 f  <- lrm(response ~ age + sex + x1 + x2 + x3 + x4 + x5,
           data=d, x=TRUE, y=TRUE)
-v3 <- validate(f, B=150, bw=TRUE,
+v3 <- validate(f, B=150, bw=TRUE, 
                rule='p', sls=.1, type='individual')
 ap3 <- round(v3[,'index.orig'], 2)
 bc3 <- round(v3[,'index.corrected'], 2)
@@ -1013,6 +1019,7 @@ print(v3,
 ```{r}
 v4 <- validate(f, B=150, bw=TRUE, rule='p', sls=.1,
                type='individual', force=1:2)
+               
 ap4 <- round(v4[,'index.orig'], 2)
 bc4 <- round(v4[,'index.corrected'], 2)
 ```

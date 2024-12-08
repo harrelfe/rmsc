@@ -1,6 +1,7 @@
 ```{r include=FALSE}
 require(rms)
 require(qreport)
+require(ggplot2)
 options(qproject='rms', prType='html')
 getRs('qbookfun.r')
 hookaddcap()
@@ -179,7 +180,7 @@ X    <- cbind(Intercept = 1,
               predict(f, data.frame(x1 = c(1,5)), type = "x"))
 Xdif <- X[2,,drop=FALSE] - X[1,,drop=FALSE]
 Xdif
-b                   <- bootcov(f, B = 1000)
+b                   <- bootcov(f, B = 1000, maxit=100)
 boot.log.odds.ratio <- b$boot.Coef %*% t(Xdif)
 sd(boot.log.odds.ratio)
 # summary() uses the bootstrap covariance matrix
