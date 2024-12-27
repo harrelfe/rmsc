@@ -1235,6 +1235,7 @@ The last example is worth expanding as an example in model formulation.  Conside
 f <- cph(Surv(etime, event) ~ rcs(log(sampleAge), 3) * rcs(B, 4) +
            rcs(age, 5) * sex, data=mydata)
 ```
+
 The `B` $\times$ `sampleAge` interaction effects have 6 d.f. and tests whether the sample deterioration affects the effect of `B`.  By not assuming that `B` has the same effect for old samples as for young samples, the investigator will be able to estimate the effect of `B` on outcome when the blood analysis is ideal by inserting `sampleAge` = 1 day when requesting predicted values as a function of `B`.
 <!-- \enosound -->
 
@@ -1357,9 +1358,11 @@ ggplot(Predict(f, time=times, fun=g, offset=off)) + w + v + yl
 Look at fit statistics especially evidence for the jump
 
 <small>
+
 ```{r sic5}
 f
 ```
+
 </small>
 
 

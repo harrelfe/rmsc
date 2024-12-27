@@ -479,7 +479,7 @@ of predicted `r hba` by OLS and plot predicted distributions of actual
 ```{r predobs,w=5.5,h=5,cap='Observed (dashed lines, open circles) and predicted (solid lines, closed circles) exceedance probability distributions from a model using 6-tiles of OLS-predicted $\\text{HbA}_{1c}$.  Key shows quantile group intervals of predicted mean $\\text{HbA}_{1c}$.',scap='Observed and predicted distributions'}
 #| label: fig-cony-predobs
 ###w$pghg <- cut2(pgh, g=6)
-f  <- orm(gh ~ pgh6, family=loglog, data=w)
+f  <- orm(gh ~ pgh6, family='loglog', data=w)
 lp <- predict(f, newdata=data.frame(pgh6=levels(w$pgh6)))
 ep <- ExProb(f)  # Exceedance prob. functn. generator in rms
 z  <- ep(lp)
@@ -499,7 +499,7 @@ the normal distribution.
 #| fig-height: 2.75
 #| fig-width: 3.5
 spar(bty='l')
-f <- orm(gh ~ rcs(age,6), family=probit, data=w)
+f <- orm(gh ~ rcs(age,6), family='probit', data=w)
 g <- ols(gh ~ rcs(age,6), data=w)
 s <- g$stats['Sigma']
 yu <- f$yunique[-1]
@@ -526,7 +526,7 @@ summary of height and weight for estimating median `gh`.
 
 ```{r htwtcoef}
 f <- orm(gh ~ rcs(age,5) + log(ht) + log(wt),
-         family=loglog, data=w)
+         family='loglog', data=w)
 f
 ```
 
@@ -535,7 +535,7 @@ aic <- NULL
 for(mod in list(gh ~ rcs(age,5) + rcs(log(bmi),5),
                 gh ~ rcs(age,5) + rcs(log(ht),5) + rcs(log(wt),5),
                 gh ~ rcs(age,5) + rcs(log(ht),4) * rcs(log(wt),4)))
-  aic <- c(aic, AIC(orm(mod, family=loglog, data=w)))
+  aic <- c(aic, AIC(orm(mod, family='loglog', data=w)))
 print(aic)
 ```
 
@@ -621,7 +621,7 @@ of the frequently-missing predictors is important.  Use likelihood ratio $\chi^2
 ```{r fitfullcasewise}
 f <- orm(gh ~ rcs(age,5) + sex + re + rcs(wt,3) + rcs(leg,3) + arml +
          rcs(armc,3) + rcs(waist,4) + tri + rcs(sub,3),
-         family=loglog, data=w, x=TRUE, y=TRUE)
+         family='loglog', data=w, x=TRUE, y=TRUE)
 print(f, coefs=FALSE)
 ## Composite test:
 anova(f, leg, arml, armc, waist, tri, sub, test='LR')
@@ -758,7 +758,7 @@ nonparametric confidence intervals (also with casewise deletion).
 h <- function() {
   gc <- orm(gh ~ rcs(age,5) + re + rcs(leg,3) +
             rcs(waist,4) + tri + rcs(sub,4),
-            family=loglog, data=w, x=TRUE, y=TRUE)
+            family='loglog', data=w, x=TRUE, y=TRUE)
   gb <- bootcov(gc, B=300)
   list(gc=gc, gb=gb)
 }
