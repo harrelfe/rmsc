@@ -1301,7 +1301,7 @@ w   <- geom_point(aes(x=time, y=rate), data=d)
 v   <- geom_vline(aes(xintercept=37, col=I('red')))
 yl  <- ylab('Acute Coronary Cases Per 100,000')
 f   <- Glm(aces ~ offset(log(stdpop)) + rcs(time, 6),
-           data=d, family=poisson)
+           data=d, family='poisson')
 f$aic
 ggplot(Predict(f, fun=g, offset=off)) + w + v + yl
 ```
@@ -1323,7 +1323,7 @@ kn <- k
 h <- function(x) cbind(rcspline.eval(x, kn),
                        sin=sin(2*pi*x/12), cos=cos(2*pi*x/12))
 f <- Glm(aces ~ offset(log(stdpop)) + gTrans(time, h),
-         data=d, family=poisson)
+         data=d, family='poisson')
 f$aic
 ggplot(Predict(f, fun=g, offset=off)) + w + v + yl
 ```
@@ -1333,7 +1333,7 @@ Next add more knots near intervention to allow for sudden change
 ```{r sic3}
 kn <- sort(c(k, c(36, 37, 38)))
 f <- Glm(aces ~ offset(log(stdpop)) + gTrans(time, h),
-         data=d, family=poisson)
+         data=d, family='poisson')
 f$aic
 ggplot(Predict(f, fun=g, offset=off)) + w + v + yl
 ```
@@ -1349,7 +1349,7 @@ h <- function(x) {
   z
 	}
 f <- Glm(aces ~ offset(log(stdpop)) + gTrans(time, h),
-         data=d, family=poisson, x=TRUE, y=TRUE) # x, y for LRTs
+         data=d, family='poisson', x=TRUE, y=TRUE) # x, y for LRTs
 f$aic
 times <- sort(c(seq(0, 60, length=200), 36.999, 37, 37.001))
 ggplot(Predict(f, time=times, fun=g, offset=off)) + w + v + yl
@@ -1380,11 +1380,119 @@ Get a joint LR test of seasonality and discontinuity by omitting 3 terms from th
 
 ```{r}
 g <- Glm(aces ~ offset(log(stdpop)) + rcs(time, k),
-         data=d, family=poisson)
+         data=d, family='poisson')
 lrtest(f, g)
 ```
 
 <!-- NEW -->
+
+## Contrasts and Model Reparameterization {#sec-genreg-repar}
+
+Contrasts allow one to estimate and test any kind of effects that are napped to the model's regression parameters.  Examples in @sec-genreg-prior show how far you can take this idea, including double difference contrasts for estimating interaction effects or degree of nonlinearity.  The `rms` package `contrast.rms` function makes it easy to estimate contrasts to get estimates such as the effect of age changing from 30 to 50 for males.  Contrasts are just differences in predicted values, so all that's needed is to specify the design matrices for one condition vs. another and to subtract these two matrices and multiply this difference by $\hat{\beta}$.  A standard formula is used to compute standard errors of such contrasts which leads to Wald confidence intervals.
+
+Since Wald confidence intervals for contrasts are so easy to compute, it is tempting to always compute contrasts in an after-fitting step.  This is optimal for bootstrapping, or for Bayesian models where the contrast is computed separately for each posterior draw, leading to posterior samples of the contrasts, which are summarized exactly as basic parameters are summarized (posterior median, highest posterior density uncertainty interval, etc.).  But in a frequentist setting outside of a standard Gaussian linear model, Wald confidence intervals are not ideal.  For example the sampling distribution of the contrast may be asymmetric, so symmetric confidence intervals may have poor coverage on at least one side.  In addition, Wald confidence intervals may inconsistent with gold-standard likelihood ratio $\chi^2$ tests, whereas profile likelihood confidence intervals are consistent with them.
+
+To compute profile likelihood confidence intervals on a contrast, one must reparameterize the model with $p$ parameters so that the contrast is represented by a single variable, with the model's $p-1$ parameters reparameterized so that the contrast and the $p-1$ parameters span the same space as the original model.  This allows profile likelihood algorithms to fix the contrast "parameter" at a given constant $c$, compute maximum likelihood estimates of the remaining new parameters, and repeat this process many times to solve for the two values of $c$ such that the interval between them is the set of values that if hyothesized to be true would not lead to rejection of the null using the likelihood ratio $\chi^2$ test.
+
+How does one derive the "contrast variable" and the remaining $p-1$ variables?  How can the contrast variable be constructed so that its estimated regression coefficient is exactly equal to the estimated contrast?  This is a useful exercise in understanding regression model algebra even if not using profile likelihoods.
+
+Consider a very simple case where the model is $E(Y | X=x) = \beta_{0} + \beta_{1}x_{1} + \beta_{2}x_{2} = f(x_1, x_2)$, where the vector $x$ is $[x_1, x_2]$.  Suppose the contrast of interest is just $\beta_1$, i.e., the contrast is $f(1, a) - f(0, a)$.  The setting for $x_2$, $a$, is irrelevant and will cancel out since $x_1$ and $x_2$ do not interact.  Se we are not reparameterizing the model; the matrix multiplication that translates from the original $x$ space to the new space involves a $2\times 2$ identity matrix, and one fits the model with the original $x$ values to get the contrast of interest as the $\hat{\beta_1}$.
+
+Next consider a more meaningful case there the contrast of interest is $\beta_1 - \beta_2$.  Intuition tells us that the rephrasing of parameters needed for the model's second variable is $\beta_1 + \beta_2$ which is orthogonal to the first combination.  Let's use a general procedure to derive this second parameter.  If we augment the first new parameter with the identity matrix that represents the original model, a singular value decomposition will yield the second variable that will make the modified model span the same space as the original.  The R code below demonstrates this.
+
+```{r}
+p <- 2                   # number of non-intercept parameters
+D <- c(1, -1)            # contrast of interest
+C <- rbind(D, diag(p))   # diag(p) is 2x2 identity matrix
+C
+s <- svd(C)
+s
+v <- s$v[, 2 : p, drop=FALSE]
+v
+```
+
+The coefficients of $x_1$ and $x_2$ in `v` are the same, so the second parameter is associated with the sum of $x_1$ and $x_2$, with an arbitrary scaling constant.
+
+Now consider a more interested case.  A model has a predictor $x$ that is modeled with an ordinary cubic polynomial plus a discontinuity at $x=3$ and includes another covariate $z$: 
+
+$$
+\begin{aligned}
+E(Y | x, z) = f(x, z) &= \beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3 \\
+                      &+ \beta_4 [x > 3] + \beta_5 z
+\end{aligned}
+$$
+
+Here $[s]$ is a 0/1 indicator variable for the truth of assertion $s$.  Our contrast of interest is $f(3, a) - f(1, a)$ which is $2\beta_1 + 8\beta_2 + 26\beta_3$.  $a$ cancels out and $\beta_4$ is not involved either since $x \leq 3$ for both contrast predictor settings.  We need to create a new variable $u$ that, when adjusted for the correct parameterization of the other variables, will result in a regression coefficient that is exactly $2\beta_1 + 8\beta_2 + 26\beta_3$ in the original $\beta$s.  Try $u = (\frac{x}{2} + \frac{x^2}{8} + \frac{x^3}{26}) / 3$.  Simulate some data and use the singular value decomposition to solve for the matrix to multiply the design matrix by to reparameterize the other parts of the model.  Below `xc` (`x` contrast variable) is $u$.
+
+```{r}
+set.seed(1)
+n   <- 100; b0=3; b1=1; b2=.2; b3=.05; b4=1; b5=2
+x   <- 2 * rnorm(n)
+z   <- rnorm(n)
+res <- 2 * rnorm(n)
+d  <- data.frame(x, z)
+dd <- datadist(d); options(datadist='dd')
+y  <- b0 + b1*x + b2*x^2 + b3*x^3 + b4*(x > 3) + b5*z + res
+# Form a general transformation function fo x
+g <- function(x) cbind(x=x, x2=x^2, x3=x^3, x4=x > 3)
+f  <- orm(y ~ gTrans(x, g) + z, x=TRUE, y=TRUE)
+f
+# For the contrast matrix setting z arbitrarily to pi
+X1 <- predict(f, data.frame(x=1, z=pi), type='x')
+X2 <- predict(f, data.frame(x=3, z=pi), type='x')
+rbind(X1, X2)
+D <- X2 - X1
+D
+D %*% coef(f)[- (1 : num.intercepts(f))]
+p <- ncol(D)
+C <- rbind(D, diag(p)); C
+s <- svd(C); s
+
+# Need to account for a scaling constant used in SVD
+v <- s$v * sqrt(sum(D ^ 2))
+v
+v <- s$v / sqrt(sum(D ^ 2))   # do the reverse when solving for x
+v
+# Get original design matrix and rotate it
+# Contrast of interest is in the 1st column, all other columns
+# are orthogonal to that
+X <- f$x
+Z <- X %*% v
+orm(y ~ Z)
+```
+
+<!--
+# Put single d.f. contrast in first column
+# For each nonzero element of D add the original X column divided by that D element
+xc <- rep(0, n)
+for(i in 1 : length(D))
+  if(D[i] != 0) xc <- xc + X[, i] / D[i]
+# Divide by number of non-zero D's so that when adding all these xc components we get 0-1 scale for 
+# contrast of interest
+xc <- xc / sum(D != 0)
+
+other <- X %*% v
+g <- ols(y ~ xc + other)
+g
+-->
+
+Compute the contrast on the original variables and compare to the coefficient of `xc`.
+
+```{r}
+k <- contrast(f, list(x=3), list(x=1))
+k
+p <- Predict(f, x=c(1,3))
+diff(p$yhat)
+```
+
+Repeat using the more accurate profile likelihood method, which makes use of the singular value decomposition like the one above.
+
+```{r}
+contrast(f, list(x=3), list(x=1), conf.type='profile')
+```
+
+Note that singular value decompositions have arbitrary signs.  The `contrast` function does any needed sign reversal so that the contrast matches the original one.
+
 
 ## Bayesian Modeling {#sec-genreg-bayes}
 
@@ -1432,7 +1540,7 @@ Interactions bring special problems to estimation and inference.  In the best of
 * use a (low power) test for interaction to decide how to analyze the treatment effect, and ignore such pre-testing when doing a statistical test (that will not preserve $\alpha$) or computing a confidence interval (that will not have the nominal $1 - \alpha$ coverage)
 * use the pre-specified model with interaction, resulting in low precision because of having no way to borrow information across levels of the interacting factor
 
-### Help in Specifying Priors
+### Help in Specifying Priors {#sec-genreg-prior}
 
 To gain the advantages of Bayesian modeling described above, doing away with binary decisions and allowing the use of outside information, one must specify prior distributions for parameters.
 It is often difficult to do this, especially when there are nonlinear effects (e.g., splines) and interactions in the model.  We need a way to specify priors on the original $X$ and $Y$ scales.  Fortunately `Stan` provides an elegant solution.

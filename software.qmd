@@ -315,6 +315,8 @@ summary(fit, age=c(50,60,70))    # Increase age from 50 to 70, adjust to
 contrast(fit, list(treat='b', cholesterol=c(150,200,250)),
               list(treat='a', cholesterol=c(150,200,250)),
          type='average')
+# Add conf.type='profile' got get more accurate profile likilihood CIs
+# as well as likelihood ratio tests for contrasts.
 # See the help file for contrast.rms for several examples of
 # how to obtain joint tests of multiple contrasts and how to get
 # double differences (interaction contrasts)

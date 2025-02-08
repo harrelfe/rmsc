@@ -92,7 +92,6 @@ v <- vClus(d, fracmiss=0.8, corrmatrix=TRUE,
            spcfile='bacteremia-spc.rds')   # uses previous run if no inputs changed
 
 htmlVerbatim(v$transace)
-saveRDS(v, '/tmp/v.rds')
 ```
 
 ```{r}

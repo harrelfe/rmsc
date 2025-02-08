@@ -197,7 +197,7 @@ x2 <- rnorm(n)
 x3 <- rnorm(n)
 x4 <- rnorm(n)
 x5 <- rnorm(n)
-y  <- x1 + x2 + rnorm(n)
+y  <- round(x1 + x2 + rnorm(n), 2)
 d  <- data.frame(x1, x2, x3, x4, y)
 f  <- orm(y ~ pol(x1, 2) * pol(x2, 2) + x3 + x4 + x5,
           x=TRUE, y=TRUE)  #<2>
@@ -217,12 +217,18 @@ plot(a, what='proportion chisq', sort='ascending') #<1>
 ```
 1. Plots ratios of partial $\chi^2$ to total model LR $\chi^2$.  `ascending` is really a misnomer.
 
+Let's use the bootstrap to get uncertainty intervals for relative explained variation.  Note that for this small sample size, bootstrap parameter estimates are highly unstable and have standard errors that are about $4\times$ larger than the estimates from maximum likelihood estimation.  We tell `bootcov` to only retain intercepts that target the median of `y`.
+
 ```{r}
 #| label: fig-val-rex
 #| fig-cap: Relative explained variation due to each predictor.  Interaction effects are added to main effects.  Intervals are 0.95 bootstrap percentile confidence intervals.
 #| fig-height: 3.5
-g <- bootcov(f, B=300)
-plot(rexVar(g, data=d))
+# Have bootcov save only one intercept for each fit: the one corresponding to the
+# median of y
+g <- bootcov(f, B=300, ytarget=NA)
+rx <- rexVar(g, data=d)
+rx
+plot(rx)
 ```
 
 ## The Bootstrap {#sec-val-boot}

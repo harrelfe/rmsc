@@ -1,4 +1,5 @@
 #! /bin/bash
 
+echo "To recompiled EVERTHING first run this:\nmv fmival.rds fmi.rds fig-lrm-simerr.rds bacteremia-transace.rds cfmissmeth.rds sanova.rds aregi.rds valbworm.rds bt.rds bacteremia-spc.rds bacteremia-aregimpute.rds markov-boot.rds /tmp"
 rm -rf .quarto/_freeze
 quarto render

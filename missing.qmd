@@ -27,13 +27,14 @@ See @haz23tri for a way to indirectly detect MNAR by comparing variances of resp
 * Quantify extent of missing data `r ipacue()`
 * Characterize types of subjects with missing data
 * Find sets of variables that are missing on same subjects
-
+ 
 
 ## Missing Values for Different Types of Response Variables
 
 * Serial data with subjects dropping out (not covered in this `r ipacue()`
   course^[@twi13mul found instability in using multiple imputation of longitudinal data, and advantages of using instead full likelihood models.]
 <!-- TODO twi13mul is epub--->
+* Excellent tutorial on imputation of longitudinal data: @wij25mul
 * $Y$=time to event, follow-up curtailed: covered under survival
   analysis^[@whi09imp provide a method for multiply imputing missing covariate values using censored survival time data.]
 <!-- NEW following: -->

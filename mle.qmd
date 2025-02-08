@@ -126,9 +126,10 @@ The Wald $\chi^2$ for `x2` is 0.26 but the much better LR $\chi^2$ is very large
   
 * LR and score-based confidence intervals also exist. However, they are computationally more intensive than the confidence interval based on the Wald statistic
 
-* Profile likelihood confidence intervals are probably best.  See [here](https://stats.stackexchange.com/a/588832/4253) for a nice example showing how to compute profile intervals on derived parameters.
+* Profile likelihood confidence intervals are probably best.  See [here](https://stats.stackexchange.com/a/588832/4253) for a nice example showing how to compute profile intervals on derived parameters.  The `rms` package `contrast.rms` function computes profile likelihood intervals and likelihood ratio test statistics for general contrasts.  The method for reparameterizing the model to allow this is covered in @sec-genreg-repar.
 
-<!-- added 2022-09-16 -->
+<!-- added 2022-09-16   2025-01-11 -->
+
 
 ---
 

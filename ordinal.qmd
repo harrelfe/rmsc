@@ -284,6 +284,15 @@ ggplot(u, aes(x, z, color=frame)) + geom_step() +
   xlab(hlab(glyhb))   # hlab is in Hmisc; looks up label in d
 ```
 
+See how these distributions are reflected in proportional odds model intercepts.
+
+```{r ints}
+#| fig-height: 2.75
+#| fig-width: 3.5
+f <- orm(glyhb ~ frame, data=d)
+plotIntercepts(f)
+```
+
 ### Quantifying Predictive Ability
 
 
