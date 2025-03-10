@@ -82,10 +82,11 @@ ac <- upData(ac, print=FALSE,
 
 # Show normal inverse Kaplan-Meier estimates
 # stratified by dzgroup
-survplot(npsurv(S ~ dzgroup, data=ac), conf='none',
-         fun=qnorm,logt=TRUE)
+ggplot(npsurv(S ~ dzgroup, data=ac), conf='none',
+       trans='probit', logt=TRUE)
 ```
 
+<!-- ggplot is new -->
 
 More stringent assessment of log-normal assumptions: check
 distribution of residuals from an adjusted model:  `r ipacue()` 

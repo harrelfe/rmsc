@@ -272,6 +272,7 @@ spar(bty='l')
 tt <- c(1,3,3,6,8,9,10)
 stat <- c(1,1,1,0,0,1,0)
 S <- Surv(tt, stat)
+# ggplot(npsurv(S ~ 1)) for prettier output if n.risk=FALSE
 survplot(npsurv(S ~ 1), conf="bands", n.risk=TRUE, xlab="t")
 survplot(npsurv(S ~ 1, type="fleming-harrington", conf.int=FALSE),
          add=TRUE, lty=3)
@@ -506,7 +507,7 @@ plot(f, conf.int=TRUE, mark.time=TRUE, mark=3, col=1, lty=1,
      xlab="", ylab="", xaxs="S", ...)
 ```
 
-This invokes `plot.survfit`.  More options: use `npsurv` and
+This invokes `plot.survfit`.  More options: use `npsurv`, `ggplot.npsurv`, and
 `survplot` in `rms`
 for other options that include automatic curve labeling and showing
 the number of subjects at risk at selected times.
@@ -520,6 +521,7 @@ require(rms)
 units(y) <- "Year"
 f <- npsurv(Surv(y, stat) ~ treatment)
 survplot(f, ylab="Fraction Pain-Free")
+ggplot(f, ylab='Fraction Pain-Free')
 ```
 
 * `bootkm` function in `Hmisc` bootstraps

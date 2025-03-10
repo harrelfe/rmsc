@@ -10,6 +10,8 @@ hooktime()
 
 # Missing Data {#sec-missing-data}
 
+`r quoteit("Consider a study of the effectiveness of a cardiac rehabilitation program.  Suppose a sample size of N=300 will result in an acceptable margin of error in estimating the overall treatment effect.  The investigator allows for 20% dropout so multiplies N by 1/0.8 = 1.25.  What serious mistake is she likely making?")`
+
 ## Types of Missing Data
 `r mrg(sound("missing-1"))`
 

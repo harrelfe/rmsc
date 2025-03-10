@@ -156,6 +156,44 @@ print(r, row.names=FALSE)
 * There is non-parallelism for the logit model
 * Other graphs will be used to guide selection of an ordinal model below
 
+The `rms` `ordParallel` function makes it easy to vary coefficients over a continuum of cutoffs, and it has a algorithm for choosing cutpoints given a specify maximum number of cutoffs.  As this allows different predictors to have different amounts of non-parallelism, this may be preferred to the 6-tiles approach.
+
+```{r}
+f <- orm(gh ~ rcs(age,5) + sex + re + rcs(bmi, 3), data=w, x=TRUE, y=TRUE)
+ordParallel(f)
+```
+
+When there are multiple terms, it is difficult to interpret this plot.  There is an option to combine all the terms for each predictor into a single partial linear predictor.  Then y-varying effects are assessed with respect to this predictor summary measure.  By default these partial linear predictors are scaled by their inter-quartile-range over observations so that weak predictors will not have exaggerated/irrelevant y-cutoff-dependencies.
+
+```{r}
+ordParallel(f, terms=TRUE)
+```
+
+The above two plots were for the logit link.  Re-run using the log-log link.
+
+```{r}
+f <- orm(gh ~ rcs(age,5) + sex + re + rcs(bmi, 3), family='loglog',
+         data=w, x=TRUE, y=TRUE)
+ordParallel(f, terms=TRUE)
+```
+
+Effects appear to be more constant.
+
+`ordParallel` has an `onlydata` option to make it produce a data frame instead of a graphic.  The data frame is a stacked version of all the one-number "terms" summaries.  The number of observations in the stacked data frame will be the number of cuts multiplied by the number of observations.  A variable `obs` is included in the data frame so that one can see which original observation numbers correspond to each row of the stacked data.  `obs` can be used as the `cluster` argument to `rms::robcov` to get robust cluster sandwich variance-covariance matrix estimates.  These can be used to get wald tests for interactions between cutoffs and covariate, i.e., tests of parallelism.  The following example shows how to do this for the two link functions.
+
+```{r}
+testpar <- function(form, link) {
+  f  <- orm(form, data=w, family=link, x=TRUE, y=TRUE)
+  do <- ordParallel(f, onlydata=TRUE, maxcuts=30)
+  g  <- orm(Yge_cut ~ (age + sex + bmi + re) * Ycut, data=do, x=TRUE, y=TRUE)
+  h  <- robcov(g, do$obs)
+  print(anova(h))
+  invisible()
+}
+form <- gh ~ rcs(age,5) + sex + re + rcs(bmi, 3)
+testpar(form, 'logistic')    # Chunk test for global parallelism 151.17
+testpar(form, 'loglog')      # Chunk test 140.8
+```
 
 ## Quantile Regression {#sec-cony-quantile-regression}
 
@@ -777,7 +815,7 @@ p <- rbind('casewise deletion'    = pgc,
            'basic bootstrap'      = bootclb,
            'percentile bootstrap' = bootclp,
            'multiple imputation'  = multimp)[, .q(age, yhat, lower, upper, .set.)]
-m <- melt(p, id.vars=c('age', '.set.'))
+m <- melt(as.data.table(p), id.vars=c('age', '.set.'))
 
 ggplot(m, aes(x=age, y=value, color=.set.,
               group=paste(variable, .set.))) + geom_line() +

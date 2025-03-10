@@ -363,7 +363,6 @@ When $T$ is right-censored, $r$ is right-censored.
 knitr::include_graphics('parsurv-aft-assumption-t.png')
 ```
 
-
 ```{r out.width='85%',echo=FALSE}
 #| label: fig-parsurv-aft-assumption-x
 #| fig-cap: "AFT model with one continuous predictor. $Y$-axis is $\\psi^{-1}(S(t|X)) = \\frac{\\log(t)-X\\beta}{\\sigma}$. Drawn for $t_{2}>t_{1}$.  The slope of each line is $\\beta_{1}/\\sigma$ and the difference between the lines is $\\frac{1}{\\sigma}\\log(t_{2}/t_{1})$."
@@ -392,19 +391,12 @@ survplot(f, n.risk=TRUE, conf='none',
          label.curves=list(keys='lines'), levels.only=TRUE)
 title(sub="Nonparametric estimates", adj=0, cex=.7)
 # Check fits of Weibull, log-logistic, log-normal
-xl <- c(4.8, 5.9)
-survplot(f, loglog=TRUE, logt=TRUE, conf="none", xlim=xl,
-         label.curves=list(keys='lines'), levels.only=TRUE)
-title(sub="Weibull (extreme value)", adj=0, cex=.7)
-survplot(f, fun=function(y)log(y/(1-y)), ylab="logit S(t)",
-         logt=TRUE, conf="none", xlim=xl,
-         label.curves=list(keys='lines'), levels.only=TRUE)
-title(sub="Log-logistic", adj=0, cex=.7)
-survplot(f, fun=qnorm, ylab="Inverse Normal S(t)",
-         logt=TRUE, conf="none",
-         xlim=xl,cex.label=.7,
-         label.curves=list(keys='lines'), levels.only=TRUE)
-title(sub="Log-normal", adj=0, cex=.7)
+ggplot(f, trans='loglog', logt=TRUE, conf='none') +
+  labs(title='Weibull (extreme value)')
+ggplot(f, trans='logit',  logt=TRUE, conf='none') + 
+  labs(title='Log-logistic')
+ggplot(f, trans='probit', logt=TRUE, conf='none') +
+  labs(title='Log-normal')
 ```
 Fit Weibull (in aft form), log-logistic, and log-normal models.
 
@@ -444,6 +436,26 @@ survplot(f, conf.int=FALSE,
          levels.only=TRUE, label.curves=list(keys='lines'))
 survplot(fl, add=TRUE, label.curves=FALSE, conf.int=FALSE)
 ```
+
+<!-- NEW -->
+
+Let's plot this another way
+
+```{r}
+np <- summary(f)
+np <- with(np, data.frame(group=strata, time, surv, lower, upper))
+np$group <- substring(np$group, 7)
+ll <- survplot(fl, group, conf.int=0.95, ggplot=TRUE, onlydata=TRUE)
+w <- rbind(data.frame(method='KM', np),
+           data.frame(method='Log-logistic', ll))
+# geom_stepconfint is in Hmisc
+ggplot(w, aes(x=time, y=surv)) + geom_step(aes(color = method)) +
+  geom_stepconfint(aes(ymin=lower, ymax=upper, fill=method), alpha=0.15) +
+  facet_wrap(~ group) +
+  labs(x='Days', y='Survival Probability')
+```
+
+Now make a stringent assessment of the fit with respect to the distributional assumption of a parametric survival model.
 
 ```{r scap='Checking AFT distributional assumption using residuals',cap='Kaplan-Meier estimates of distribution of standardized, censored residuals from the log-logistic model, along with the assumed standard log-logistic distribution (blue).  Red step function is the estimated distribution of all residuals; black step functions are the estimated distributions of residuals stratified by group, as indicated.'}
 #| label: fig-parsurv-kprats-resid-np

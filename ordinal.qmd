@@ -293,6 +293,9 @@ f <- orm(glyhb ~ frame, data=d)
 plotIntercepts(f)
 ```
 
+<!-- NEW -->
+Especially for continuous predictors, the `rms` package `ordParallel` provides graphical and formal assessments of proportionality (adequacy of link).  See @sec:cony for an example.
+
 ### Quantifying Predictive Ability
 
 
