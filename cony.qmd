@@ -109,7 +109,7 @@ solving for $\hat{\beta}$ to minimize $\sum (Y_{i} - X \hat{\beta})^{2}$.
 <!--   (selected quantiles of continuous predictors' marginal distributions)--->
 
 
-### Checking Assumptions of OLS and Other Models
+### Checking Assumptions of OLS and Other Models {#sec-cony-checkass}
  
 * First see if `gh` would make a Gaussian residuals model fit `r ipacue()`
 * Use ordinary regression on 4 key variables to collapse into one
@@ -194,6 +194,14 @@ form <- gh ~ rcs(age,5) + sex + re + rcs(bmi, 3)
 testpar(form, 'logistic')    # Chunk test for global parallelism 151.17
 testpar(form, 'loglog')      # Chunk test 140.8
 ```
+
+Finally, the `rms` `Olinks` function computes deviance measures for a series of link functions.  Though this may not detect Y-dependency of effects (nonparallelism) with respect to a single predictor, it is useful for choosing the overall model. Model fits are automatically re-run by `Olinks` for a series of links not used in the current fit.
+
+```{r}
+Olinks(f)
+```
+
+Oddly, the logit link had the smallest deviance.  More study of comparing deviances is needed.
 
 ## Quantile Regression {#sec-cony-quantile-regression}
 

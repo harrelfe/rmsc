@@ -199,6 +199,7 @@ kableExtra, pcaPP, VGAM, MASS, leaps, rpart
 
 | Date | Sections | Changes |
 |:---|:-|:--------|
+| 2025-03-10 | [-@sec-cony-checkass]  | Added usage of `ordParallel` and `Olinks` |
 | 2025-03-01 | [-@sec-ordsurv]        | New chapter on survival analysis with ordinal regression |
 | 2025-02-23 | [-@sec-parsurv-assess] | Replaced some `survplot()`s with the new `ggplot.npsurv` method |
 | 2025-01-03 | [-@sec-genreg-repar]   | New section on reparameterizing models to make contrast coefficients and set up for profile likelihood |
