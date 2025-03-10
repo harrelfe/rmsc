@@ -1,0 +1,641 @@
+```{r include=FALSE}
+require(Hmisc)
+options(qproject='rms', prType='html')
+require(qreport)
+getRs('qbookfun.r')
+hookaddcap()
+knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.scap')
+```
+
+# Ordinal Semiparametric Regression for Survival Analysis {#sec-ordsurv}
+
+## Background
+
+This chapter considers methods for typical survival analyses used for analyzing time until a single type of event occurs, without competing risks.  Most applications involve right-censoring, to handle subjects who have not been followed long enough to have an event observed.
+
+The most popular methods used in this setting are the Kaplan-Meier survival curve estimator for homogeneous groups, and the Cox proportional hazards (PH) model for modeling covariates and also possibly including strata whose effects are not parameterized but which induce differently-shaped survival curves.  [This can be thought of as providing adjusted Kaplan-Meier curves]{.aside}
+
+The Cox PH model uses the marginal distribution of ranks of failure times that come from an underlying Gumbel extreme-value distribution $\exp(-\exp(t))$.  This gives rise to proportional hazards effects of covariates, and the Cox _partial likelihood_ that does not involve the underlying hazard or survival curve for a "standard" subject, e.g., a subject with all covariates equal to their mean.  This implies that maximum partial likelihood estimates can be calculated very quickly without dealing with intercepts in the model.  But the extreme value distribution is the **only** distribution for which the multi-dimensional integration that results in the marginal likelihood is tractable.  That isolates Cox PH from all the other survival model forms that do not use partial likelihood.
+
+Instead of seeking partial likelihood solutions, full semiparametric likelihoods can be used.  That allows extension of the Cox model semiparametric theme to any distribution, because with semiparametric models the intercepts are estimated simultaneously with $\beta$.  Sparse matrix operations allow full likelihood to be as fast as using the Cox partial likelihood, so some of the issues that originally motivated the Cox model are moot.  And unlike the Cox model, semiparametric ordinal models handle left- and interval-censoring.  As will be seen below, ordinal models also unite PH and accelerated failure time (AFT) models.  In essence, one ordinal model encompasses all of single-event-type survival analysis, with different link function choices giving rise to the complete PH-AFT spectrum and beyond.  For AFT, ordinal models have an incredibly important advantage of not assuming a specific transformation of time, such as the commonly used $\log(t)$ transformation that gives rise to log-logistic, log-normal, and log-$t$ survival models when for example the residuals actually follow logistic, normal, or $t$ distributions.
+
+## Cumulative Probability Models
+
+Cumulative probability ordinal models (CPMs) are natural for survival analysis.  For a distribution family $F$, the usual model
+
+$$
+P(Y \geq y | X) = F(\alpha_{y} + X\beta)
+$$
+
+automatically provides the survival function
+
+$$
+S(t | X) = P(T > t | X) = F(\alpha_{t+} + X\beta)
+$$
+
+where $\alpha_{t+}$ is the next intercept after $\alpha_t$.
+
+### CPMs and Censoring
+
+Consider any semiparametric regression model in the class of cumulative probability models.  It is easy to modify the likelihood function for such a model to make optimum use of incomplete dependent variable information due to left, right, and interval censoring.  The `rms` package `orm` function starting with version 7.1 handles these censoring patterns.  The `rms` `Ocens` function is used instead of the `survival` package `Surv` function, to specify censoring details and to package the results in a 2-column matrix.  `Ocens` takes two numeric variables `a, b`.  For a complete observation, `a`=`b`.  For a left-censored observation, `a` is $-\infty$, coded in r as `-Inf` and `b` is finite.  For a right-censored observation, `a` is finite and `b` is $\infty$, coded as `Inf`.  For example, an observation that is right-censored at 2 years may be coded as `(2, Inf)`.  An interval censored observation has both `a` and `b` numeric but `b` > `a`.  This is considered to be a closed interval inclusive of the endpoints.  Left- and right-censored intervals are assumed to be exclusive, e.g., `(2, Inf)` stands for "we know that the true event time is greater than 2".
+
+The `rms` `orm` function takes a user-specified `Ocens` object and runs it through the `Ocens2ord` function to do the recoding into a discrete ordinal variable.  If there is no censoring, the response variable `Y` is simply recoded to an integer vector based on the unique (to within $10^{-7}$ by default) values occurring in the data.  For left- or right- censoring, censored values are recoded to the next inward uncensored value and considered censored at that open-interval value.  All censored values that are beyond the outermost uncensored values are coded at the innermost censored value that is beyond the most extreme uncensored value, and a new uncensored category is created at this value.  For right censoring, this process makes the maximum likelihood estimates (MLE) of the model intercepts, when there no covariates, exactly equal the link function of Kaplan-Meier estimates.  When the highest coded value is right-censored at say a value $y$, the predicted value of $P(Y \geq y)$ will be greater than 0, so the resulting survival curve will not be observed to drop to zero.  If the highest observation is uncensored, the estimated survival curve will drop to zero at that point.
+
+For interval censoring, the process of converting general intervals to ordered categories is a complex one involving _Turnbull intervals_ which requires one to iterate to remove intervals that do not contribute to the likelihood function.  `Ocens2ord` has two algorithm for interval consolidation, one based on consolidating parameters and one on consolidating data.  Except in rare situations such as having certain patterns of tied times in the data, the MLEs are exactly the Turnbull nonparametric interval-censored survival probability estimates transformed by the link function.
+
+Related resources and important background publications by several authors may be found [here](https://hbiostat.org/papers#ordcens).
+
+## Special Cases of Ordinal Cumulative Probability Models
+
+There are important implications of the generality, robustness, and efficiency of ordinal regression for censored data just as there are for uncensored data.  The generality of cumulative probability models (CPMs) allows them to bridge binary, discrete, and continuous ordinal regression to survival analysis and simple statistical tests, and would present major didactic simplifications for statistics courses.  Ordinal regression covers all the following special cases.
+
+* An ordinal regression with logit link and only 2 Y levels is binary logistic regression
+* The score test in binary logistic regression is the Pearson $\chi^2$ test
+* The score test in proportional odds regression is the Wilcoxon statistic
+* The score test in a log-log link ordinal model is the logrank statistic
+* Ordinal regression for continuous Y with a probit link essentially has the linear model as a special case without needing to know how to transform Y for modeling
+* When there is only right censoring and no covariates, the estimated survival curve from ordinal regression is exactly the Kaplan-Meier estimate
+   + The link function is irrelevant for the survival point estimates
+   + Different link functions will give rise to different confidence intervals
+   + Example: A log-log link gives identical confidence intervals to Kaplan-Meier intervals using the standard error of log-log survival 
+* For interval-censored data, survival estimates with no covariates are almost exactly Turnbull estimates
+* Parametric accelerated failure time models are special cases of ordinal models with probit or logit links
+   + They are special cases because they assume that time is correctly transformed (it is usually logged) to make the residuals have a specific distribution
+   + normal survival time model is a special case of a probit ordinal model where the intercepts are linearly related to the times they represent
+   + log-normal survival time model is a special case of a probit model with intercepts as linear functions of log time
+   + The ordinal model provides results that are independent of any time transformation that is monotonically increasing
+* The Cox PH model is a special case of an ordinal model with a log-log link.  @cox72 developed a partial likelihood approach so make estimation of regression coefficients very easy and fast.  This approach required the intercepts (underlying survival curve) to be estimated in a second step once $\hat{\beta}$ were computed.  There is a degree of arbitrariness in this approach, and methods for computing confidence intervals for estimated survival probabilities are complex.  Ordinal models use full likelihood so they estimate the intercepts simultaneously with $\beta$.  This is about as fast as just estimating $\beta$ with Cox PH, because with right censoring the hessian matrix for ordinal models is extremely sparse, so inverting its negative in order to get the covariance matrix is extremely fast even with hundreds of thousands of distinct failure times.
+
+## The Continuum of Links
+
+CPMs exist for an array of link functions representing distribution families, each link function giving rise to a different way that changes in covariate values change the distribution of Y.  But the likelihood function used as an objective function against which to estimate intercepts $\alpha$ and regression coefficients $\beta$ has the same form for all links, and all links involve the same number of $\alpha$ and $\beta$.  With CPMs with different links we find that
+
+* When there are no covariates or $\hat{\beta} = 0$, the estimated probabilities that $Y\geq y$ or that $Y=y$ are the same for all links.
+* Thus the deviance (-2 log likelihood) for the null model (no $\beta$) is the same for all links.
+
+This and all links having the same likelihood structure have important implications in favor of using the deviance, or equivalently the model likelihood ratio $\chi^2$ statistic or AIC, for link selection.  The `rms` `Olinks` function facilates the calculations as shown in examples below.  Compare this with trying to compare the deviance of a Cox PH model with that of a parametric accelerated failure time model. [Better fitting models (up to the point of overfitting) probably have sharper probability estimates, i.e., estimates further from 0.5.  This rewards the deviance by making it smaller.  Ill-fitting models tend to be conservative about $\hat{\alpha}$ and $\hat{\beta}$, leading to cell probability (likelihood probability elements) closer to 0.5 and hence worse AIC and pseudo $R^2$.]{.aside}
+
+## Effective Sample Sizes
+
+Ordinal models give us a new opportunity to estimate _effective sample size_ (ESS), i.e., the number of uncensored observations that has the same statistical information as our mixture of censored and uncensored observations.  A new option `lpe` ("likelihood probability element") to `orm` will cause `orm.fit` to save an $N$-vector of `lpe`s in the fit object.  These are the log-likelihoods contributed by each observation.  By setting the ESS for all the uncensored observations to the number $u$ of such observations, one can solve for a multiplier of -2 log likelihood that makes the scaled -2 LL of these $u$ observations add up to $u$.  The multiplier is then used to scale the -2 LL for the uncensored observations to estimate their ESS. [The Cox model does not provide a per-observation ESS because the likelihood is computed only for _risk sets_ not for individual observations.]{.aside}
+
+## The `rms` Package for Survival Analysis Using Ordinal Regression
+
+Many general functions apply to all `rms` model fitting functions, e.g.
+
+* `Function`: generates an R function expressing the model's linear predictor
+* `Predict`: easy calculation of predicted value and confidence limits
+* `nomogram`: plots nomograms
+* `anova`: comprehensive ANOVA table
+* `summary`: single-number effect estimates
+* `contrast`: general contrasts and profile likelihood confidence intervals
+* `validate`: resampling validation of model performance metrics
+* `calibrate`: resampling overfitting-corrected calibration curves
+* `latex`: express the fitted model in mathematical form using $\LaTeX$ markup
+
+The `rms` `orm` function has been generalized in version 7.1 to handle general censoring patterns, and there are several new `rms` functions that use `orm` fits to produce output that is especially suited for survival analysis:
+
+* `Ocens`: packages survival and censoring times into a two-column matrix
+* `Ocens2ord`: converts `Ocens` objects to discrete ordinal codes
+   + Makes adjustments for left, right, interval censoring
+   + Each observation must be associated with one or two ordinal model intercepts
+   + Censored observations must use existing intercept parameters that are defined by distinct uncensored values
+   + E.g. an observation right-censored at 4 years considers the point to be right-censored at 3.9 years if the last uncensored value before 4y was 3.9
+   + Observations censored after the last uncensored time point are very informative and cause creation of a new final uncensored category at the lowest of such censoring times, plus a small time increment to indicate the open interval involved
+   + Interval-censored observations create Turnbull intervals and are given a lot of attention by `Ocens` so that unique likelihood contributions result
+   + The nonparametric survival curve estimates are saved so that the link function of them can be used as started values for MLE, with starting values for $\beta$ equal to zero
+* `survest`: estimate survival probabilities and confidence intervals for subjects described in a data frame
+* `survplot`: plot survival curves and confidence bands for easily-specified covariate combinations
+* `Survival`: generate an R function that computes survival probabilities and confidence limits
+* `Mean`: generate an R function that computes restricted mean survival time
+* `plotIntercepts`: plot intercepts vs. corresponding $y$-values, with optional log scale for $y$; linearity of such plots would indicate that the variable would have been correctly transformed for the corresponding parametric model
+* `ordParallel`: estimate the effects of covariates over time
+   + Re-fits the ordinal model using a sequence of cutoffs to check the adequacy of the link function, i.e., to check parallelism of link-transformed survival curves
+* `ordESS`: computes the effective sample size in the presence of general censoring, and plots per-observation ESS against censoring time (e.g., interval-censored observations with narrower intervals will convey more information)
+* `residuals.orm`: `type='score'` creates a score matrix that respects general censoring; this is used by `robcov` to get robust sandwich covariance estimates
+
+The `Hazard` function generator is not available for ordinal models.  Discrete hazard functions are somewhat easy to compute using the `Survival` and `predict` functions.
+
+In addition to the survival-specific functions there is a new general function in `rms` just for `orm` fits: `Olinks`.  See examples below.
+
+### Rank Discrimination Indexes Computed by `orm`
+
+For uncensored data, `orm` computes Spearman's $\rho$ rank correlation between predicted and observed Y.  There is no version of $\rho$ for censored data.  Somers' $D_{xy}$ has been added to `orm` because this works for both uncensored and censored data.  $D_{xy}$ is $2\times (c - \frac{1}{2})$ where $c$ is the generalized $c$-index or concordance probability, computed extremely quickly by Therneau's `survival` package `concordancefit` function.
+
+## Simple Examples With Goodness of Fit Assessments
+
+* Simulate survival times from two models
+* Exponential distribution with proportional hazards (PH) for the covariate effects
+  + covariate effects are constant over time on the hazard ratio scale
+  + the AFT class and PH intersect for exponential and Weibull models when covariate effects operate multiplicatively on the hazard
+  + $T$ has an AFT model (e.g., $\log(T)$ has a normal, logistic distribution)  
+* An accelerated failure time model -- additive covariate effects with logistic distribution residuals
+  + covariates have decreasing effects over time on hazard ratios
+* For each simulated dataset fit the right model and a wrong model
+* Run model diagnostics
+   + `ordParallel` to check parallelism assumption / link adequacy
+   + Note that neither Cox-Snell residual plots nor smoothed score residual plots are sensitive to lack of fit in this setting; smoothed score residual plots (Schoenfeld residuals) only work for the Cox model
+* Model fits as labeled as follows (`x11` and `x22` are correct models)
+   + f11: exponential data with PH fitted with Cox PH
+   + g11: exponential data with PH fitted with log-log family ordinal model
+   + g12: exponential data with PH fitted with logistic family AFT ordinal model
+   + f21: logistic distribution data with non-PH fitted with the Cox model
+   + g21: logistic distribution data fitted with log-log ordinal model
+   + g22: logistic distribution data fitted with logistic AFT ordinal model
+* Censoring distribution is $U(2, 15)$ and only right censoring is present
+   
+```{r}
+require(rms)
+require(survival)
+require(ggplot2)    # needed for labs(title=...) etc.
+n <- 2000
+set.seed(2)
+cens <- runif(n, 2, 15)
+age  <- rnorm(n, 50, 12)
+sex  <- sample(c('male', 'female'), n, TRUE)
+ran  <- rnorm(n)   # irrelevant random covariate
+# Exponential model with PH
+lp   <- 0.04 * (age - 50) + 0.8 * (sex == 'female')
+h    <- 0.02 * exp(lp)      # hazard function
+t1   <- -log(runif(n))/h    # simulated failure times
+e1   <- t1 <= cens
+sum(e1)              # uncensored obs
+y1   <- pmin(t1, cens)
+S1   <- survival::Surv(y1,  e1)
+Y1   <- Ocens(y1, ifelse(e1, y1, Inf))
+l    <- 13:15
+cbind(t1, cens)[l, ]
+S1[l, ]
+Y1[l, ]
+# Right-censored values beyond the last censored time are very
+# informative, and for them Ocens creates a final uncensored level
+# at the minimum of such censoring times + a tiny increment
+max.uncens <- max(t1[e1])
+min.cens.after.last.uncens <- min(t1[! e1 & (t1 > max.uncens)])
+c(max.uncens, min.cens.after.last.uncens)
+a <- S1[,1]
+b <- S1[,2]
+max(a[b == 1])
+min(a[b == 0 & a > max.uncens])
+m <- which(a == min(a[a > max.uncens & b == 0]))
+S1[m, ]
+Y1[m,, drop=FALSE ]
+l <- 13:15
+S1[l, ]
+Y1[l, ]
+
+# Logistic AFT model
+t2   <- exp(0.5 + lp + rlogis(n) / 3)
+e2   <- t2 <= cens
+sum(e2)
+y2   <- pmin(t2, cens)
+S2   <- survival::Surv(y2, e2)
+Y2   <- Ocens(y2, ifelse(e2, y2, Inf))
+t1 <- round(t1, 2)
+t2 <- round(t2, 2)
+dd <- datadist(age, sex, ran); options(datadist='dd')
+```
+
+First see if we can discern the correct link functions if we knew the true linear predictor.  Stratify this linear predictor into groups each containing 500 subjects, compute Kaplan-Meier estimates stratified by this, and plot the results with 3 transformations of the y-axis, looking at parallelism.
+
+```{r}
+g <- round(cutGn(lp, 500), 2)
+# Compute the number of events per lp group
+table(t1 <= cens, g)
+f <- npsurv(S1 ~ g)
+ggplot(f, trans='loglog', logt=TRUE, conf='none') + labs(title='log-log Link')
+ggplot(f, trans='logit',  logt=TRUE, conf='none') + labs(title='logit Link')
+ggplot(f, trans='probit', logt=TRUE, conf='none') + labs(title='probit link')
+```
+
+Non-parallelism (inadequacy of the link function) is best judged by comparing vertical distance between the outer transformed survival curves.  The probit link clearly does not work, but the logit link and the perfect-fitting log-log link are surprisingly close. This is perhaps related to the simplicity of the first simulation model.
+
+Let's fit a series of models examine fitted linear predictors from the log-log and logit model.  `mscore=TRUE` computes the $n\times p$ score matrix correctly if censoring is present.
+
+```{r}
+f11  <- cph(S1 ~ age + sex + ran, surv=TRUE, x=TRUE, y=TRUE)
+g11  <- orm(Y1 ~ age + sex + ran, family='loglog',   mscore=TRUE, x=TRUE, y=TRUE)
+g12  <- orm(Y1 ~ age + sex + ran, family='logistic', mscore=TRUE, x=TRUE, y=TRUE)
+f21  <- cph(S2 ~ age + sex + ran, surv=TRUE, x=TRUE, y=TRUE)
+g21  <- orm(Y2 ~ age + sex + ran, family='loglog',   mscore=TRUE, x=TRUE, y=TRUE)
+g22  <- orm(Y2 ~ age + sex + ran, family='logistic', mscore=TRUE, x=TRUE, y=TRUE)
+```
+
+### Data Simulated from Exponential Distribution with PH
+
+Compare the models fitted on exponential-distributed survival times in various ways, and check whether better-fitting models have robust standard errors of $\hat{\beta}$ that is closer to the usual standard errors than less-well-fitting models.  Show
+
+* model `print` output
+* comparison $\hat{\beta}$ across models
+* correlation matrix of linear predictors $X\hat{\beta}$ across models
+* usual vs. robust sandwich standard errors
+
+```{r}
+# Compare betas first
+cbetas <- function(fits) {
+  nam <- names(fits)
+  u <- function(f) {
+    k <- num.intercepts(f)
+    if(k == 0) coef(f) else coef(f)[-(1 : k)]
+  }
+  cat('betas:\n\n')
+  print(sapply(fits, u))
+  # Compute correlation matrix of linear predictors
+  cat('\nCorrelations of linear predictors:\n\n')
+  print(round(cor(sapply(fits, function(x) x$linear.predictors)), 5))
+  
+  # Compute SEs from information matrix and from sandwich estimator
+  u <- function(f, nam) {
+    k <- num.intercepts(f)
+    se1 <- if(k == 0) sqrt(diag(vcov(f)))
+            else sqrt(diag(vcov(f, intercepts='none')))
+    se2 <- if(k == 0) sqrt(diag(vcov(robcov(f))))
+            else sqrt(diag(vcov(robcov(f), intercepts='none')))
+    cat('\n', nam,
+        ': standard errors from information matrix and robust sandwich estimator\n\n',
+        sep='')
+    print(round(rbind(Info = se1, Robust=se2), 4))
+    cat('\n')
+  }
+  w <- sapply(names(fits), function(nm) u(fits[[nm]], nm))
+  invisible()
+}
+```
+
+```{r results='asis'}
+fits <- list(Cox=f11, loglog=g11, logit=g12)
+maketabs(fits)
+```
+
+```{r}
+cbetas(fits)
+```
+
+So the model choice is not very relevant for getting estimates on the linear scale as judged by the correlations between $X\hat{\beta}$ all being near 1.0 in absolute value.
+
+Plot effects of predictors over time to check link functions (parallelism assumption).
+
+```{r}
+czph <- function(fit) {
+  z <- cox.zph(fit)
+  cat('cox.zph tests for proportional hazards\n\n')
+  print(z)
+  spar(mfrow=c(2,2))
+  plot(z, resid=FALSE)
+}
+czph(f11)
+```
+
+```{r}
+#| layout-ncol: 1
+ordParallel(g11)
+ordParallel(g12)
+```
+
+* Cox model: Schoenfeld residual plots appear to be flat, and low $\chi^2$ statistics for testing PH
+* log-log link ordinal model: flat effects over time to within the limits of the confidence bands show our limits of estimating time-specific effects
+* logit link: systematic changing of effects over time with meaningful changes in $\hat{\beta}$ for the two relevant variables, indicating time-dependent covariate effects / non-parallelism of logit of $S(t | X)$
+
+Let's see if comparison of links based on log-likelihood measures gives us the same impression about the `orm` models.
+
+```{r}
+Olinks(g11)
+```
+
+The log-log link is the winner.
+
+We know the true survival curves so compare estimated survival curves for selected ages and sexes.
+
+```{r h=8,w=7}
+compsurv <- function(fits) {
+  nam <- names(fits)
+  w <- NULL
+  for(ag in c(40, 50, 60)) {
+    for(sx in c('female', 'male')) {
+      z <- data.frame(age=ag, sex=sx, ran=0)
+      for(m in 1 : length(nam)) {
+        start <- Sys.time()
+        fit <- fits[[m]]
+        s <- if(m == 1) fit(ag, sx)
+        else as.data.frame(survest(fit, z)[c('time', 'surv')])
+        s$model <- nam[m]
+        s$age   <- ag
+        s$sex   <- sx
+        end <- Sys.time()
+        # cat('Time:', end - start, 's\n', sep='')
+        w <- rbind(w, s)
+      }
+    }
+  }
+  w$model <- factor(w$model, nam)
+  # w <- subset(w, model %in% c('Cox', 'loglog'))
+  ggplot(w, aes(x=time, y=surv, color=model)) + geom_line() +
+    facet_grid(age ~ sex) +
+    xlab(expression(t)) + ylab('Survival Probability')
+}
+
+S_actual <- function(age, sex, ran=0) {
+  times <- seq(.02, 13, length=200)
+  lp <- 0.04 * (age - 50) + 0.8 * (sex == 'female')
+  h  <- 0.02 * exp(lp)
+  data.frame(time=times, surv=exp(- h * times))
+}
+fits <- list(actual=S_actual, Cox=f11, loglog=g11, logit=g12)
+compsurv(fits)
+```
+
+There is no obvious lack of fit for any model.
+
+Compare intercepts in the ordinal log-log model with intercepts from the Cox model.  First plot the ordinal model intercepts, on the $\log(t)$ scale.  Linearity would indicate that the constant hazard assumption is correct (cumulative hazard is linear in $t$).
+
+```{r}
+plotIntercepts(g11, logt=TRUE)
+ord_ints <- coef(g11)[1 : num.intercepts(g11)]
+cox_ints <- f11$surv
+cox_ints <- log(-log(cox_ints[-c(1, length(cox_ints))]))
+ggplot(mapping=aes(x=ord_ints, y=cox_ints)) + geom_line() +
+  xlab('orm Intercepts') + ylab('Cox Intercepts')
+f <- lm(cox_ints ~ ord_ints)
+coef(f)
+mean(abs(resid(f)))
+```
+
+### Data from Log-logistic AFT Model With Non-PH
+
+Examine parallelism of transformed Kaplan-Meier estimates stratified by intervals of the true linear predictor.
+
+```{r}
+# Compute the number of events per lp group
+table(t2 <= cens, g)
+f <- npsurv(S2 ~ g)
+ggplot(f, trans='loglog', logt=TRUE, conf='none') + labs(title='log-log Link')
+ggplot(f, trans='logit',  logt=TRUE, conf='none') + labs(title='logit Link')
+ggplot(f, trans='probit', logt=TRUE, conf='none') + labs(title='probit link')
+```
+
+The Cox model (log-log link) clearly fits less well than the two AFTs.
+
+Compare regression coefficients and standard errors.
+
+```{r results='asis'}
+fits <- list(Cox=f21, loglog=g21, logit=g22)
+maketabs(fits)
+```
+
+```{r}
+cbetas(fits)
+```
+
+Check parallelism assumptions.
+
+```{r}
+czph(f21)
+```
+
+```{r}
+#| layout-ncol: 1
+ordParallel(g21)
+ordParallel(g22)
+```
+
+Cox and the ordinal regression version of Cox with log-log link fail to properly model the covariate effects, with the Cox `cox.zph` tests of PH yielding an overall $\chi^{2}_{3} = 146$.
+
+Check the deviance and other measures for several links.
+
+```{r}
+Olinks(g21)
+```
+
+Fortunately, the logit link had smaller deviance (and AIC).
+
+Get predicted survival curves and compare them to the actual survival functions used to simulate the data, as before.  The true survival function is as follows, with $X\beta =$ 0.5 plus the original linear predictor `lp` and $r$ is a random variable from a standard logistic distribution.
+
+$$S(t) = P(T > t) = P(\exp(X\beta + \frac{r}{3}) > t) = P(X\beta + \frac{r}{3} > \log(t)) = 1 - \text{expit}(3(\log(t) - X\beta))$$
+
+```{r h=8,w=7}
+S_actual <- function(age, sex, ran=0) {
+  times <- seq(.02, 13, length=200)
+  lp <- 0.5 + 0.04 * (age - 50) + 0.8 * (sex == 'female')
+  s <- 1 - plogis(3*(log(times) - lp))
+  data.frame(time=times, surv=s)
+}
+fits <- list(actual=S_actual, Cox=f21, loglog=g21, logit=g22)
+compsurv(fits)
+```
+
+The Cox and ordinal semiparametric log-log link estimates are indistinguishable.  The logit link estimates and the true survival curves are almost indistinguishable.  The Cox and log-log estimates, which both falsely assume PH, do not agree with the true curves, especially for 60 year-old females.
+
+Note that log hazard ratios are moving towards zero as $t\uparrow$.  When data come from an AFT distribution that has a non-PH form, the true hazard ratios converge to 1.0, i.e, covariate effects wear off on the hazard ratio scale.
+
+
+## Accelerated Failure Time Example
+
+Consider the SUPPORT dataset analysed with a parametric log-logistic AFT model in @sec-psmcase.  In ordinal models we do not have the same kind of residual plots for checking distributional assumptions, because there is no assumption about the distribution of absolute failure time $T$ given a set of covariate values $X$.  We do have a parallelism assumption.  Along the lines of [this](https://hbiostat.org/rmsc/cony#fig-cony-predobs) in @sec-cony let's fit a rough model and divide predictions into intervals of 80 patients.  Then let's see if logit of Kaplan-Meier curves are parallel.
+
+Fit the smaller model near the end of @sec-psmcase.
+
+```{r}
+getHdata(support)          # Get data frame from web site
+acute     <- support$dzclass %in% c('ARF/MOSF','Coma')
+d         <- support[acute, ]
+d$dzgroup <- d$dzgroup[drop=TRUE]    # Remove unused levels
+d <- upData(d, print=FALSE,
+       t = d.time/365.25,
+       labels = c(t = 'Survival Time'),
+  units = c(t = 'year'))
+d <- upData(d, 
+        Y = Ocens(t, ifelse(death == 1, t, Inf)))
+maxuc <- with(d, max(t[death == 1]))
+round(maxuc, 3)
+minc  <- round(with(d, min(t[t > maxuc])), 2)
+minc
+with(d, sum(t[death == 0] > 4.399726))
+c(censored=sum(d$death), uncensored=nrow(d) - sum(d$death))
+```
+
+Do simple single imputation.
+
+```{r}
+d <- upData(d, print=FALSE,
+  wblc = impute(wblc, 9),
+  pafi = impute(pafi, 333.3),
+  ph   = impute(ph,   7.4),
+  race2  = ifelse(is.na(race), 'white',
+                  ifelse(race != 'white', 'other', 'white')) )
+dd <- datadist(d); options(datadist='dd')
+```
+
+Fit the semiparametric generalization of the log-normal AFT model.
+
+```{r}
+f <- orm(Y ~ dzgroup + rcs(meanbp,5) + rcs(crea,4) + rcs(age,5) +
+         rcs(hrt,3) + scoma + rcs(pafi,4) + pol(adlsc,2) +
+         rcs(resp,3), family='probit', data=d, x=TRUE, y=TRUE, lpe=TRUE, trace=1)
+f
+a <- anova(f, test='LR')
+plot(a)
+```
+
+
+The first output from `trace=1` shows the maximum likelihood iterative process when there are no predictors in the model, only intercepts.  Notice that the iterations had already converged at the starting values, which were normal inverses of the Kaplan-Meier estimates.  So the maximum likelihood estimates in an ordinal semiparametric model are exactly the link function of the Kaplan-Meier estimates when there are no covariates.
+
+When there are right-censored observations above the highest uncensored time, `Ocens2ord` creates a new level for them and considers them to be uncensored at the lowest of such times.  This is because these are high-information points, and treating them this way still makes `orm` result in K-M estimates with no covariates.  But the numbers of censored observations reported in the output are the actual numbers before this modification.
+
+There are 356 deaths.  The effective sample size is estimated to be 380.5, i.e., the number of complete observations that would provide the same statistical information as the 537 observations with 181 right-censored.  We can look at the information in right-censored observations in detail by using the `rms` `ordESS` function to plot the effective sample size vs. censoring time.  We expect late-censored observations to provide more information than early-censored ones.
+
+```{r}
+ordESS(f)
+```
+
+We see a slight increase in the ESS for longer follow-up times.  Altogether the 181 right-censored observations have the information of 24.5 uncensored times.
+
+Plot the model intercepts, which represent the survival curve for persons with all covariates equal to zero, on the probit scale with time log-transformed.
+
+```{r}
+plotIntercepts(f, logt=TRUE)
+```
+
+This is not quite straight, indicating that a log-normal AFT model would not be perfect, e.g., the $\log(t)$ transformation part of the model may be wrong.
+
+Unlike the parametric model we do not need such curves to be linear, only parallel across covariate values.
+
+There are two other ways to check model assumptions, one of which is to estimate $\beta(t)$ and check for flatness (irrelevance of $t$).  Do this for the probit fit.
+
+```{r}
+#| column: page-inset-left
+#| fig-height: 9
+#| fig-width: 9
+ordParallel(f)
+```
+
+The curves are fairly flat.  But it is difficult to interpret trends in individual $\beta$ that make up one predictor's effect.  Use an option to compute the partial linear predictor for each of the model's predictors. Each weighted sum term gives rise to an effect that now has $\beta=1$.  The terms are scaled so that they are in units of inter-quartile range of the part of linear predictor involving a predictor.  In this way a weak variable will have a smaller effect.  See how the overall multiplier varies as a function of time.  This does not allow for shape changes over time but does allow change in overall importance (steepness).
+
+```{r}
+ordParallel(f, terms=TRUE)
+```
+
+There seems to e an increasing effect of age over time, and a decreasing effect of coma score.
+
+Let's see how some other link functions fare.
+
+```{r}
+g <- update(f, family='logistic', trace=0)
+ordParallel(g, terms=TRUE)
+g <- update(g, family='loglog')
+ordParallel(g, terms=TRUE)
+```
+
+Do formal tests of goodness-of-link (parallelism on the assumed link scale) by having `ordParallel` create 30 copies of the dataset with different cutoffs of survival time, and when censoring allows, determine whether observed survival time exceeds the cutoff.  The global multiplicity-adjusted test for parallelism is in the **TOTAL INTERACTION** line near the bottom of each ANOVA.
+
+```{r results='asis'}
+testpar <- function(form, link) {
+  f  <- orm(form, data=d, family=link, x=TRUE, y=TRUE)
+  do <- ordParallel(f, onlydata=TRUE, maxcuts=30)
+  g  <- orm(Yge_cut ~ (dzgroup + meanbp + crea + age + hrt +
+                         scoma + pafi + adlsc + resp) * rcs(Ycut, 3),
+            data=do, family=link, x=TRUE, y=TRUE)
+  h  <- robcov(g, do$obs)
+  anova(h)
+}
+form <- Y ~ dzgroup + rcs(meanbp, 5) + rcs(crea, 4) + rcs(age, 5) + rcs(hrt, 3) + 
+  scoma + rcs(pafi, 4) + pol(adlsc, 2) + rcs(resp, 3)
+fams <- .q(probit, logistic, loglog)
+w <- lapply(fams, function(x) testpar(form, x))
+names(w) <- fams
+maketabs(w)
+```
+
+The best fit (most constancy in $\beta$) is a logit link AFT model which we will use for all remaining steps.
+
+```{r}
+f <- update(f, family='logistic', trace=0)
+# latex by default does not print intercepts when their number > 10
+# Best to use plotIntercepts
+latex(f)
+```
+
+Check the deviance, pseudo $R^2$, etc., for all the links.
+
+```{r}
+Olinks(f)
+```
+
+By deviance measures, the probit model has better fit by a little, with the two log-log links faring poorer.
+
+
+Derive R functions for translating the linear predictor into estimated mean and quantiles using the logic link.  For ordinal models fitted to right-censored data, the mean is the restricted mean survival time.  Until the `Mean.orm` function adds a `tmax` argument, the restriction is essentially to the lowest censored time that is above the highest uncensored time, which is `r minc`.
+
+```{r}
+#| column: page-inset-left
+#| fig-height: 8
+#| fig-width: 8
+expected.surv <- Mean(f)
+quantile.surv <- Quantile(f)
+median.surv   <- function(x) quantile.surv(q=0.5, lp=x)
+nom <-
+  nomogram(f,
+           pafi=c(0, 50, 100, 200, 300, 500, 600, 700, 800, 900),
+           fun=list('Median Survival Time'=median.surv,
+                    'Mean Survival Time'  =expected.surv),
+           fun.at=c(0.01, .1,.25,.5,1,2,5))
+plot(nom, cex.var=1, cex.axis=.75, lmgp=.25)
+```
+
+* Plot the shape of the effect of each predictor on log survival time.
+* All effects centered: can be placed on common scale
+* LR $\chi^2$ statistics, penalized for d.f., plotted in descending order
+
+```{r plot, h=7, w=7, cap='Effect of each predictor on the normal inverse survival probability scale.  Predicted values have been centered so that predictions at predictor reference values are zero.  Pointwise 0.95 confidence bands are also shown.  As all $Y$-axes have the same scale, it is easy to see which predictors are strongest.',scap='Effect of predictors on log survival time in SUPPORT'}
+#| label: fig-ordsurv-plot
+ggplot(Predict(f, ref.zero=TRUE), vnames='names', anova=a)
+```
+
+```{r plot2, h=7, w=7, cap='Effect of each predictor on the restricted mean survival time scale.  Pointwise 0.95 confidence bands are also shown.',scap='Effect of predictors on RMST in SUPPORT'}
+#| label: fig-ordsurv-plot2
+ggplot(Predict(f, ref.zero=FALSE, fun=expected.surv), vnames='names')
+```
+
+Compute Wald confidence intervals of age 40:60 odds ratios two different ways, and the corresponding more accurate profile likelihood interval.  A likelihood ratio test for the one degree of freedom contrast between ages 40 and 60 is also included.  This is a focused contrast in comparison with the overall 4 degree of freedom chunk LR test for age.
+
+```{r}
+summary(f, age=c(40, 60), est.all=FALSE)
+k <- contrast(f, list(age=60), list(age=40))
+print(k, fun=exp)
+k <- contrast(f, list(age=60), list(age=40), conf.type='profile')
+print(k, fun=exp)
+```
+
+Compute estimated survival curves and point wise 0.95 confidence bands for several covariate combinations.
+
+```{r scurves, h=7, w=7, cap='Effect of each predictor on the normal inverse survival probability scale.  Predicted values have been centered so that predictions at predictor reference values are zero.  Pointwise 0.95 confidence bands are also shown.',scap='Probit AFT survival curves estimates for SUPPORT'}
+#| label: fig-ordsurv-scurves
+survplot(f, dzgroup, meanbp=c(40, 100), crea=c(1, 1.4, 2.5), conf.int=0.95)
+```
+
+### Strong Internal Validation of the Fitted Model Using the Bootstrap
+
+
+Validate indexes describing the fitted model using the optimism bootstrap.
+
+
+```{r}
+# First add data to model fit so bootstrap can re-sample
+#  from the data
+set.seed(717)
+validate(f, B=300)
+```
+
+Validate a calibration curve for 1-time unit survival predictions using the optimism bootstrap incorporating smoothed moving overlapping window Kaplan-Meier estimates.  Also use the adaptive linear spline `hare` method.  Usually `hare` does too much smoothing.
+
+```{r}
+# Default is method='smoothkm' with eps=30 (30 observations in each moving window)
+set.seed(3)
+cal1 <- calibrate(f, B=100, u=1) #, val.surv.args=list(method='smoothkm', eps=30))
+plot(cal1)
+cal2 <- calibrate(f, B=100, u=1, val.surv.args=list(method='hare'))
+plot(cal2)
+```
+
+```{r echo=FALSE}
+saveCap('25')
+```
