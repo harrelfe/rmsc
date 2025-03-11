@@ -153,6 +153,8 @@ n <- 2000
 set.seed(2)
 cens <- runif(n, 2, 15)
 age  <- rnorm(n, 50, 12)
+label(age) <- 'Age'
+units(age) <- 'year'
 sex  <- sample(c('male', 'female'), n, TRUE)
 ran  <- rnorm(n)   # irrelevant random covariate
 # Exponential model with PH
@@ -162,6 +164,7 @@ t1   <- -log(runif(n))/h    # simulated failure times
 e1   <- t1 <= cens
 sum(e1)              # uncensored obs
 y1   <- pmin(t1, cens)
+units(y1) <- 'year'
 S1   <- survival::Surv(y1,  e1)
 Y1   <- Ocens(y1, ifelse(e1, y1, Inf))
 l    <- 13:15
@@ -190,6 +193,7 @@ t2   <- exp(0.5 + lp + rlogis(n) / 3)
 e2   <- t2 <= cens
 sum(e2)
 y2   <- pmin(t2, cens)
+units(y2) <- 'year'
 S2   <- survival::Surv(y2, e2)
 Y2   <- Ocens(y2, ifelse(e2, y2, Inf))
 t1 <- round(t1, 2)
@@ -304,6 +308,13 @@ intCalibration(g11, m=100, dec=2) + labs(subtitle=g11$family)
 intCalibration(g12, m=100, dec=2) + labs(subtitle=g12$family)
 ```
 
+We can also check calibration with respect to a key predictor.
+
+```{r}
+intCalibration(g11, m=100, x=age, dec=2) + labs(subtitle=g11$family)
+intCalibration(g12, m=100, x=age, dec=2) + labs(subtitle=g12$fam)
+```
+
 Let's see if comparison of links based on log-likelihood measures gives us the same impression about the `orm` models.
 
 ```{r}
@@ -416,6 +427,13 @@ intCalibration(g22, m=200, dec=2) + labs(subtitle=g22$family)
 ```
 
 The logit link is decidedly better by the plots of predicted vs. observed probabilities.
+
+We can also check calibration with respect to age.
+
+```{r}
+intCalibration(g21, m=100, x=age, dec=2) + labs(subtitle=g21$family)
+intCalibration(g22, m=100, x=age, dec=2) + labs(subtitle=g22$family)
+```
 
 Check the deviance and other measures for several links.
 
