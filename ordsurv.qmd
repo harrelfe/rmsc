@@ -50,7 +50,7 @@ Related resources and important background publications by several authors may b
 There are important implications of the generality, robustness, and efficiency of ordinal regression for censored data just as there are for uncensored data.  The generality of cumulative probability models (CPMs) allows them to bridge binary, discrete, and continuous ordinal regression to survival analysis and simple statistical tests, and would present major didactic simplifications for statistics courses.  Ordinal regression covers all the following special cases.
 
 * An ordinal regression with logit link and only 2 Y levels is binary logistic regression
-* The score test in binary logistic regression is the Pearson $\chi^2$ test
+* The score test in binary logistic regression is the Pearson $\chi^2$ test[For score tests see @sec-mle-tests, [here](https://www.fharrell.com/post/powilcoxon) and [here](https://www.fharrell.com/post/logrank).  The numerator of a score statistic is the first derivative of the log-likelihood evaluated at the null parameter value.  It is an "observed - expected" quantity.]{.aside}
 * The score test in proportional odds regression is the Wilcoxon statistic
 * The score test in a log-log link ordinal model is the logrank statistic
 * Ordinal regression for continuous Y with a probit link essentially has the linear model as a special case without needing to know how to transform Y for modeling
@@ -91,6 +91,7 @@ Many general functions apply to all `rms` model fitting functions, e.g.
 * `contrast`: general contrasts and profile likelihood confidence intervals
 * `validate`: resampling validation of model performance metrics
 * `calibrate`: resampling overfitting-corrected calibration curves
+* `intCalibration`: new `rms` 7.1 function for internal calibration plots for a series of cutpoints
 * `latex`: express the fitted model in mathematical form using $\LaTeX$ markup
 
 The `rms` `orm` function has been generalized in version 7.1 to handle general censoring patterns, and there are several new `rms` functions that use `orm` fits to produce output that is especially suited for survival analysis:
@@ -100,7 +101,7 @@ The `rms` `orm` function has been generalized in version 7.1 to handle general c
    + Makes adjustments for left, right, interval censoring
    + Each observation must be associated with one or two ordinal model intercepts
    + Censored observations must use existing intercept parameters that are defined by distinct uncensored values
-   + E.g. an observation right-censored at 4 years considers the point to be right-censored at 3.9 years if the last uncensored value before 4y was 3.9
+      - E.g. an observation right-censored at 4 years considers the point to be right-censored at 3.9 years if the last uncensored value before 4y was 3.9
    + Observations censored after the last uncensored time point are very informative and cause creation of a new final uncensored category at the lowest of such censoring times, plus a small time increment to indicate the open interval involved
    + Interval-censored observations create Turnbull intervals and are given a lot of attention by `Ocens` so that unique likelihood contributions result
    + The nonparametric survival curve estimates are saved so that the link function of them can be used as started values for MLE, with starting values for $\beta$ equal to zero
@@ -296,6 +297,13 @@ ordParallel(g12)
 * log-log link ordinal model: flat effects over time to within the limits of the confidence bands show our limits of estimating time-specific effects
 * logit link: systematic changing of effects over time with meaningful changes in $\hat{\beta}$ for the two relevant variables, indicating time-dependent covariate effects / non-parallelism of logit of $S(t | X)$
 
+Look at internal calibration-in-the-small curves and also print statistics for calibration-in-the-large.  Cutpoints are chosen so that there are 100 uncensored observations between cutpoints and beyond outer cutpoints.
+
+```{r}
+intCalibration(g11, m=100, dec=2) + labs(subtitle=g11$family)
+intCalibration(g12, m=100, dec=2) + labs(subtitle=g12$family)
+```
+
 Let's see if comparison of links based on log-likelihood measures gives us the same impression about the `orm` models.
 
 ```{r}
@@ -344,7 +352,7 @@ fits <- list(actual=S_actual, Cox=f11, loglog=g11, logit=g12)
 compsurv(fits)
 ```
 
-There is no obvious lack of fit for any model.
+There is no obvious lack of fit for any model except for 60 year old females.
 
 Compare intercepts in the ordinal log-log model with intercepts from the Cox model.  First plot the ordinal model intercepts, on the $\log(t)$ scale.  Linearity would indicate that the constant hazard assumption is correct (cumulative hazard is linear in $t$).
 
@@ -399,6 +407,15 @@ ordParallel(g22)
 ```
 
 Cox and the ordinal regression version of Cox with log-log link fail to properly model the covariate effects, with the Cox `cox.zph` tests of PH yielding an overall $\chi^{2}_{3} = 146$.
+
+Look at internal calibrations.
+
+```{r}
+intCalibration(g21, m=200, dec=2) + labs(subtitle=g21$family)
+intCalibration(g22, m=200, dec=2) + labs(subtitle=g22$family)
+```
+
+The logit link is decidedly better by the plots of predicted vs. observed probabilities.
 
 Check the deviance and other measures for several links.
 

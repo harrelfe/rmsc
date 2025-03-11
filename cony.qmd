@@ -195,6 +195,17 @@ testpar(form, 'logistic')    # Chunk test for global parallelism 151.17
 testpar(form, 'loglog')      # Chunk test 140.8
 ```
 
+Another approach to goodness of fit is internal calibration plots.  For a series of `gh` cutoffs plot the estimated actual probability of exceeding the cutoff as a function of the predicted probability of exceeding it.
+
+```{r}
+gcuts <- c(5.5, 6, 6.5, 7)
+intCalibration(f, ycuts=gcuts) + labs(subtitle=f$family)
+g <- update(f, family='logistic')
+intCalibration(g, ycuts=gcuts) + labs(subtitle=g$family)
+```
+
+Using the adaptive linear spline HARE estimates, the logit link fits less well.
+
 Finally, the `rms` `Olinks` function computes deviance measures for a series of link functions.  Though this may not detect Y-dependency of effects (nonparallelism) with respect to a single predictor, it is useful for choosing the overall model. Model fits are automatically re-run by `Olinks` for a series of links not used in the current fit.
 
 ```{r}

@@ -58,7 +58,7 @@ plot(p, ll2, type = "l", ylab = "logL", xlab = expression(theta),
 
 ---
 
-## Review, continued
+## Review, continued {#sec-mle-tests}
 
 
 Likelihood Ratio Test (LR): 
