@@ -9,6 +9,26 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 
 # Ordinal Semiparametric Regression for Survival Analysis {#sec-ordsurv}
 
+```{mermaid}
+flowchart LR
+PM[Parametric Models]
+SP[Semiparametric Models]
+PM --> PMA[Assumptions<br><br>Link-transfored Y distributions parallel<br><br>Y perfectly transformed<br><br>Y has a specific distribution<br><br>Usual X assumptions]
+SP --> SPA[Assumptions<br><br>Link-transformed Y distributions parallel<br><br>Usual X assumptions]
+```
+
+```{mermaid}
+flowchart LR
+Y[Types of Y Allowed in<br>Semiparametric Models]
+Y --> binary
+Y --> d[discrete ordinal]
+Y --> fc[floor and ceiling effects<br>zero inflation]
+Y --> disc[general discontinuities]
+Y --> bim[bimodal distributions]
+Y --> continuous
+Y --> cens[left, right, interval censored]
+```
+
 ## Background
 
 This chapter considers methods for typical survival analyses used for analyzing time until a single type of event occurs, without competing risks.  Most applications involve right-censoring, to handle subjects who have not been followed long enough to have an event observed.
@@ -37,7 +57,7 @@ where $\alpha_{t+}$ is the next intercept after $\alpha_t$.
 
 ### CPMs and Censoring
 
-Consider any semiparametric regression model in the class of cumulative probability models.  It is easy to modify the likelihood function for such a model to make optimum use of incomplete dependent variable information due to left, right, and interval censoring.  The `rms` package `orm` function starting with version 7.1 handles these censoring patterns.  The `rms` `Ocens` function is used instead of the `survival` package `Surv` function, to specify censoring details and to package the results in a 2-column matrix.  `Ocens` takes two numeric variables `a, b`.  For a complete observation, `a`=`b`.  For a left-censored observation, `a` is $-\infty$, coded in r as `-Inf` and `b` is finite.  For a right-censored observation, `a` is finite and `b` is $\infty$, coded as `Inf`.  For example, an observation that is right-censored at 2 years may be coded as `(2, Inf)`.  An interval censored observation has both `a` and `b` numeric but `b` > `a`.  This is considered to be a closed interval inclusive of the endpoints.  Left- and right-censored intervals are assumed to be exclusive, e.g., `(2, Inf)` stands for "we know that the true event time is greater than 2".
+Consider any semiparametric regression model in the class of cumulative probability models.  It is easy to modify the likelihood function for such a model to make optimum use of incomplete dependent variable information due to left, right, and interval censoring.  The `rms` package `orm` function starting with version 8.0 handles these censoring patterns.  The `rms` `Ocens` function is used instead of the `survival` package `Surv` function, to specify censoring details and to package the results in a 2-column matrix.  `Ocens` takes two numeric variables `a, b`.  For a complete observation, `a`=`b`.  For a left-censored observation, `a` is $-\infty$, coded in r as `-Inf` and `b` is finite.  For a right-censored observation, `a` is finite and `b` is $\infty$, coded as `Inf`.  For example, an observation that is right-censored at 2 years may be coded as `(2, Inf)`.  An interval censored observation has both `a` and `b` numeric but `b` > `a`.  This is considered to be a closed interval inclusive of the endpoints.  Left- and right-censored intervals are assumed to be exclusive, e.g., `(2, Inf)` stands for "we know that the true event time is greater than 2".
 
 The `rms` `orm` function takes a user-specified `Ocens` object and runs it through the `Ocens2ord` function to do the recoding into a discrete ordinal variable.  If there is no censoring, the response variable `Y` is simply recoded to an integer vector based on the unique (to within $10^{-7}$ by default) values occurring in the data.  For left- or right- censoring, censored values are recoded to the next inward uncensored value and considered censored at that open-interval value.  All censored values that are beyond the outermost uncensored values are coded at the innermost censored value that is beyond the most extreme uncensored value, and a new uncensored category is created at this value.  For right censoring, this process makes the maximum likelihood estimates (MLE) of the model intercepts, when there no covariates, exactly equal the link function of Kaplan-Meier estimates.  When the highest coded value is right-censored at say a value $y$, the predicted value of $P(Y \geq y)$ will be greater than 0, so the resulting survival curve will not be observed to drop to zero.  If the highest observation is uncensored, the estimated survival curve will drop to zero at that point.
 
@@ -73,7 +93,7 @@ CPMs exist for an array of link functions representing distribution families, ea
 * When there are no covariates or $\hat{\beta} = 0$, the estimated probabilities that $Y\geq y$ or that $Y=y$ are the same for all links.
 * Thus the deviance (-2 log likelihood) for the null model (no $\beta$) is the same for all links.
 
-This and all links having the same likelihood structure have important implications in favor of using the deviance, or equivalently the model likelihood ratio $\chi^2$ statistic or AIC, for link selection.  The `rms` `Olinks` function facilates the calculations as shown in examples below.  Compare this with trying to compare the deviance of a Cox PH model with that of a parametric accelerated failure time model. [Better fitting models (up to the point of overfitting) probably have sharper probability estimates, i.e., estimates further from 0.5.  This rewards the deviance by making it smaller.  Ill-fitting models tend to be conservative about $\hat{\alpha}$ and $\hat{\beta}$, leading to cell probability (likelihood probability elements) closer to 0.5 and hence worse AIC and pseudo $R^2$.]{.aside}
+This and all links having the same likelihood structure have important implications in favor of using the deviance, or equivalently the model likelihood ratio $\chi^2$ statistic or AIC, for link selection.  The `rms` `Olinks` function facilitates the calculations as shown in examples below.  Compare this with trying to compare the deviance of a Cox PH model with that of a parametric accelerated failure time model. [Better fitting models (up to the point of overfitting) probably have sharper probability estimates, i.e., estimates further from 0.5.  This rewards the deviance by making it smaller.  Ill-fitting models tend to be conservative about $\hat{\alpha}$ and $\hat{\beta}$, leading to cell probability (likelihood probability elements) closer to 0.5 and hence worse AIC and pseudo $R^2$.]{.aside}
 
 ## Effective Sample Sizes
 
@@ -91,10 +111,10 @@ Many general functions apply to all `rms` model fitting functions, e.g.
 * `contrast`: general contrasts and profile likelihood confidence intervals
 * `validate`: resampling validation of model performance metrics
 * `calibrate`: resampling overfitting-corrected calibration curves
-* `intCalibration`: new `rms` 7.1 function for internal calibration plots for a series of cutpoints
+* `intCalibration`: new `rms` 8.0 function for internal calibration plots for a series of cut-points
 * `latex`: express the fitted model in mathematical form using $\LaTeX$ markup
 
-The `rms` `orm` function has been generalized in version 7.1 to handle general censoring patterns, and there are several new `rms` functions that use `orm` fits to produce output that is especially suited for survival analysis:
+The `rms` `orm` function has been generalized in version 8.0 to handle general censoring patterns, and there are several new `rms` functions that use `orm` fits to produce output that is especially suited for survival analysis:
 
 * `Ocens`: packages survival and censoring times into a two-column matrix
 * `Ocens2ord`: converts `Ocens` objects to discrete ordinal codes
@@ -122,6 +142,168 @@ In addition to the survival-specific functions there is a new general function i
 ### Rank Discrimination Indexes Computed by `orm`
 
 For uncensored data, `orm` computes Spearman's $\rho$ rank correlation between predicted and observed Y.  There is no version of $\rho$ for censored data.  Somers' $D_{xy}$ has been added to `orm` because this works for both uncensored and censored data.  $D_{xy}$ is $2\times (c - \frac{1}{2})$ where $c$ is the generalized $c$-index or concordance probability, computed extremely quickly by Therneau's `survival` package `concordancefit` function.
+
+## Goodness of Fit Overview
+
+Ordinal semiparametric CPM models ---
+
+* Essentially are covariate-shifted empirical cumulative distribution function estimators
+* Usual $X$-assumptions related to how many d.f./parameters specified (linearity, additivity)
+* Intercepts move around as needed to fit **any** shape of distribution for a specific $X$
+* $\rightarrow$ no distributional assumption to check
+* Assumes how shape of $Y$ distribution varies across levels of $X$
+   + link-transformed $P(Y \geq y | X)$ as a function of $y$ are parallel
+
+### Quantitative GOF Assessments
+
+* Embed the model in a more general model with more parameters
+   + use AIC to judge which of the two models is more likely to have better cross-validated accuracy
+   + examples of more general models: partial proportional odds model, polytomous (multinomial) logistic regression
+   + [example](https://https://fharrell.com/post/impactpo)
+   + this is the preferred method but is not covered in this chapter although is related to the $y$-varying $\beta$ plots to follow
+   + future addition to the `rms` `orm` function will make this easier
+* Compare deviances (-2 log likelihood) for different links using the same $X$ design
+   + equivalent to judging model likelihood ratio $\chi^2$, AIC, and pseudo $R^2$
+   + easy to do with `rms` `Olinks` function (new in 8.0)
+   + several examples follow
+   
+### Qualitative/Graphical GOF Assessments
+
+* Stratify by a key predictor or by predicted values from a tentative model, and for each stratum compute a nonparametric cumulative distribution estimate (ECDF or Kaplan-Meier), link-transform it, and assess parallelism
+* For a series of $y$ cutoffs fit binary models for the event occurrence $Y \geq y$ and plot the estimated $\beta$ against $y$, and add a smoother
+   + Examples also given with formal tests of $X\times y$ interaction using GEE
+   + With censored $Y$, some binary indicators of $Y\geq y$ cannot be determined and these observations are omitted
+* The same as the previous dichotomization approach but on the overall linear predictor, seeing how it slope varies away from 1.0 over cut-points
+   + This may be better than stratifying by a linear predictor and getting stratified Kaplan-Meier estimates
+* Internal calibration plots: plot predicted $P(Y \geq y)$ vs. observed smoothed proportions (smoothed moving overlapping windows of Kaplan-Meier estimates or using an adaptive flexible hazard model - [`hare`](https://cran.r-project.org/web/packages/polspline/index.html) @koo95haz, @koo97haz)
+* Similar to the previous method but plot both predicted and observed probabilities against a covariate (overlapping window moving averages)
+* @she16pro probability-scaled residual plot (like linear model Q-Q plot but check against a uniform distribution); extended to censored data [here](https://arxiv.org/abs/2409.11385)
+
+### Sample Size Limitations
+
+* Just as when estimating parameters, the effective sample size limits the information content in goodness-of-fit diagnostics (informal or formal)
+* $N$ needed for relative comparisons that do not involve intercept $\alpha$ have their own sample size requirements to achieve a given power or precision
+* Absolute estimates that involve $\alpha$ and GOF assessments related to distribution shifts need sufficient $N$ to be able to estimate entire distributions
+   + RMS Chapter 20: need 184 uncensored observations to estimate entire cumulative distribution within margin of error $\pm 0.1$ with probability $\geq 0.95$
+   + For margin of error $\pm 0.05$, sample size required is $4\times$ higher at 736
+
+So in non-huge datasets **some GOF assessments are noisy are hard to use for decision making**.
+
+::: {.callout-note collapse="true"}
+## Sample Size Requirements for Discriminating Links Using Deviance
+
+What sample sizes are needed for deviances from various links to be able to discern the correct link?  Let's simulate multiple datasets with varying $N$, with no censoring, replicating each $N$ 50 times and averaging the 50 deviances.  Data are generated using a logit link.  The deviance from the ideal logit link is subtracted from each non-logit link's deviance. 
+
+```{r}
+require(rms)
+require(data.table)
+sim <- function(n) {
+  age <- rnorm(n, 50, 12)
+  sex <- sample(c('male', 'female'), n, TRUE)
+  ran <- rnorm(n)
+  lp  <- 0.04 * (age - 50) + 0.8 * (sex == 'female')
+  y   <- exp(0.5 + lp + rlogis(n) / 3)
+  f   <- orm(y ~ age + sex + ran, x=TRUE, y=TRUE)
+  Olinks(f, dec=5)[c('link', 'deviance')]
+}
+R <- expand.grid(n = c(20, 40, 60, 80, 100, 150, 200, 300, 400, 500),
+                 i = 1:50)
+setDT(R)   # Change R to a data.table
+set.seed(8)
+w <- R[, sim(n), by=.(n, i)]
+# For each run, subtract logit deviance from others
+g <- function(dev, link) {
+  j <- link == 'logistic'
+  list(link=link[! j], dif=dev[! j] - dev[j])
+}
+u <- w[, g(deviance, link), by=.(n, i)]
+m <- u[, .(dif = mean(dif)), by=.(link, n)]
+ggplot(m, aes(x=n, y=dif, col=link)) + geom_line() +
+  xlab(expression(N)) + ylab('Deviance Minus logit Deviance') +
+  geom_hline(yintercept=3.84, alpha=0.4)
+```
+
+A reference line is drawn at the $\chi^{2}_{1}$ 0.95 critical value of 3.84 to give a rough idea of a noise reference level.  Distinguishing between the logit and probit links requires $N > 250$ whereas the log-log and complementary log-link links are distinguishable from the logit link by $N=60$. 
+
+But these are on the average.  There is a lot of sample-to-sample variability in deviances and deviance orderings.  Instead of showing mean differences, plot the 0.1 quantiles of differences within each 50-run batch.
+
+```{r}
+lo <- u[, .(dif = quantile(dif, 0.1)), by=.(link, n)]
+ggplot(lo, aes(x=n, y=dif, col=link)) + geom_line() +
+  xlab(expression(N)) + ylab('Deviance Minus logit Deviance') +
+  geom_hline(yintercept=3.84, alpha=0.4)
+```
+
+Another way: plot the proportion of times that the logit deviance was the smallest of the four, and the proportion of times that either the logit or probit were the smallest.
+
+```{r}
+g <- function(dev, link) {
+  j <- which.min(dev)
+  k <- link %in% c('logistic', 'probit')
+  list(glink   = c('logit', 'logit or probit'),
+       correct = c(link[j] == 'logistic',
+                   min(dev[k]) < min(dev[! k]) ) )
+}
+cr <-  w[, g(deviance, link), by=.(n, i)]
+m  <- cr[, .(prop = mean(correct)), by=.(n, glink)] 
+ggplot(m, aes(x=n, y=prop, col=glink)) + geom_line() +
+  xlab(expression(N)) + ylab('Proportion Correct') +
+  guides(color=guide_legend(title='')) +
+  geom_hline(yintercept=0.9, alpha=0.3)
+```
+
+To have $> 0.9$ chance that the link with the minimum deviance is the correct or very similar link, we need $N > 125$.  To have confidence that it is the logit link we need $N > 300$.
+
+:::
+
+### Overall Recommendations and Strategy
+
+```{mermaid}
+flowchart LR
+S[Strategy]
+S --> PS[Pre-specification]
+S --> CF[Controlled flexibility]
+PS --> LP[Choose link that<br>well-fitted<br>a similar dataset]
+PS --> SM[Subject matter knowledge<br><br>Chronic process, constant<br>X effects over time:<br>PH model log-log link<br><br>Acute process, front-loaded X effects<br>accelerated failure time<br>logit link]
+CF --> DEV[Compare deviances of<br>logit, log-log, c-loglog links]
+CF --> CUT[Check flatness of overall<br>linear predictor effect<br>over y cutpoints]
+CF --> SX[Predictor of special<br>importance<br><br>Check flatness of its<br>partial effect over<br>cutpoints]
+```
+
+
+* Link function is a bit less important than it seems
+   + Impact of link can be lost in the noise of estimating $\beta$ especially when $N$ is not large
+   + Semiparametric models shift intercept spacings as needed so that for a given $X$ there is no distributional assumption for $Y$
+   + Ordinal model analyses are unaffected by transformation of $Y$ until one computes $E(Y | X)$
+   + By contrast, compare accuracy of $\hat{S}(t | X)$ for different links with accuracy of accelerated failure time parametric $S(t | X)$ estimates for different $Y$-transformations
+* Impact of the link on interpretation is perhaps larger than impact on estimating probabilities and quantiles
+   + Odds ratios with logit link, hazard ratios with log-log link
+   + But if one emphasizes covariate-specific differences in survival curves, interpretation is easier and perhaps more robust
+
+**Suggested Strategy**
+
+Remember that the $X$ effects need to be carefully specified as with all regression models.
+An ordinal model link function specifies the transformation of cumulative probabilities of $Y$ such that for different $X$ the cumulative distributions are parallel.  Ideally the link function should not necessitate $y$-dependent covariate effects, i.e., allows us to act as if effects of covariates are constant over time for the chosen distribution family.
+
+* If you want to have a completely pre-specified statistical analysis plan, use subject matter knowledge to reason whether predictor effects are likely to have constant effects on instantaneous risk, or they have front-loaded effects that wane with time
+   + Use log-log link (assumes constant hazard ratios) for the first
+   + Use logit link for the second (accelerated failure time model)
+* Don't use the probit link
+   + Very similar to logit link but has no easy interpretation of effect estimates
+   + Only use it when you think that normality of residuals is in play after some $Y$-transformation and you want to guarantee efficiency of semiparametric estimates with respect to parametric counterparts
+* Entertain 3 links that are very different from each other
+   + logit, log-log, and complementary log-log
+   + If previous analyses on similar data indicate a good fit of one of the links, pre-specify use of that one
+* Develop a tentative model by carefully specifying predictors, non-linearities, and interactions
+* Compare deviances of the three models (using e.g. `rms::Olinks`) and note the link with the smallest (best) deviance
+* Compute the linear predictor $X\hat{\beta}$ from each of the three fits
+   + Re-fit a series of binary models over $y$ cuts, using each link
+   + Plot the coefficient of $X\hat{\beta}$ over cuts (the coefficients must have a weighted average of 1.0)
+   + These steps are automated by `rms::ordParallel(fit, lp=TRUE)`
+   + Select the link that has the best trade-off of deviance and flatness in these plots
+* If there is a pre-specified predictor of major importance to interpretation (e.g., treatment), see how $\beta$ for that predictor varies over $y$-cuts
+   + `rms::ordParallel(fit, which=...)`
+   + Choose a link that makes that predictor fit well subject to overall fit not being severely affected
 
 ## Simple Examples With Goodness of Fit Assessments
 
@@ -159,6 +341,7 @@ sex  <- sample(c('male', 'female'), n, TRUE)
 ran  <- rnorm(n)   # irrelevant random covariate
 # Exponential model with PH
 lp   <- 0.04 * (age - 50) + 0.8 * (sex == 'female')
+label(lp) <- ''
 h    <- 0.02 * exp(lp)      # hazard function
 t1   <- -log(runif(n))/h    # simulated failure times
 e1   <- t1 <= cens
@@ -301,7 +484,15 @@ ordParallel(g12)
 * log-log link ordinal model: flat effects over time to within the limits of the confidence bands show our limits of estimating time-specific effects
 * logit link: systematic changing of effects over time with meaningful changes in $\hat{\beta}$ for the two relevant variables, indicating time-dependent covariate effects / non-parallelism of logit of $S(t | X)$
 
-Look at internal calibration-in-the-small curves and also print statistics for calibration-in-the-large.  Cutpoints are chosen so that there are 100 uncensored observations between cutpoints and beyond outer cutpoints.
+Consider the estimated linear predictor to be a single summary predictor.  Refit models with just that one predictor and plot its coefficient over the cuts.
+
+```{r}
+#| layout-ncol: 1
+ordParallel(g11, lp=TRUE)
+ordParallel(g12, lp=TRUE)
+```
+
+Look at internal calibration-in-the-small curves and also print statistics for calibration-in-the-large.  Cut-points are chosen so that there are 100 uncensored observations between cut-points and beyond outer cut-points.
 
 ```{r}
 intCalibration(g11, m=100, dec=2) + labs(subtitle=g11$family)
@@ -418,6 +609,15 @@ ordParallel(g22)
 ```
 
 Cox and the ordinal regression version of Cox with log-log link fail to properly model the covariate effects, with the Cox `cox.zph` tests of PH yielding an overall $\chi^{2}_{3} = 146$.
+
+Now do this for just the linear predictor $X\hat{\beta}$.
+
+```{r}
+#| layout-ncol: 1
+ordParallel(g21, lp=TRUE)
+ordParallel(g22, lp=TRUE)
+```
+
 
 Look at internal calibrations.
 
@@ -543,10 +743,16 @@ There are two other ways to check model assumptions, one of which is to estimate
 ordParallel(f)
 ```
 
-The curves are fairly flat.  But it is difficult to interpret trends in individual $\beta$ that make up one predictor's effect.  Use an option to compute the partial linear predictor for each of the model's predictors. Each weighted sum term gives rise to an effect that now has $\beta=1$.  The terms are scaled so that they are in units of inter-quartile range of the part of linear predictor involving a predictor.  In this way a weak variable will have a smaller effect.  See how the overall multiplier varies as a function of time.  This does not allow for shape changes over time but does allow change in overall importance (steepness).
+The curves are fairly flat.  But it is difficult to interpret trends in individual $\beta$ that make up one predictor's effect.  Use an option to compute the partial linear predictor for each of the model's predictors. Each weighted sum term gives rise to an effect that now has $\beta=1$.  The terms are scaled so that they are in units of inter-quartile range of the part of linear predictor involving a predictor.  In this way a weak variable will have a smaller effect.  See how the overall multiplier varies as a function of time.  This does not allow for shape changes over time but does allow change in overall importance (steepness).  
 
 ```{r}
 ordParallel(f, terms=TRUE)
+```
+
+Also do this for the overall linear predictor.
+
+```{r}
+ordParallel(f, lp=TRUE)
 ```
 
 There seems to e an increasing effect of age over time, and a decreasing effect of coma score.
@@ -556,8 +762,14 @@ Let's see how some other link functions fare.
 ```{r}
 g <- update(f, family='logistic', trace=0)
 ordParallel(g, terms=TRUE)
-g <- update(g, family='loglog')
-ordParallel(g, terms=TRUE)
+h <- update(g, family='loglog')
+ordParallel(h, terms=TRUE)
+```
+
+```{r}
+#| layout-ncol: 1
+ordParallel(g, lp=TRUE)
+ordParallel(h, lp=TRUE)
 ```
 
 Do formal tests of goodness-of-link (parallelism on the assumed link scale) by having `ordParallel` create 30 copies of the dataset with different cutoffs of survival time, and when censoring allows, determine whether observed survival time exceeds the cutoff.  The global multiplicity-adjusted test for parallelism is in the **TOTAL INTERACTION** line near the bottom of each ANOVA.
