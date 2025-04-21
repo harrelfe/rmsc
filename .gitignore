@@ -8,3 +8,6 @@ convertchapter.r
 harrelfe.bib
 apa*.csl
 /.quarto/
+.DS_Store
+flow*.dot
+

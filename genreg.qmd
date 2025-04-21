@@ -895,6 +895,7 @@ models @has90gen, @woo06gen should also be considered.
 * Researchers are under the mistaken impression that machine
   learning can be used on small samples
 `r mrg(blog("ml-sample-size"))`
+* See [A brief tour of deep learning from a statistical perspective](https://www.annualreviews.org/content/journals/10.1146/annurev-statistics-032921-013738) by E Nalisnick, P Smyth, D Tran, 2023.
 
 
 **Considerations in Choosing One Approach over Another**
