@@ -453,6 +453,7 @@ discussed here but applied to time series modeling.
   estimation for continuous, binary, and time-to-event models to
   account for all of these issues
 * To just estimate $\sigma$ in a linear model with a multiplicative margin of error of 1.2 with 0.95 confidence requires $n=70$
+* See [this](https://stats.stackexchange.com/questions/10079) for an excellent discussion of the sample size needed for ordinary linear models
 
 <!-- NEW changed eff sample size for binary -->
 `r fa <- '^[If one considers the power of a two-sample binomial test compared with a Wilcoxon test if the response could be made continuous and the proportional odds assumption holds, the effective sample size for a binary response is $3 n_{1}n_{2}/n \\approx 3 \\min(n_{1}, n_{2})$ if $\\frac{n_{1}}{n}$ is near 0 or 1 [@whi93sam, Eq. 10, 15].  Here $n_{1}$ and $n_{2}$ are the marginal frequencies of the two response levels [@ped96sim].  The effective sample size is a maximum ($0.75n$) when $n_{1}=n_{2}$, i.e. $p=\\frac{1}{2}$ .]'`

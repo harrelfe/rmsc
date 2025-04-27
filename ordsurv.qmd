@@ -75,6 +75,17 @@ $$
 
 where $\alpha_{t+}$ is the next intercept after $\alpha_t$.
 
+### Interpretation of Parameters
+
+Consider a predictor $X_{j}$ that operates linearly and does not interact with any other predictor.  A one-unit change in $X_{j}$ then changes the linear predictor $X\beta$ by $\beta_{j}$ units.  Equivalently, it changes $F^{-1}(S(t | X))$ by $\beta_j$ units.  For some link functions, the interpretation can be stated in other ways, letting $r = \exp(\beta_{j})$ denote an effect ratio.
+
+* _logit link_: $r$ is a survival odds ratio, i.e., $\frac{\text{odds}(T > t | X=a+1)}{\text{odds}(T > t | X=a)}$, where $\text{odds}(u) = \frac{P(u)}{1 - P(u)}$ and $a$ is any constant.
+* _log-log link_: $r$ is the exponent relating the two survival curves, i.e., $S(T > t | X=a+1) = S(T > t | X=a)^{r}$.  In the special case that $T$ is truly continuous, i.e., the distance between successive distinct values of $T$ goes to zero as $n \rightarrow \infty$, $\frac{1}{r}$ is the $X=a+1 : X=a$ hazard ratio and the model is a proportional hazards model.  The hazard ratio is $\exp(-\beta_{j})$.  The idea of a continuous hazard function (and hence ratios of them) does not apply when $T$ is really discrete.
+* _complementary log-log link_: $r$ is the exponent relating $(1 - S(t | X=a+1))$ to $(1 - S(t | X=a))$, i.e., the cumulative distribution functions or cumulative incidence functions $C(t | X) = 1 - S(t | X)$.  $C(t | X=a+1) = C(t | X=a)^{r}$.
+
+The probit link is harder to interpret.  $\beta_j$ is a "$z$-score change."
+
+
 ### CPMs and Censoring
 
 Consider any semiparametric regression model in the class of cumulative probability models.  It is easy to modify the likelihood function for such a model to make optimum use of incomplete dependent variable information due to left, right, and interval censoring.  The `rms` package `orm` function starting with version 8.0 handles these censoring patterns.  The `rms` `Ocens` function is used instead of the `survival` package `Surv` function, to specify censoring details and to package the results in a 2-column matrix.  `Ocens` takes two numeric variables `a, b`.  For a complete observation, `a`=`b`.  For a left-censored observation, `a` is $-\infty$, coded in r as `-Inf` and `b` is finite.  For a right-censored observation, `a` is finite and `b` is $\infty$, coded as `Inf`.  For example, an observation that is right-censored at 2 years may be coded as `(2, Inf)`.  An interval censored observation has both `a` and `b` numeric but `b` > `a`.  This is considered to be a closed interval inclusive of the endpoints.  Left- and right-censored intervals are assumed to be exclusive, e.g., `(2, Inf)` stands for "we know that the true event time is greater than 2".
@@ -607,7 +618,7 @@ ordParallel(g11, lp=TRUE)
 ordParallel(g12, lp=TRUE)
 ```
 
-Look at internal calibration-in-the-small curves and also print statistics for calibration-in-the-large.  Cut-points are chosen so that there are 100 uncensored observations between cut-points and beyond outer cut-points.
+Look at internal calibration-in-the-small curves and also print statistics for calibration-in-the-large.  Cut-points are chosen so that there are 100 uncensored observations between cut-points and beyond outer cut-points.  Here the relationship between predicted and observed survival probabilities is estimated using three methods: moving Kaplan-Meier estimates, hazard regression with `polspline::hare`, and adaptive ordinal models.
 
 ```{r}
 intCalibration(g11, m=100, dec=2) + labs(subtitle=g11$family)
@@ -617,8 +628,10 @@ intCalibration(g12, m=100, dec=2) + labs(subtitle=g12$family)
 We can also check calibration with respect to a key predictor.
 
 ```{r}
-intCalibration(g11, m=100, x=age, dec=2) + labs(subtitle=g11$family)
-intCalibration(g12, m=100, x=age, dec=2) + labs(subtitle=g12$fam)
+intCalibration(g11, m=100, x=age, hare=FALSE, dec=2) +
+  labs(subtitle=g11$family)
+intCalibration(g12, m=100, x=age, hare=FALSE, dec=2) +
+  labs(subtitle=g12$fam)
 ```
 
 Let's see if comparison of links based on log-likelihood measures gives us the same impression about the `orm` models.
