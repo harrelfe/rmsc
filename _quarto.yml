@@ -72,8 +72,8 @@ format:
     css: h.css
     code-annotations: hover
 
-bibliography: harrelfe.bib
-csl: apa-annotated-bibliography.csl
+bibliography: /Users/harrelfe/web/bib/harrelfe.bib
+csl: /Users/harrelfe/web/bib/apa-annotated-bibliography.csl
 
 comments:
   hypothesis:

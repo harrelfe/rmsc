@@ -17,7 +17,7 @@ Regression modeling meets many analytic needs:
     + E.g.: effects of age, smoking, and air quality add to predict lung capacity
     + When effects are predominantly additive, or when there aren't too many interactions and one knows the likely interacting variables in advance, regression can beat machine learning techniques that assume interaction effects are likely to be as strong as main effects
 
-* Separate effects of variables (especially exposure and treatment)
+* Isolate effects of variables (especially exposure and treatment)
 * Hypothesis testing
 * Deep understanding of uncertainties associated with all model components
     + Simplest example: confidence interval for the slope of a predictor
@@ -182,7 +182,7 @@ Worse interactions:
 If $X_{1}$ is binary, the interaction may take the form of a difference in shape (and/or distribution) of $X_{2}$ vs. $C(Y)$
 depending on whether $X_{1}=0$ or $X_{1}=1$ (e.g. logarithm vs. square root).
 
-[This paper](http://yiqingxu.org/papers/english/2018_HMX_interaction/main.pdf) describes how interaction effects can be misleading.
+[This paper](http://yiqingxu.org/papers/english/2018_HMX_interaction/main.pdf) describes how interaction effects can be misleading.  See [Interaction effects need interaction controls](https://datacolada.org/80) by Uri Simonsohn for an explanation of the possible need for controlling for other interactions when the interest is on a specific interaction.  <!-- NEW -->
 
 
 ### Example: Inference for a Simple Model
@@ -560,7 +560,7 @@ text(0, -400, 'Third Derivative: Jolt\nRate of Change of Acceleration',
 ### Restricted Cubic Splines {#sec-rcspline}
 `r mrg(sound("genreg-5"))`
  `r ipacue()` 
-Stone and Koo @sto85: cubic splines poorly behaved in tails.
+@sto85: cubic splines poorly behaved in tails.
 Constrain function to be linear in tails. <br>
 $k+3 \rightarrow k-1$ parameters @dev86.
 
@@ -1020,8 +1020,8 @@ text(.9, .75,expression(X[1]==1), adj=.5)
 
 Methods for checking fit:
 
-1. Fit simple linear additive model and check examine `r ipacue()`
-  residual plots for patterns
+**1. Fit simple linear additive model and check examine residual plots for patterns**
+`r ipacue()`
  
 * For OLS: box plots of $e$ stratified by $X_{1}$,
   scatterplots of $e$ vs. $X_{2}$ and $\hat{Y}$, with trend
@@ -1040,49 +1040,49 @@ Methods for checking fit:
 * Hard to see patterns with large $n$ (trend lines help)
 * Seeing patterns does not lead to corrective action
 
-1. Scatterplot of $Y$ vs. $X_{2}$ using different symbols
-  according to values of $X_{1}$ `r ipacue()`  <br>
- **Advantages**: Simplicity, can see interaction
+**2. Scatterplot of $Y$ vs. $X_{2}$ using different symbols according to values of $X_{1}$**
+ `r ipacue()`
 
- **Disadvantages**:
+**Advantages**: Simplicity, can see interaction
+
+**Disadvantages**:
  
 * Scatterplots cannot be drawn for binary, categorical, or
    censored $Y$
 * Patterns difficult to see if relationships are weak or $n$
    large
 
-1. Stratify the sample by $X_{1}$ and quantile groups (e.g.
-  deciles) of $X_{2}$; estimate $C(Y|X_{1},X_{2})$ for each stratum <br>
- **Advantages**: Simplicity, can see interactions, handles
- censored $Y$ (if you are careful)
+**3. Stratify the sample by $X_{1}$ and quantile groups (e.g. deciles) of $X_{2}$; estimate $C(Y|X_{1},X_{2})$ for each stratum**
 
- **Disadvantages**:
+**Advantages**: Simplicity, can see interactions, handles censored $Y$ (if you are careful)
+
+**Disadvantages**:
  
 * Requires large $n$
 * Does not use continuous var. effectively (no interpolation)
 * Subgroup estimates have low precision
 * Dependent on binning method
 
-1. Separately for levels of $X_{1}$ fit a nonparametric smoother
-  relating $X_{2}$ to $Y$  `r ipacue()`  <br>
- **Advantages**: All regression aspects of the model can be
- summarized efficiently with minimal assumptions
+**4. Separately for levels of $X_{1}$ fit a nonparametric smoother relating $X_{2}$ to $Y$**
+`r ipacue()`
 
- **Disadvantages**:
+**Advantages**: All regression aspects of the model can be summarized efficiently with minimal assumptions
+
+**Disadvantages**:
  
 * Does not apply to censored $Y$
 * Hard to deal with multiple predictors
 
-1. Fit flexible nonlinear parametric model
+**5. Fit flexible nonlinear parametric model**
 
- **Advantages**:
+**Advantages**:
  
 * One framework for examining the model assumptions, fitting the
    model, drawing formal inference
 * d.f. defined and all aspects of statistical
   inference "work as advertised"
 
- **Disadvantages**:
+**Disadvantages**:
  
 * Complexity
 * Generally difficult to allow for interactions when assessing
@@ -1257,14 +1257,16 @@ The `B` $\times$ `sampleAge` interaction effects have 6 d.f. and tests whether t
 
 * Some models (e.g., logistic): all assumptions in $C(Y|X)=X\beta$ `r ipacue()`
     (implicitly assuming no omitted variables!)
-* Linear regression: $Y \sim X\beta + \epsilon,
-    \epsilon \sim n(0,\sigma^{2})$
-* Examine distribution of residuals
+* Parametric models make an absolute distributional assumption
+   + E.g. linear regression: $Y \sim X\beta + \epsilon, \epsilon \sim n(0,\sigma^{2})$
+   + Examine distribution of residuals
 * Some models (Weibull, @cox72): <br>
-    $C(Y|X) = C(Y=y|X) = d(y)+X\beta$ <br>
+    $C(Y|X) = C(Y=y|X) = d(y) + X\beta$ <br>
     $C =$ log hazard
-* Check form of $d(y)$
-* Show $d(y)$ does not interact with $X$
+* Check form of $d(y)$ for parametric models such as Weibull
+* For semiparametric models (Cox and ordinal regression) $d(y)$ does not need to be specified
+   + $d(y)$ is estimated by a step function (is link function of empirical CDF when $\beta=0$)
+* Show $d(y)$ does not interact with $X$ (parallelism assumption)
 
 
 ## Complex Curve Fitting Example {#sec-genreg-gtrans}
@@ -1713,11 +1715,11 @@ ggplot(Predict(f, x1, x2))
 1. In a model with main effects and two-way interactions, which regression parameter is the most "universal" by virtue of being most independent of coding?
 1. When a predictor is involved in an interaction, which test of association involving that predictor is preferred?
 1. What are two ways of doing chunk (composite) tests?
-1. An analyst intends to use least squares multiple regression to
+1. Analysts intends to use least squares multiple regression to
   predict follow-up blood pressure from baseline blood pressure, age,
-  and sex.  She wants to use this model for estimation, prediction,
+  and sex.  They wants to use this model for estimation, prediction,
   and inference (statistical tests and confidence limits).  List all
-  of the assumptions she makes by fitting the model $Y = \beta_{0} +
+  of the assumptions they make by fitting the model $Y = \beta_{0} +
   \beta_{1} \text{bp} + \beta_{2} \text{age} + \beta_{3} [\text{sex=female}]$.
 1. List as many methods as you can for checking the assumptions you listed.
 

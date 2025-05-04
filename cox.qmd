@@ -23,6 +23,7 @@ options(omitlatexcom=TRUE)  # makes latex() not generate comments
         efficient for $\beta$
 * Model diagnostics are advanced
 * Log-rank test is a special case with one binary $X$
+* The Cox model is a special case of ordinal semiparametric models (@sec-ordsurv) although it has better model diagnostics, especially for assessing proportional hazards
 
 
 ### Model Definition
@@ -549,8 +550,8 @@ $$\lambda(t | X) = \lambda_{0}(t) \exp(\beta_{1} X + \beta_{2} X \times [t > c])
 
 
 * Or fit one model for early follow-up, one for late
-* Try another model, e.g. log-normal, log-logistic can have
-        effects of $X$ changing constantly over time
+* Try another model, e.g. log-normal, log-logistic can have effects of $X$ changing constantly over time on the hazard scale
+* Example the fit of various link functions in an ordinal model, as this process spans a whole spectrum of PH to AFT models (@sec-ordsurv)
 * Differences in mean restricted life length can be useful
         in comparing therapies when PH fails [@kar97use], but see [bit.ly/datamethods-rmst](http://datamethods.org/t/restricted-mean-survival-time-and-comparing-treatments-under-non-proportional-hazards/2686)
 
@@ -718,6 +719,7 @@ treatment effect and non-compliance probabilities.
   survival time quantiles, and mean and mean restricted lifetimes,
   based on a `cph` fit with `surv=TRUE`
 * `Quantile` and `Mean` are especially useful with `plot`, `ggplot`, `plotp` and `nomogram`.  `Survival` is useful with `nomogram`
+* Usually better: use `orm` (@sec-ordsurv) to do Cox regression and more
 
 
 ```{r coxexcode, eval=FALSE}

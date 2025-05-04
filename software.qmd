@@ -77,7 +77,7 @@ f5 <- update(f, y2 ~ .)         # same terms, new response var.
 ## User-Contributed Functions
 
 * `R` is high-level object-oriented language. 
-* `R` runs on all platforms, and can be run on chromebooks using [RStudio Server](https://www.rstudio.com/products/rstudio/#rstudio-server)
+* `R` runs on all platforms, and can be run on chromebooks using [RStudio Server](https://posit.co/products/open-source/rstudio-server)
 * Multitude of user-contributed functions freely available
 * International community of users
 
@@ -135,20 +135,20 @@ y ~ lsp(age,30) + rcs(cholesterol,4) +
     lsp(age,30) %ia% rcs(cholesterol,4)
 ```
 
-Special fitting functions by Harrell to simplify
-procedures described in these notes:
+Special fitting functions to simplify procedures described in these notes:
 
 | Function | Purpose | Related `R` Functions|
 |-----|-------------------------------|---|
-| `ols`    | Ordinary least squares linear model | `lm`  |
-| `lrm`    | Binary and ordinal logistic regression model with options for penalize MLE| `glm` |
-| `orm`    | Ordinal semi-parametric regression model for continuous $Y$ and several link functions |`polr`,`lrm`  |
-| `psm`    | Accelerated failure time parametric survival models | `survreg` |
-| `cph`    | Cox proportional hazards regression | `coxph`  |
-| `bj`     | Buckley-James censored least squares model | `survreg`,`lm`  |
-| `Glm`   | `rms` version of `glm` | `glm`  |
-| `Gls`   | `rms` version of `gls` | `gls` (`nlme` package) |
-| `Rq`    | `rms` version of `rq`  | `rq` (`quantreg` package) |
+| `ols`       | Ordinary least squares linear model | `lm`  |
+| `lrm`       | Binary and ordinal logistic regression model with options for penalize MLE, meant for discrete $Y$ | `glm` |
+| `orm`       | Ordinal semi-parametric regression model for continuous $Y$ and several link functions, penalization, left, right, and interval censoring |`polr`,`lrm`  |
+| `psm`       | Accelerated failure time parametric survival models | `survreg` |
+| `cph`       | Cox proportional hazards regression | `coxph`  |
+| `bj`        | Buckley-James censored least squares model | `survreg`,`lm`  |
+| `Glm`       | `rms` version of `glm` | `glm`  |
+| `Gls`       | `rms` version of `gls` | `gls` (`nlme` package) |
+| `Rq`        | `rms` version of `rq`  | `rq` (`quantreg` package) |
+| `adapt_orm` | Use AIC to find the best link function and number of knots for a single continuous predictor using `orm`; a replacement for nonparametric smoothers that handles censoring | `orm` |
 
 : `rms` Fitting Functions
 
@@ -163,6 +163,7 @@ procedures described in these notes:
 | `scored` | Ordinal categorical variables | `ordered`  |
 | `matrx`  | Keep variables as group for `anova` and `fastbw` | `matrix`  |
 | `strat`  | Non-modeled stratification factors (used for `cph` only) | `strata`  |
+| `Ocens`  | Used by `orm` to code left, right, interval censoring of $Y$ |
 
 : `rms` Transformation Functions
 
@@ -176,38 +177,39 @@ has an option to convert the result to `plotly`), and a direct
 `plotly` method.  `plotly` is used to create somewhat
 interactive graphics with drill-down capability, and the `rms`
 package takes advantage of this capability.  `plotly` graphics are
-best used with RStudio Rmarkdown html output.
+best used with `RStudio Rmarkdown` or `Quarto` html output.  The `ggplot` and `plotly` (`plotp`; see later in this section) methods are recommended.
 
-| Function | Purpose | Related Functions |
-|----------|--------------------------------|-----|
-| `print`  | Print parameters and statistics of fit                    | |
-| `coef` | Fitted regression coefficients                              | |
+| Function     | Purpose                        | Related Functions |
+|--------------|--------------------------------|-----|
+| `print`      | Print parameters and statistics of fit                | |
+| `coef`       | Fitted regression coefficients                        | |
 | `formula`    | Formula used in the fit                               | |
-| `specs`  | Detailed specifications of fit                            | |
-| `vcov`   | Fetch covariance matrix                              | |
-| `logLik` | Fetch maximized log-likelihood                       | |
-| `AIC`    | Fetch AIC with option to put on chi-square basis     | |
-| `lrtest` | Likelihood ratio test for two nested models          | |
-| univarLR | Compute all univariable LR $\chi^{2}$               | |
+| `specs`      | Detailed specifications of fit                        | |
+| `vcov`       | Fetch covariance matrix                               | |
+| `logLik`     | Fetch maximized log-likelihood                        | |
+| `AIC`        | Fetch AIC with option to put on chi-square basis      | |
+| `lrtest`     | Likelihood ratio test for two nested models           | |
+| `univarLR`   | Compute all univariable LR $\chi^{2}$                 | |
 | `robcov` | Robust covariance matrix estimates                        | |
 | `bootcov`    | Bootstrap covariance matrix estimates and bootstrap distribution of estimates   | |
 | `pentrace`   | Find optimum penalty factors by tracing effective AIC for a grid of penalties | |
 | `effective.df`| Print effective d.f. for each type of variable in model, for penalized fit or `pentrace` results | |
 | `summary`    | Summary of effects of predictors                      | |
 | `plot.summary` | Plot continuously shaded confidence bars for results of `summary`| |
-| `anova`  | Wald and LR tests of most meaningful hypotheses                | |
+| `anova`  | Wald and LR tests of most meaningful hypotheses           | |
 | `plot.anova` | Graphical depiction of anova                          | |
-| `contrast`   | General contrasts, C.L., tests                        | |
-| `gendata` | Easily generate predictor combinations             | |
-| `predict`    | Obtain predicted values or design matrix | |
+| `contrast`   | General contrasts, C.L., tests (both Wald- and likelihood-based)                        | |
+| `gendata` | Easily generate predictor combinations                   | |
+| `predict`    | Obtain predicted values or design matrix              | |
 | `Predict`    | Obtain predicted values and confidence limits easily varying a subset of predictors and others set at default values|  |
-| `plot.Predict` | Plot the result of `Predict` using `lattice`| |
-| `ggplot.Predict` | Plot the result of `Predict` using `ggplot2` | |
-| `plotp.Predict` | Plot the result of `Predict` using `plotly` | |
+| `plot.Predict` | Plot the result of `Predict` using `lattice`        | |
+| `ggplot.Predict` | Plot the result of `Predict` using `ggplot2`      | |
+| `plotp.Predict` | Plot the result of `Predict` using `plotly`        | |
 | `fastbw` | Fast backward step-down variable selection | `step` |
 | `residuals` | (or `resid`) Residuals, influence stats from fit | |
 | `sensuc` | Sensitivity analysis for unmeasured confounder | |
 | `which.influence` | Which observations are overly influential |`residuals` |
+| `impactPO` | Assess the impact of the proportional odds assumption for `lrm` | `ordParallel` |
 | `latex`  | $\LaTeX$ representation of fitted model | `Function`   |
 | `Function`| `R` function analytic representation of $X\hat{\beta}$ from a fitted regression model| `latex` |
 | `Hazard` | `R` function analytic representation of a fitted hazard function (for `psm`) | |
@@ -221,27 +223,39 @@ best used with RStudio Rmarkdown html output.
 | `validate`   | Validate indexes of model fit using resampling | |
 | `val.prob`   | External validation of a probability model | `lrm` |
 | `val.surv`   | External validation of a survival model | `calibrate`  |
-| `calibrate` | Estimate calibration curve using resampling | `val.prob`  |
+| `calibrate`  | Estimate calibration curve using resampling | `val.prob`  |
 | `vif`        | Variance inflation factors for fitted model |              |
-| `naresid`     | Bring elements corresponding to missing data back into predictions and residuals | |
-| `naprint`     | Print summary of missing values                      | |
-| `impute` | Impute missing values                 | `aregImpute`   |
+| `naresid`    | Bring elements corresponding to missing data back into predictions and residuals | |
+| `naprint`    | Print summary of missing values                      | |
+| `impute`     | Impute missing values                 | `aregImpute`   |
 
 : `rms` After-fit Functions
+
+The `orm` function has special after-fit functions:
+
+| Function | Purpose | Related Functions |
+|----------|--------------------------------|-----|
+| `intCalibration` | Internal calibration, useful for assessing goodness-of-fit | `calibrate` |
+| `ordParallel`    | Check parallelism assumption, e.g., proportional odds | `impactPO` |
+| `plotIntercepts` | Line plot of intercept estimates | |
+| `ordESS`         | Effective sample size with special handling of censored observations |
+| `Olinks`         | Compute deviance of model under four link functions |
+
+: `orm` After-fit Functions
 
 
 
 | Function | Purpose   |
-|-----|-----|
-| `blrm`         | Bayesian binary and ordinal logistic model  |
-| `stackMI`      | Bayesian posterior stacking for multiple imputation  |
-| `stanDx`       | Stan diagnostics on fit  |
-| `stanDxplot`   | Trace plots to check posterior sampling convergence  |
+|----------------|-----------------------------------------------------------|
+| `blrm`         | Bayesian binary and ordinal logistic model                |
+| `stackMI`      | Bayesian posterior stacking for multiple imputation       |
+| `stanDx`       | Stan diagnostics on fit                                   |
+| `stanDxplot`   | Trace plots to check posterior sampling convergence       |
 | `PostF`        | Creates R function for computing posterior probabilities  |
-| `plot.rmsb`    | Plot posterior densities, intervals, point summaries |
-| `compareBmods` | Compare two models using LOO-cv  |
-| `HPDint`       | Compute highest posterior density interval |
-| `distSym`      | Compute meaure of symmetry of posterior distribution |
+| `plot.rmsb`    | Plot posterior densities, intervals, point summaries      |
+| `compareBmods` | Compare two models using LOO-cv                           |
+| `HPDint`       | Compute highest posterior density interval                |
+| `distSym`      | Compute meaure of symmetry of posterior distribution      |
 
 : `rmsb`: Bayesian Regression Modeling Strategies Package, Focusing on Semiparametric Univariate and Longitudinal Models
 

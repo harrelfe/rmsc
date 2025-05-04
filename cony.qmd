@@ -29,8 +29,7 @@ multivariable models for predicting such response variables.
 * semiparametric models based on the ranks of $Y$, such as the Cox
   proportional hazards model
   and the proportional odds ordinal logistic model
-* cumulative probability models (often called _cumulative link models_) which are semiparametric models from a wider class of
-  families than the logistic
+* cumulative probability models (often called _cumulative link models_ despite the fact that cumulative probabilities and not cumulative links are being computed) which are semiparametric models from a wider class of families than the logistic
 
 Semiparametric models that treat $Y$ as ordinal but not  `r ipacue()` 
 interval-scaled have many advantages including robustness and freedom

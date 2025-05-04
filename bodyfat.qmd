@@ -115,8 +115,15 @@ median(abs(resid(g)))
 * Nomogram
 
 ```{r}
+#| label: fig-bodyfat-bplot
+#| fig-cap: "Predicted body fat fraction for varying height and weight given age of 43 and other predictors set to their medians/modes"
 p <- Predict(f, height, abdomen)
 bplot(p, ylabrot=90)
+```
+
+```{r}
+#| label: fig-bodyfat-nomo
+#| fig-cap: "Nomogram for estimating body fat fraction from all predictors"
 plot(nomogram(f), lplab='Fat Fraction')
 ```
 

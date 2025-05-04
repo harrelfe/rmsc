@@ -9,6 +9,8 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 
 # Case Study in Cox Regression {#sec-coxcase}
 
+Note that all the analyses presented here may be done in a more general context - see @sec-ordsurv
+
 ## Choosing the Number of Parameters and Fitting the Model
 
 `r mrg(sound("cox-case-1"))`

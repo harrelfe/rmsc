@@ -152,7 +152,7 @@ classif --> whatclass[Categorical output<br><br>Hides close calls<br><br>Makes p
 
 * ROC analysis is misleading except for the special case
   of mass one-time group decision making with unknowable
-  utilities^[To make an optimal decision you need to know all relevant data about an individual (used to estimate the probability of an outcome), and the utility (cost, loss function) of making each decision. Sensitivity and specificity do not provide this information. For example, if one estimated that the probability of a disease given age, sex, and symptoms is 0.1 and the "cost"of a false positive equaled the "cost" of a false negative, one would act as if the person does not have the disease.  Given other utilities, one would make different decisions.  If the utilities are unknown, one gives the best estimate of the probability of the outcome to the decision maker and let her incorporate her own unspoken utilities in making an optimum decision for her. <br><br>Besides the fact that cutoffs do not apply to individuals, only to groups, individual decision making does not utilize sensitivity and specificity.  For an individual we can compute $\textrm{Prob}(Y=1 | X=x)$; we don't care about $\textrm{Prob}(Y=1 | X>c)$, and an individual having $X=x$ would be quite puzzled if she were given $\textrm{Prob}(X>c | \textrm{future unknown Y})$ when she already knows $X=x$ so $X$ is no longer a random variable. <br><br>Even when group decision making is needed, sensitivity and specificity can be bypassed.  For mass marketing, for example, one can rank order individuals by the estimated probability of buying the product, to create a lift curve.  This is then used to target the $k$ most likely buyers where $k$ is chosen to meet total program cost constraints.]
+  utilities^[To make an optimal decision you need to know all relevant data about an individual (used to estimate the probability of an outcome), and the utility (cost, loss function) of making each decision. Sensitivity and specificity do not provide this information. For example, if one estimated that the probability of a disease given age, sex, and symptoms is 0.1 and the "cost" of a false positive equaled the "cost" of a false negative, one would act as if the person does not have the disease.  Given other utilities, one would make different decisions.  If the utilities are unknown, one gives the best estimate of the probability of the outcome to the decision maker and let them incorporate their own unspoken utilities in making an optimum decision for them. <br><br>Besides the fact that cutoffs do not apply to individuals, only to groups, individual decision making does not utilize sensitivity and specificity.  For an individual we can compute $\textrm{Prob}(Y=1 | X=x)$; we don't care about $\textrm{Prob}(Y=1 | X>c)$, and an individual having $X=x$ would be quite puzzled if they were given $\textrm{Prob}(X>c | \textrm{future unknown Y})$ when they already knows $X=x$ so $X$ is no longer a random variable. <br><br>Even when group decision making is needed, sensitivity and specificity can be bypassed.  For mass marketing, for example, one can rank order individuals by the estimated probability of buying the product, to create a lift curve.  This is then used to target the $k$ most likely buyers where $k$ is chosen to meet total program cost constraints.]
 
 See @vic08dec, @bri08ski, @gai05cri, @bor07sta, @fan07amn, @gne07str.
 
@@ -300,9 +300,8 @@ General aspects to capture in the predictors:
 * Model must use data efficiently
 * Should model overall structure (e.g., acute vs. chronic)
 * Robust models are better
-* Should have correct mathematical structure (e.g., constraints
-        on probabilities)
-
+   + The most general robust models not requiring machine learning-level sample sizes are semiparametric ordinal models
+* Should have correct mathematical structure (e.g., constraints on probabilities)
 
 
 ## Model uncertainty / Data-driven Model Specification
@@ -379,4 +378,4 @@ As the Bayesian $t$-test exemplifies, there are advantages of a continuous appro
 1. Why are so many decisions non-binary?
 1. How do we normally choose statistical models---from subject matter theory or empirically?
 1. What is model uncertainty?
-1. An investigator feels that there are too many variables to analyze so she uses significance testing to select which variables to analyze further.  What is wrong with that?
+1. Investigator feels that there are too many variables to analyze so they use significance testing to select which variables to analyze further.  What is wrong with that?

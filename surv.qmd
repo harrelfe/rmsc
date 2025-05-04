@@ -458,6 +458,7 @@ Longitudinal ordinal models based on a discrete time state transition Markov pro
 * `event.chart` in `Hmisc` draws a variety of charts for
   displaying raw survival time data, for both single and multiple
   events per subject (see also `event.history, event.chart2`)
+* A general modeling approach makes use of ordinal semiparametric regression models (@sec-ordsurv)
 * Analyses in this chapter can be done as special cases of the Cox
   model
 * Particular functions for this chapter (no covariables) from Therneau:

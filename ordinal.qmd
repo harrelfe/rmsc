@@ -29,10 +29,12 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
   Wilcoxon-Mann-Whitney-Kruskal-Wallis-Spearman
 * Can have $n$ categories for $n$ observations!
 * Continuation ratio model: discrete proportional hazards model
-
+* Ordinal models are _semiparametric_, i.e., distribution-free on the left-hand-side and parametric on the right hand $X\beta$ side of the model
 
 
 ## Ordinality Assumption {#sec-ordinal-ordinality}
+
+A backwards way to look at ordinality ---
 
 * Assume $X$ is linearly related to some appropriate log odds `r ipacue()`
 * Estimate mean $X | Y$ with and without assuming the model holds
@@ -84,9 +86,7 @@ where $j=1, 2, \ldots, k$.
 
 ## Assumptions and Interpretation of Parameters
 
-
 ### Estimation
-
 
 ### Residuals
 
@@ -104,7 +104,8 @@ $$
 
 * For each column of $U$ plot mean $\bar{U}_{\cdot m}$ and C.L.\
   against $Y$
-* Partial residuals are more useful as they can also estimate
+* Score residuals are not as useful in general semiparametric models for continuous $Y$ as they are in the Cox proportional hazards model
+* Partial residuals may be more useful as they can also estimate
   covariable transformations[@lan84gra; @colBookbin]:
 
 $$
@@ -185,7 +186,7 @@ _impact_ of making the PO assumption:
     + to relax the PO assumption for all predictors fit a
     multinomial logistic model
     + to relax the PO assumption for a subset of predictors fit a
-    partial PO model[@pet90par] (here using the `R` `VGAM` function)
+    partial PO model [@pet90par] (here using the `R` `VGAM` function)
 
 * For all the covariate combinations evaluate predicted
   probabilities for all levels of Y using the PO model and the relaxed

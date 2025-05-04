@@ -538,7 +538,7 @@ w
 ```
 
 
-We estimate that patients on treatment 1 have 3 less days unwell than those on treatment 0 for the given covariate settings.
+We estimate that patients on treatment 1 have 1 less day unwell than those on treatment 0 for the given covariate settings.
 
 Do a similar calculation for the expected number of days alive out of 28 days (similar to restricted mean survival time.
 

@@ -133,7 +133,7 @@ The Wald $\chi^2$ for `x2` is 0.26 but the much better LR $\chi^2$ is very large
 
 ---
 
-## Boostrap Confidence Regions {#sec-mle-boot}
+## Bootstrap Confidence Regions {#sec-mle-boot}
 
 * Confidence intervals for functions of the vector of parameters $B$ can be computed using **bootstrap percentile** confidence limits.
 

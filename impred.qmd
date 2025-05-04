@@ -86,7 +86,7 @@ predictors with the maximum number of parameters we consider for each.
 |-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
 | Number of Parameters: |  3 |   2 |   4 |  2 |  1 |  4 |   4 |   5 |   4 |  4 |  4 |  4 | 1   |
 
-: Degrees of fredom needed for predictors {#tbl-impred-maxdf}
+: Degrees of freedom needed for predictors {#tbl-impred-maxdf}
 
 
 ## Redundancy Analysis

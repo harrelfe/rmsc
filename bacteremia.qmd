@@ -27,7 +27,7 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 * Sparse principal components
 * High-level statistical reporting functions in the `qreport` package (`dataOverview, missChk, vClus`)
 
-The optimum nonlinear transformations are determined form the `transace` function in the `Hmisc` package, which uses the [ACE algorithm](https://en.wikipedia.org/wiki/Alternating_conditional_expectations).  Nonlinear transformations, redundancy analysis, and sparse PCs are all done on a tall stacked multiply-imputed dataset.
+The optimum nonlinear transformations are determined using the `transace` function in the `Hmisc` package, which uses the [ACE algorithm](https://en.wikipedia.org/wiki/Alternating_conditional_expectations).  Nonlinear transformations, redundancy analysis, and sparse PCs are all done on a tall stacked multiply-imputed dataset.
 
 ##  Descriptive Statistics
 

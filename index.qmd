@@ -17,9 +17,16 @@ rms[Multivariable Model Development] --> est[Estimation] --> pred[Prediction] --
 
 All standard regression models have assumptions that
 must be verified for the model to have power to test hypotheses and
-for it to be able to predict accurately. Of the principal assumptions
-(linearity, additivity, distributional), this course will emphasize
-methods for assessing and satisfying the first two.  Practical but
+for it to be able to estimate and predict accurately. There are four principal types of assumptions of regression models: 
+
+1. linearity of effects of predictors
+2. additivity of effects of multiple predictors
+3. absolute distributional assumptions
+4. relative distributional assumptions
+
+Absolute distributional assumptions are made for parametric regression models.  These assume a specific distribution for the dependent variable $Y$ given specific predictor $X$ values.  Relative distributional assumptions pertain to how the shape of the $Y$ distribution for one set of $X$ values relates to the shape for other values of $X$.  Semiparametric regression models only make the second kind of distributional assumption.
+
+This course emphasizes methods for assessing and satisfying assumption types 1, 2, and 4.  Less attention is paid to assumption 3 due to the course's emphasis on semiparametric models.  Practical but
 powerful tools are presented for validating model assumptions and
 presenting model results. This course provides methods for estimating
 the shape of the relationship between predictors and response using
@@ -29,11 +36,10 @@ overfitting can ruin a model's predictive ability for future
 observations.  Methods for data reduction will be introduced to deal
 with the common case where the number of potential predictors is large
 in comparison with the number of observations. Methods of model
-validation (bootstrap and cross-validation) will be covered, as will
-auxiliary topics such as modeling interaction surfaces,
+validation (bootstrap and cross-validation) will be covered, as well
+as quantifying predictive accuracy and predictor importance, modeling interaction surfaces,
 efficiently utilizing partial covariable data by using multiple
-imputation,
-variable selection, overly influential observations, collinearity, and
+imputation, variable selection, overly influential observations, collinearity, and
 shrinkage, and a brief introduction to the `R` `rms` package
 for handling these problems.
 The methods covered will apply to almost any regression model, including
@@ -131,7 +137,7 @@ Students will
 * A good overall strategy is to decide how many degrees of
   freedom (i.e., number of regression parameters) can be \"spent\",
   where they should be spent, to spend them with no regrets.
-See the excellent text _Clinical Prediction Models_ [@cpm]
+See the excellent text _Clinical Prediction Models_ [@ste19cli]
 
 ## Key Messages of the Course
 
@@ -173,13 +179,17 @@ that further discusses the topic.
    + [Four hour short course](https://youtu.be/UPcpkIJXlvY) from useR!2022
 * [BBR course](https://hbiostat.org/bbrc)
 * Go directly to a YouTube video for RMS Session `n` by going to `bit.ly/yt-rmsn`
-* [Study questions](https://hbiostat.org/rms/qstudy.html)
+* Study questions at the end of selected chapters
 * [Datamethods discussion board](http://datamethods.org)
 * [Statistical papers written for clinical researchers](https://hbiostat.org/bib)
 * [RMS overview and template for statistical analysis plan](https://fharrell.com/post/modplan)
 * [Statistical Thinking blog](https://fharrell.com)
 * [Glossary of statistical terms](https://hbiostat.org/glossary)
 * [R Workflow](https://hbiostat.org/rflow)
+
+## Acknowledgements
+
+A number of individuals who are key to my career and to the development of RMS were acknowledged in the preface to the $2^\text{nd}$ edition of _Regression Modeling Strategies_.  In particular, David Hurst, the first Chair of the Department of Biostatistics at the University of Alabama in Birmingham, was singularly responsible for my entering the field of biostatistics.  I also wish to thank Drew Levy and Madeline Bauer for critical reading of these course notes and providing a large number of constructive comments that made the notes significantly better.
 
 ## R Packages
 

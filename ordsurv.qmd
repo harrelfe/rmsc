@@ -57,11 +57,11 @@ The most popular methods used in this setting are the Kaplan-Meier survival curv
 
 The Cox PH model uses the marginal distribution of ranks of failure times that come from an underlying Gumbel extreme-value distribution $\exp(-\exp(t))$.  This gives rise to proportional hazards effects of covariates, and the Cox _partial likelihood_ that does not involve the underlying hazard or survival curve for a "standard" subject, e.g., a subject with all covariates equal to their mean.  This implies that maximum partial likelihood estimates can be calculated very quickly without dealing with intercepts in the model.  But the extreme value distribution is the **only** distribution for which the multi-dimensional integration that results in the marginal likelihood is tractable.  That isolates Cox PH from all the other survival model forms that cannot use partial likelihood.
 
-Instead of seeking partial likelihood solutions, full semiparametric likelihoods can be used.  That allows extension of the Cox model semiparametric theme to any distribution, because with semiparametric models the intercepts are estimated simultaneously with $\beta$.  Sparse matrix operations allow full likelihood to be as fast as using the Cox partial likelihood, so some of the issues that originally motivated the Cox model are moot.  And unlike the Cox model, semiparametric ordinal models handle left- and interval-censoring.  As will be seen below, ordinal models also unite PH and accelerated failure time (AFT) models.  In essence, one ordinal model encompasses all of single-event-type survival analysis, with different link function choices giving rise to the complete PH-AFT spectrum and beyond.  For AFT, ordinal models have an incredibly important advantage of not assuming a specific transformation of time, such as the commonly used $\log(t)$ transformation that gives rise to log-logistic, log-normal, and log-$t$ survival models when for example the residuals actually follow logistic, normal, or $t$ distributions.
+Instead of seeking partial likelihood solutions, full semiparametric likelihoods can be used.  That allows extension of the Cox model semiparametric theme to any distribution, because with semiparametric models the intercepts are estimated simultaneously with $\beta$.  Sparse matrix operations allow full maximum likelihood iterative calculations and matrix operations to be as fast as using the Cox partial likelihood, so some of the issues that originally motivated the Cox model are moot.  And unlike the Cox model, semiparametric ordinal models handle left- and interval-censoring.  As will be seen below, ordinal models also unite PH and accelerated failure time (AFT) models.  In essence, one ordinal model encompasses all of single-event-type survival analysis, with different link function choices giving rise to the complete PH-AFT spectrum and beyond.  For AFT, ordinal models have an incredibly important advantage of not assuming a specific transformation of time, such as the commonly used $\log(t)$ transformation that gives rise to log-logistic, log-normal, and log-$t$ survival models when for example the residuals actually follow logistic, normal, or $t$ distributions.
 
 ## Cumulative Probability Models
 
-Cumulative probability ordinal models (CPMs) are natural for survival analysis.  For a distribution family $F$, the usual model
+Cumulative probability ordinal models (CPMs) are natural for survival analysis.  For a distribution family $F$ the usual model
 
 $$
 P(Y \geq y | X) = F(\alpha_{y} + X\beta)
@@ -79,7 +79,7 @@ where $\alpha_{t+}$ is the next intercept after $\alpha_t$.
 
 Consider a predictor $X_{j}$ that operates linearly and does not interact with any other predictor.  A one-unit change in $X_{j}$ then changes the linear predictor $X\beta$ by $\beta_{j}$ units.  Equivalently, it changes $F^{-1}(S(t | X))$ by $\beta_j$ units.  For some link functions, the interpretation can be stated in other ways, letting $r = \exp(\beta_{j})$ denote an effect ratio.
 
-* _logit link_: $r$ is a survival odds ratio, i.e., $\frac{\text{odds}(T > t | X=a+1)}{\text{odds}(T > t | X=a)}$, where $\text{odds}(u) = \frac{P(u)}{1 - P(u)}$ and $a$ is any constant.
+* _logit link_: $r$ is a survival odds ratio, i.e., $\frac{\text{odds}(T > t | X=a+1)}{\text{odds}(T > t | X=a)}$, where $\text{odds}(u) = \frac{P(u)}{1 - P(u)}$, $a$ is any constant, and $u$ represents some assertion
 * _log-log link_: $r$ is the exponent relating the two survival curves, i.e., $S(T > t | X=a+1) = S(T > t | X=a)^{r}$.  In the special case that $T$ is truly continuous, i.e., the distance between successive distinct values of $T$ goes to zero as $n \rightarrow \infty$, $\frac{1}{r}$ is the $X=a+1 : X=a$ hazard ratio and the model is a proportional hazards model.  The hazard ratio is $\exp(-\beta_{j})$.  The idea of a continuous hazard function (and hence ratios of them) does not apply when $T$ is really discrete.
 * _complementary log-log link_: $r$ is the exponent relating $(1 - S(t | X=a+1))$ to $(1 - S(t | X=a))$, i.e., the cumulative distribution functions or cumulative incidence functions $C(t | X) = 1 - S(t | X)$.  $C(t | X=a+1) = C(t | X=a)^{r}$.
 
@@ -125,7 +125,7 @@ Special Cases of Ordinal CPMs
 //| file: flow3.dot 
 ```
 
-There are important implications of the generality, robustness, and efficiency of ordinal regression for censored data just as there are for uncensored data.  The generality of cumulative probability models (CPMs) allows them to bridge binary, discrete, and continuous ordinal regression to survival analysis and simple statistical tests, and would present major didactic simplifications for statistics courses.  Ordinal regression covers all the following special cases.
+There are important implications of the generality, robustness, and efficiency of ordinal regression for censored data just as there are for uncensored data.  The generality of cumulative probability models (CPMs) allows them to bridge binary, discrete, and continuous ordinal regression to survival analysis and simple statistical tests, and would present major didactic simplifications for statistics courses.  Ordinal regression covers all the following special cases:
 
 * An ordinal regression with logit link and only 2 Y levels is binary logistic regression
 * The score test in binary logistic regression is the Pearson $\chi^2$ test[For score tests see @sec-mle-tests, [here](https://www.fharrell.com/post/powilcoxon) and [here](https://www.fharrell.com/post/logrank).  The numerator of a score statistic is the first derivative of the log-likelihood evaluated at the null parameter value.  It is an "observed - expected" quantity.]{.aside}
@@ -142,7 +142,7 @@ There are important implications of the generality, robustness, and efficiency o
    + normal survival time model is a special case of a probit ordinal model where the intercepts are linearly related to the times they represent
    + log-normal survival time model is a special case of a probit model with intercepts as linear functions of log time
    + The ordinal model provides results that are independent of any time transformation that is monotonically increasing
-* The Cox PH model is a special case of an ordinal model with a log-log link.  @cox72 developed a partial likelihood approach so make estimation of regression coefficients very easy and fast.  This approach required the intercepts (underlying survival curve) to be estimated in a second step once $\hat{\beta}$ were computed.  There is a degree of arbitrariness in this approach, and methods for computing confidence intervals for estimated survival probabilities are complex.  Ordinal models use full likelihood so they estimate the intercepts simultaneously with $\beta$.  This is about as fast as just estimating $\beta$ with Cox PH, because with right censoring the hessian matrix for ordinal models is extremely sparse, so inverting its negative in order to get the covariance matrix is extremely fast even with hundreds of thousands of distinct failure times.
+* The Cox PH model is a special case of an ordinal model with a log-log link.  @cox72 developed a partial likelihood approach to make estimation of regression coefficients very easy and fast.  This approach required the intercepts (underlying survival curve) to be estimated in a second step once $\hat{\beta}$ were computed.  There is a degree of arbitrariness in this approach, and methods for computing confidence intervals for estimated survival probabilities are complex.  Ordinal models use full likelihood so they estimate the intercepts simultaneously with $\beta$.  This is about as fast as just estimating $\beta$ with Cox PH, because with right censoring the hessian matrix for ordinal models is extremely sparse, so inverting its negative in order to get the covariance matrix is extremely fast even with hundreds of thousands of distinct failure times.
 
 ::: {.callout-note collapse="true"}
 ## Agreement of Cox Model and Ordinal Regression
@@ -251,7 +251,7 @@ The `rms` `orm` function has been generalized in version 8.0 to handle general c
 * `survplot`: plot survival curves and confidence bands for easily-specified covariate combinations
 * `Survival`: generate an R function that computes survival probabilities and confidence limits
 * `Mean`: generate an R function that computes restricted mean survival time and confidence limits
-* `plotIntercepts`: plot intercepts vs. corresponding $y$-values, with optional log scale for $y$; linearity of such plots would indicate that the variable would have been correctly transformed for the corresponding parametric model
+* `plotIntercepts`: plot intercepts vs. corresponding $y$-values, with optional log scale for $y$; linearity of such plots would indicate that $y$ was correctly transformed for the corresponding parametric model
 * `ordParallel`: estimate the effects of covariates over time
    + Re-fits the ordinal model using a sequence of cutoffs to check the adequacy of the link function, i.e., to check parallelism of link-transformed survival curves
 * `ordESS`: computes the effective sample size in the presence of general censoring, and plots per-observation ESS against censoring time (e.g., interval-censored observations with narrower intervals will convey more information)
@@ -282,7 +282,7 @@ Ordinal semiparametric CPM models ---
    + use AIC to judge which of the two models is more likely to have better cross-validated accuracy
    + examples of more general models: partial proportional odds model, polytomous (multinomial) logistic regression
    + [example](https://https://fharrell.com/post/impactpo)
-   + this is the preferred method but is not covered in this chapter although is related to the $y$-varying $\beta$ plots to follow
+   + this is the preferred method but is not covered in this chapter although it is related to the $y$-varying $\beta$ plots to follow
    + future addition to the `rms` `orm` function will make this easier
 * Compare deviances (-2 log likelihood) for different links using the same $X$ design
    + equivalent to judging model likelihood ratio $\chi^2$, AIC, and pseudo $R^2$
@@ -295,7 +295,7 @@ Ordinal semiparametric CPM models ---
 * For a series of $y$ cutoffs fit binary models for the event occurrence $Y \geq y$ and plot the estimated $\beta$ against $y$, and add a smoother
    + Examples also given with formal tests of $X\times y$ interaction using GEE
    + With censored $Y$, some binary indicators of $Y\geq y$ cannot be determined and these observations are omitted
-* The same as the previous dichotomization approach but on the overall linear predictor, seeing how it slope varies away from 1.0 over cut-points
+* The same as the previous dichotomization approach but on the overall linear predictor, seeing how its slope varies away from 1.0 over the set of cut-points
    + This may be better than stratifying by a linear predictor and getting stratified Kaplan-Meier estimates
 * Internal calibration plots: plot predicted $P(Y \geq y)$ vs. observed smoothed proportions (smoothed moving overlapping windows of Kaplan-Meier estimates or using an adaptive flexible hazard model - [`hare`](https://cran.r-project.org/web/packages/polspline/index.html) @koo95haz, @koo97haz)
 * Similar to the previous method but plot both predicted and observed probabilities against a covariate (overlapping window moving averages)
@@ -309,7 +309,7 @@ Ordinal semiparametric CPM models ---
    + RMS Chapter 20: need 184 uncensored observations to estimate entire cumulative distribution within margin of error $\pm 0.1$ with probability $\geq 0.95$
    + For margin of error $\pm 0.05$, sample size required is $4\times$ higher at 736
 
-So in non-huge datasets **some GOF assessments are noisy are hard to use for decision making**.
+So in non-huge datasets **some GOF assessments are noisy and hard to use for decision making**.
 
 ::: {.callout-note collapse="true"}
 ## Sample Size Requirements for Discriminating Links Using Deviance
@@ -524,7 +524,7 @@ ggplot(f, trans='probit', logt=TRUE, conf='none') + labs(title='probit link')
 
 Non-parallelism (inadequacy of the link function) is best judged by comparing vertical distance between the outer transformed survival curves.  The probit link clearly does not work, but the logit link and the perfect-fitting log-log link are surprisingly close. This is perhaps related to the simplicity of the first simulation model.
 
-Let's fit a series of models examine fitted linear predictors from the log-log and logit model.  `mscore=TRUE` computes the $n\times p$ score matrix correctly if censoring is present.
+Let's fit a series of models to examine fitted linear predictors from the log-log and logit model.  `mscore=TRUE` computes the $n\times p$ score matrix correctly if censoring is present.
 
 ```{r}
 f11  <- cph(S1 ~ age + sex + ran, surv=TRUE, x=TRUE, y=TRUE)
