@@ -377,7 +377,7 @@ First 20 samples:
     + cross-validation
     + bootstrap: get overfitting-corrected accuracy index
 
-* Best way to make model fit data well is to discard much of the data  `r ipacue()`
+* Best way to make model fit data well is to discard much of the data  `r ipacue()` (not recommended!)
 * Predictions on another dataset will be inaccurate
 * Need unbiased assessment of predictive accuracy
 
@@ -643,6 +643,23 @@ Other issues:
 * See @ble93inf and @cha95mod for more interesting
     examples of problems resulting from data-driven analyses.
 
+<!-- NEW 2025-10-15 -->
+
+#### Confidence Intervals for Overfitting-Corrected Model Performance Measures {#sec-validate-bootcl}
+
+* Uncertainty comes from estimating
+   + apparent performance
+   + bias in apparent performance (overfitting)
+* @nom21con studied an accurate double-bootstrap-loop approach accounting for both sources of uncertainty
+* They also studied an approximate method where bootstrap percentile confidence intervals in the apparent accuracy were merely shifted by the estimated about of bias
+* The approximate approach requires no additional computations whereas the full double-loop approach is very slow
+* The authors found that the approximate solution works reasonably well if
+   + the sample size is not small
+   + the amount of overfitting is not huge
+
+Examples with a small sample size and much overfitting showed the Noma _et al_ fast shifted coinfidence intervals to not have adequate coverage due to accounting for only one source of uncertainty.  An alternative called ABCLOC (**a**symmetric **b**ootstrap **c**onfidence **l**imits for **o**verfitting-**c**orrected model performance metrics) that was derived empirically for such situations has the best coverage to date from among fast methods not requiring an outer bootstrap loop.  ABCLOC was derived and studied [here](https://fharrell.com/post/bootcal).  Briefly, it considers variation over bootstrap resamples in the quantity $\theta_{b} + 1.25 \theta_{w}$ where $\theta_{b}$ is a model performance measure for a model fitted and evaluated on a bootstrap sample, and $\theta_{w}$ is the measure from the model fitted on the bootstrap sample and evaluated on the original whole sample.  Dual standard deviations of this quantity are computed to handle asymmetry of distributions.  Confidence limits are the overfitting-corrected performance estimates $- a$ and the estimates $+ b$ where $a$ is the SD of the upper half of the distribution and $b$ is the SD for the lower half.  A standard normal critical value is multipled by each SD.
+
+ABCLOC limits are implemented in `rms` in version 8.1-0 for `validate` and `calibrate` functions.
 
 ### Multiple Imputation and Resampling-Based Model Validation {#sec-val-mival}
 
@@ -730,6 +747,8 @@ cal <- processMI(f, 'calibrate', nind=3)
 
 * Run `plot(cal)` if you want to see a full size final average calibration
 
+For related information see @mi25com and @awo25com.
+
 <!-- NEW -->
 
 ### Validation of Data Reduction {#sec-val-dr}
@@ -799,7 +818,8 @@ ggplot(w, aes(x=predictor, y=Rank)) + geom_point() + coord_flip() +
   geom_errorbar(aes(ymin=lim[,1], ymax=lim[,2]), width=0)
 ```
 
-See [this](https://fharrell.com/post/badb) and [this](https://hbiostat.org/talks/older/FHbiomarkers.pdf) for a higher-dimension example.
+<!-- NEW -->
+See [this](https://fharrell.com/post/badb) and [this](https://hbiostat.org/talks/older/FHbiomarkers.pdf) for a higher-dimension example.  See [this](https://www.tandfonline.com/doi/full/10.1080/10618600.2025.2547064?af=R#abstract) for a more in-depth discussion of ranking variable importance.
 
 
 ## Simplifying the Final Model by Approximating It {#sec-val-approx}

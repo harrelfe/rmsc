@@ -1049,28 +1049,28 @@ plot(s)
 #| label: fig-lrm-abm-age
 #| fig-cap: "Linear spline fit for probability of bacterial vs. viral meningitis as a function of age at onset [@spa89].  Points are simple proportions by age quantile groups."
 #|fig-scap: "Linear spline fit for age at presentation with meningitis"
-knitr::include_graphics('abm-age.png')
+knitr::include_graphics('images/abm-age.png')
 ```
 
 ```{r echo=FALSE}
 #| label: fig-lrm-vfib
 #| fig-cap: "(A) Relationship between myocardium at risk and ventricular fibrillation, based on the individual best fit equations for animals anesthetized with pentobarbital and $\\alpha$-chloralose.  The amount of myocardium at risk at which 0.5 of the animals are expected to fibrillate $(\\text{MAR}_{50})$ is shown for each anesthetic group. (B) Relationship between myocardium at risk and ventricular fibrillation, based on equations derived from the single slope estimate.  Note that the $\\text{MAR}_{50}$ describes the overall relationship between myocardium at risk and outcome when either the individual best fit slope or the single slope estimate is used.  The shift of the curve to the right during $\\alpha$-chloralose anesthesia is well described by the shift in $\\text{MAR}_{50}$. Test for interaction had P=0.10 [@wen84ven].  Reprinted by permission, NRC Research Press."
 #| fig-scap: "Fitted logistic models in two variables, with and without interaction"
-knitr::include_graphics('vfib.png')
+knitr::include_graphics('images/vfib.png')
 ```
 
 ```{r echo=FALSE}
 #| label: fig-lrm-cad-nomo
 #| fig-cap: 'A nomogram for estimating the likelihood of significant coronary artery disease (CAD) in women.  ECG = electrocardiographic; MI = myocardial infarction [@pry83].  Reprinted from American Journal of Medicine, Vol 75, Pryor DB et al., "Estimating the likelihood of significant coronary artery disease", p. 778, Copyright 1983, with permission from Excerpta Medica, Inc.'
 #| fig-scap: "Nomogram for predicting $\\Pr(\\text{CAD})$"
-knitr::include_graphics('cad-nomo.png')
+knitr::include_graphics('images/cad-nomo.png')
 ```
 
 ```{r echo=FALSE}
 #| label: fig-lrm-abm-nomo
 #| fig-cap: "Nomogram for estimating probability of bacterial (ABM) vs. viral (AVM) meningitis.  Step 1, place ruler on reading lines for patient's age and month of presentation and mark intersection with line A; step 2, place ruler on values for glucose ratio and total polymorphonuclear leukocyte (PMN) count in cerebro-spinal fluid and mark intersection with line B; step 3, use ruler to join marks on lines A and B, then read off the probability of ABM vs. AVM [@spa89]."
 #| fig-scap: "Nomogram for predicting $\\Pr($, Bacterial meningitis$)$"
-knitr::include_graphics('abm-nomo.png')
+knitr::include_graphics('images/abm-nomo.png')
 ```
 
 ```{r w=6.5,h=7.75,cap='Nomogram relating age, sex, and cholesterol to the log odds and to the probability of significant coronary artery disease.  Select one axis corresponding to sex and to age $\\in \\{30,40,50,60,70\\}$. There was linear interaction between age and sex and between age and cholesterol.  0.70 and 0.90 confidence intervals are shown (0.90 in gray).  Note that for the `Linear Predictor` scale there are various lengths of confidence intervals near the same value of $X\\hat{\\beta}$, demonstrating that the standard error of $X\\hat{\\beta}$ depends on the individual $X$ values.  Also note that confidence intervals corresponding to smaller patient groups (e.g., females) are wider.',scap='Nomogram for CAD using age, sex, cholesterol'}

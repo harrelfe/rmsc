@@ -21,7 +21,7 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 
 * Multiple imputation
 * Variable clustering with pairwise deletion of `NA`s
-* Stacking of multiply-imputed datasets so that single analyses can be done (@mor15com)
+* Stacking of multiply-imputed datasets so that single analyses can be done (@mor15com, @hos25las)
 * Optimum unsupervised nonlinear transformations
 * Redundancy analysis
 * Sparse principal components

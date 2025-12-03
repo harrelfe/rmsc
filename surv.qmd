@@ -166,7 +166,7 @@ $$
 ```{r out.width='85%',echo=FALSE}
 #| label: fig-surv-censored-data
 #| fig-cap: "Some censored data.  Circles denote events."
-knitr::include_graphics('surv-censored-data.png')
+knitr::include_graphics('images/surv-censored-data.png')
 ```
 
 ## Homogeneous Failure Time Distributions

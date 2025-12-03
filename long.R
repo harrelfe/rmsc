@@ -167,6 +167,8 @@ plot(n, cex.axis=.55, cex.var=.8, lmgp=.25)
 ## ---- bayesfit --------
 
 require(rmsb)
+cmdstanr::set_cmdstan_path(cmdstan.loc)
+# cmdstan.loc is defined in ~/.Rprofile
 options(mc.cores=parallel::detectCores() - 1, rmsb.backend='cmdstan')
 bpo <- blrm(twstrs ~ treat * rcs(week, 3) + rcs(twstrs0, 3) +
             rcs(age, 4) * sex + cluster(uid), data=both, file='bpo.rds')
@@ -239,7 +241,7 @@ stanDxplot(bmark)
 ## ---- mark2 --------
 
 bmark
-a <- anova(bpo)
+a <- anova(bmark)
 a
 plot(a)
 

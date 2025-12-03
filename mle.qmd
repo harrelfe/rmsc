@@ -76,7 +76,7 @@ $$S = \frac{U(B_0)}{I(B_0)}$$
 ```{r, out.width='100%', fig.align='center', echo=FALSE, fig.retina=3}
 #| label: fig-mle-liktest
 #| fig-cap: "Tests arising from maximum liklihood estimation"
-knitr::include_graphics('mle-liktest.png')
+knitr::include_graphics('images/mle-liktest.png')
 ```
 
 
@@ -156,7 +156,7 @@ The Wald $\chi^2$ for `x2` is 0.26 but the much better LR $\chi^2$ is very large
 ```{r, out.width='100%', fig.align='center', echo=FALSE, fig.retina=3}
 #| label: fig-mle-bootstrapEx
 #| fig-cap: "Bootstrap confidence interval choices, from @car00boo"
-knitr::include_graphics('mle-bootstrapEx.png')
+knitr::include_graphics('images/mle-bootstrapEx.png')
 ```
 
 ---
@@ -213,7 +213,7 @@ psimult  <- Predict(b, x1 = x1s, conf.type = "simultaneous")
 ```{r, out.width='100%', fig.align='center', echo=FALSE, fig.retina=3}
 #| label: fig-mle-bootci
 #| fig-cap: "Bootstrap confidence intervals"
-knitr::include_graphics('mle-bootCi.png')
+knitr::include_graphics('images/mle-bootCi.png')
 ```
 
 ---
@@ -270,7 +270,7 @@ Gelman, Hwang, and Vehtari have a very useful article [here](http://www.stat.col
   * test whether $M_2$  adds predictive information to $M_1$ $(H_0: M_1+M_2>M_1)$
 
 ```{r, out.width='100%', fig.align='center', echo=FALSE, fig.retina=3}
-knitr::include_graphics('mle-table.png')
+knitr::include_graphics('images/mle-table.png')
 ```
 
 ----

@@ -1,5 +1,6 @@
 ```{r include=FALSE}
 require(rms)
+require(data.table)
 options(qproject='rms', prType='html')
 require(qreport)
 getRs('qbookfun.r')
@@ -317,8 +318,6 @@ So in non-huge datasets **some GOF assessments are noisy and hard to use for dec
 What sample sizes are needed for deviances from various links to be able to discern the correct link?  Let's simulate multiple datasets with varying $N$, with no censoring, replicating each $N$ 50 times and averaging the 50 deviances.  Data are generated using a logit link.  The deviance from the ideal logit link is subtracted from each non-logit link's deviance. 
 
 ```{r}
-require(rms)
-require(data.table)
 sim <- function(n) {
   age <- rnorm(n, 50, 12)
   sex <- sample(c('male', 'female'), n, TRUE)
@@ -326,7 +325,8 @@ sim <- function(n) {
   lp  <- 0.04 * (age - 50) + 0.8 * (sex == 'female')
   y   <- exp(0.5 + lp + rlogis(n) / 3)
   f   <- orm(y ~ age + sex + ran, x=TRUE, y=TRUE)
-  Olinks(f, dec=5)[c('link', 'deviance')]
+  # One cloglog fit would not converge; fixed by gradtol
+  Olinks(f, dec=5, gradtol=0.01)[c('link', 'deviance')]
 }
 R <- expand.grid(n = c(20, 40, 60, 80, 100, 150, 200, 300, 400, 500),
                  i = 1:50)

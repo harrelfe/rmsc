@@ -525,7 +525,7 @@ ve4 <- 'Test non-additive terms, e.g. products'
 
 ```{r echo=FALSE,out.width='100%'}
 #| fig-cap: "Comparison of methods for checking the proportional hazards assumption and for allowing for non-proportional hazards"
-knitr::include_graphics('cox-method-tab.png')
+knitr::include_graphics('images/cox-method-tab.png')
 ```
 
 ## What to Do When PH Fails
@@ -611,7 +611,8 @@ e   <- c(rep(0, n / 2), rep(1, n / 2))
 f   <- cph(Surv(y, e) ~ xx, x=TRUE, y=TRUE,
            time.inc=.5, surv=TRUE)
 cal <- calibrate(f, u=.5, B=200)
-plot(cal, ylim=c(.4, 1), subtitles=FALSE)
+par(mar=c(6, 3.5, 1, 1))
+plot(cal, ylim=c(.2, 1))#, subtitles=FALSE)
 calkm <- calibrate(f, u=.5, m=40,  cmethod='KM', B=200)
 plot(calkm, add=TRUE)   
 ```

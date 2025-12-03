@@ -11,3 +11,5 @@ apa*.csl
 .DS_Store
 flow*.dot
 
+
+**/*.quarto_ipynb

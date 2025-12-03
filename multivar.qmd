@@ -14,7 +14,7 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 **Scientific Big Picture**[Thanks to Drew Levy for key contributions]{.aside}
 
 * Rigorous judgements about information quality and sufficiency for explicit objectives should precede any modeling
-   + Undertaking modeling and inference and subsequently apologizing for analysis deficiencies results in scientific noise
+   + Undertaking modeling and inference and subsequently apologizing for data deficiencies results in scientific noise
 * Study design and measurement of key variables are $\frac{9}{10}$ of the problem
 * Distinguish predictive vs. causitive effects of $X$
 * Is the current sample size large enough to do an analysis whose goal is to find definitive answers that do not need to be independently validated?
@@ -28,6 +28,7 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 * If $N$ is insufficient and you want to proceed, you must replace the unavailable data with assumptions or knowledge to make the _effective_ sample size adequate
    + All-or-nothing assumptions (how treatments and humans function, which variables are relevant, which variables have linear effects, which interactions are real, etc.), or
    + Informative Bayesian prior distributions
+* See [On the uses and abuses of regression models](https://onlinelibrary.wiley.com/doi/10.1002/sim.10244) by JB Carlin and M Moreno-Betancur.  See also [this](https://bsky.app/profile/georgheinze.bsky.social/post/3lsj4jzbghs2a).
 
 <br>
 
@@ -404,6 +405,8 @@ See also these articles:
 * [Five myths about variable selection](https://onlinelibrary.wiley.com/doi/full/10.1111/tri.12895) by Georg Heinze and Daniela Dunkler
 * [Variable selection - A review and recommendations for the practicing statistician](https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700067) by Georg Heinze, Christine Wallisch, Daniela Dunkler
 * [Stopping stepwise](https://towardsdatascience.com/stopping-stepwise-why-stepwise-selection-is-bad-and-what-you-should-use-instead-90818b3f52df) by Peter Flom
+* [Best subset, forward stepwise or lasso?  Analysis and recommendations based on extensive simulations](https://www.stat.cmu.edu/~ryantibs/papers/bestsubset-sts.pdf) by Trevor Hastie, Robert Tibshirani, and Ryan Tibshirani, 2020
+* [Variable selection results in worse predictions than general shrinkage such as ridge regression](https://stats.stackexchange.com/a/669294/4253)
 
 
 ### Maxwell's Demon as an Analogy to Variable Selection
@@ -416,7 +419,7 @@ Model _specification_ is preferred to model _selection_.
 Information content of the data usually insufficient for reliable
 variable selection.
 
- <img src="maxwellsdemon.jpg" width="65%"> <img src="maxwell.jpg" width="25%">[James Clerk Maxwell]{.aside}
+ <img src="images/maxwellsdemon.jpg" width="65%"> <img src="images/maxwell.jpg" width="25%">[James Clerk Maxwell]{.aside}
 
 
 <small>Maxwell imagines one container divided into two parts, A and B. Both parts are filled with the same gas at equal temperatures and placed next to each other. Observing the molecules on both sides, an imaginary demon guards a trapdoor between the two parts. When a faster-than-average molecule from A flies towards the trapdoor, the demon opens it, and the molecule will fly from A to B. Likewise, when a slower-than-average molecule from B flies towards the trapdoor, the demon will let it pass from B to A. The average speed of the molecules in B will have increased while in A they will have slowed down on average. Since average molecular speed corresponds to temperature, the temperature decreases in A and increases in B, contrary to the second law of thermodynamics. </small>
@@ -441,7 +444,8 @@ discussed here but applied to time series modeling.
   ratios allow for more aggressive modeling)
 * $p$ should be $< \frac{m}{15}$ [@har84;  @har85reg; @smi92pro; @ped95imp; @ped96sim; @vit06rel; @plo14mod]
 * $p$ is number of parameters in full model or number of _candidate_
-    parameters in a stepwise analysis
+    parameters in a stepwise analysis, and $m$ is the effective sample size
+   + See @sec-ordsurv for how to estimate the effective sample size coming from censored observations
 * Derived from simulations to find minimum sample size so that
   apparent discrimination = validated discrimination
 * Applies to typical signal:noise ratios found outside of tightly
@@ -452,6 +456,7 @@ discussed here but applied to time series modeling.
 * @ril19min and @ril19mina have refined sample size
   estimation for continuous, binary, and time-to-event models to
   account for all of these issues
+* See also [Riley et al](https://arxiv.org/abs/2504.18730) 2025
 * To just estimate $\sigma$ in a linear model with a multiplicative margin of error of 1.2 with 0.95 confidence requires $n=70$
 * See [this](https://stats.stackexchange.com/questions/10079) for an excellent discussion of the sample size needed for ordinary linear models
 
@@ -597,7 +602,9 @@ between variables.
     + For others create clusters: socioeconomic, risk factors/history, and physiologic function
     + Summarize each cluster with its first principal component $PC_{1}$, i.e., the linear combination of characteristics that maximizes variance of the score across subjects subject to an overall constraint on the coefficients
     + Fit outcome model with 5 predictors
-* See [this](https://stats.stackexchange.com/questions/5774) for useful resources related to principal component analysis of mixed continuous and categorical variables
+* See [this](https://stats.stackexchange.com/questions/5774) [this](https://stats.stackexchange.com/questions/547566) and [this](https://stats.stackexchange.com/questions/3810) for useful resources related to principal component analysis of mixed continuous and categorical variables
+* [Multivariate analysis of mixed data: The R package PCAmixdata](https://arxiv.org/abs/1411.4911) by M Chavent et al, 2022.
+* R [homals package](https://cran.r-project.org/web/packages/homals)
 * See [this](https://stats.stackexchange.com/questions/239898) for an excellent discussion of whether data reduction (unsupervised learning) steps need to be included in resampling for model validation
 
 
@@ -608,7 +615,7 @@ between variables.
     + E.g., categorical variables with fewer than 2 categories having
  at least 20 observations
 
-* Use flexible additive parametric additive models to
+* Use flexible additive parametric models to
 determine how well each variable can be predicted from the remaining
 variables
 * Variables dropped in stepwise fashion, removing the
@@ -1011,6 +1018,8 @@ result of using a bad modeling strategy:
 ### Developing Predictive Models
 `r mrg(sound("mv-15"))`
 
+For an excellent tutorial covering many strategical aspects of developing and validating predictive models see @eft24dev.
+
 1. Assemble accurate, pertinent data and lots of it, with wide `r ipacue()`
   distributions for $X$.
 1. Formulate good hypotheses --- specify
@@ -1094,9 +1103,9 @@ result of using a bad modeling strategy:
 
 **Section 4.1**
 
-1. Investigators have interested in finding risk factors for stroke.
+1. Investigators are interested in finding risk factors for stroke.
   They collected data on 3000 subjects of whom 70 were known to
-  suffer a stroke within 5 years from study entry.  They decided decided
+  suffer a stroke within 5 years from study entry.  They decided
   that race (5 possible levels), age, height, and mean arterial blood
   pressure should definitely be in the model.  They do not try to
   find previous studies that show how these potential risk factors

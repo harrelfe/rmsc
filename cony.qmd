@@ -1,5 +1,6 @@
 ```{r include=FALSE}
 require(Hmisc)
+require(data.table)
 options(qproject='rms', prType='html')
 require(qreport)
 getRs('qbookfun.r')
@@ -294,7 +295,7 @@ be restated
 \Pr[Y \geq y | X] = \Pr[\frac{Y-X\beta}{\sigma} \geq
   \frac{y-X\beta}{\sigma}]\\ = 1-\Phi(\frac{y-X\beta}{\sigma}) = \Phi(\frac{-y}{\sigma}+\frac{X\beta}{\sigma})
 \end{array}
-so that to within an additive constant ^[$\hat{\alpha_{y}}$ are unchanged if a constant is added to all $y$.} $\alpha_{y} = \frac{-y}{\sigma}$ (intercepts $\alpha$ are
+so that to within an additive constant ^[$\hat{\alpha_{y}}$ are unchanged if a constant is added to all $y$.] $\alpha_{y} = \frac{-y}{\sigma}$ (intercepts $\alpha$ are
 linear in $y$ whereas they are arbitrarily descending in the ordinal model), and
 $\sigma$ is absorbed in $\beta$ to put the OLS model into the new notation.
 The general ordinal regression model assumes that for fixed $X_{1}, X_{2}$,
@@ -437,7 +438,6 @@ quantile regression(discussed below) and for means we compare to OLS.
 
 ```{r comparemany,h=6.5,w=6.75,cap='Three estimated quantiles and estimated mean using 6 methods, compared against caliper-matched sample quantiles/means (circles).  Numbers are mean absolute differences between predicted and sample quantities using overlapping intervals of age and caliper matching.  QR:quantile regression.',scap='Six methods for estimating quantiles or means.'}
 #| label: fig-cony-comparemany
-require(data.table)
 require(ggplot2)
 estimands  <- .q(q2, q3, p90, mean)
 links      <- .q(logistic, probit, loglog, cloglog)

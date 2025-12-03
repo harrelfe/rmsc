@@ -1,6 +1,6 @@
 project:
   type: book
-  output-dir: /Users/harrelfe/web/rmsc
+  post-render: syncdir _book/ /Users/harrelfe/i/web/rmsc
 
 book:
   title: "Regression Modeling Strategies"

@@ -163,7 +163,7 @@ $S_{T}=S_{C}^{0.5}$
 
 ```{r out.width='65%',echo=FALSE}
 #| fig-cap: "Mortality differences and ratios when hazard ratio is 0.5."
-knitr::include_graphics('parsurv-hr-diff.png')
+knitr::include_graphics('images/parsurv-hr-diff.png')
 ```
 
 ```{r w=6,h=4.5,scap='Absolute clinical benefit as a function of survival in a control subject and the relative benefit',cap='Absolute clinical benefit as a function of survival in a control subject and the relative benefit (hazard ratio).  The hazard ratios are given for each curve.'}
@@ -230,7 +230,7 @@ the generalized gamma distribution [@cox07par].
 #| label: fig-parsurv-ph-assumption-binary
 #| fig-cap: "PH Model with one binary predictor. $Y$-axis is $\\log \\lambda(t)$ or $\\log \\Lambda(t)$. For $\\log \\Lambda(t)$, the curves must be non-decreasing. For $\\log \\lambda(t)$, they may be any shape."
 #| fig-scap: "PH model with one binary predictor"
-knitr::include_graphics('parsurv-ph-assumption-binary.png')
+knitr::include_graphics('images/parsurv-ph-assumption-binary.png')
 ```
 
 If $\lambda(t)$ is Weibull, the two
@@ -241,7 +241,7 @@ curves will be linear if  $\log t$ is plotted instead of $t$ on the $x$-axis.
 #| label: fig-parsurv-ph-assumption-x
 #| fig-cap: "PH model with one continuous predictor. $Y$-axis is $\\log \\lambda(t)$ or $\\log \\Lambda(t)$.  For $\\log \\Lambda(t)$, drawn for $t_{2}>t_{1}$. The slope of each line is $\\beta_{1}$."
 #| fig-scap: "PH model with one continuous predictor"
-knitr::include_graphics('parsurv-ph-assumption-x.png')
+knitr::include_graphics('images/parsurv-ph-assumption-x.png')
 ```
 
 
@@ -249,14 +249,14 @@ knitr::include_graphics('parsurv-ph-assumption-x.png')
 #| label: fig-parsurv-ph-assumption-t
 #| fig-cap: "PH model with one continuous predictor. $Y$-axis is $\\log \\lambda(t)$ or $\\log \\Lambda(t)$. For $\\log \\lambda$, the functions need not be monotonic."
 #| fig-scap: "PH model with one continuous predictor"
-knitr::include_graphics('parsurv-ph-assumption-t.png')
+knitr::include_graphics('images/parsurv-ph-assumption-t.png')
 ```
 
 ```{r out.width='85%',echo=FALSE}
 #| label: fig-parsurv-ph-assumption-x1x2
 #| fig-cap: "Regression assumptions, linear additive PH or AFT model with two predictors. For PH, $Y$-axis is $\\log \\lambda(t)$ or $\\log \\Lambda(t)$ for a fixed $t$. For AFT, $Y$-axis is $\\log(T)$."
 #| fig-scap: "Regression assumptions, linear additive PH or AFT model with two predictors"
-knitr::include_graphics('parsurv-ph-assumption-x1x2.png')
+knitr::include_graphics('images/parsurv-ph-assumption-x1x2.png')
 ```
 
 * Weibull: Stratify on $X$, plot $\log \Lambda_{\rm KM}(t|X {\rm\ stratum})$ vs.  $\log t$.
@@ -360,14 +360,14 @@ When $T$ is right-censored, $r$ is right-censored.
 #| label: fig-parsurv-aft-assumption-t
 #| fig-cap: "AFT model with one predictor. $Y$-axis is $\\psi^{-1}(S(t|X)) = \\frac{\\log(t)-X\\beta}{\\sigma}$. Drawn for $d>c$.  The slope of the lines is $\\sigma^{-1}$."
 #| fig-scap: "AFT model with one predictor"
-knitr::include_graphics('parsurv-aft-assumption-t.png')
+knitr::include_graphics('images/parsurv-aft-assumption-t.png')
 ```
 
 ```{r out.width='85%',echo=FALSE}
 #| label: fig-parsurv-aft-assumption-x
 #| fig-cap: "AFT model with one continuous predictor. $Y$-axis is $\\psi^{-1}(S(t|X)) = \\frac{\\log(t)-X\\beta}{\\sigma}$. Drawn for $t_{2}>t_{1}$.  The slope of each line is $\\beta_{1}/\\sigma$ and the difference between the lines is $\\frac{1}{\\sigma}\\log(t_{2}/t_{1})$."
 #| fig-scap: "AFT model with one continuous predictor"
-knitr::include_graphics('parsurv-aft-assumption-x.png')
+knitr::include_graphics('images/parsurv-aft-assumption-x.png')
 ```
 
 |         ||||||||||   |
@@ -420,7 +420,7 @@ latex(fn)
 
 ```{r out.width='75%',echo=FALSE}
 #| fig-cap: "Group effects from three survival models"
-knitr::include_graphics('parsurv-group-effects.png')
+knitr::include_graphics('images/parsurv-group-effects.png')
 ```
 
 * More general approach to verifying distributional assumptions:

@@ -4,7 +4,7 @@ options(qproject='rms')
 getRs('qbookfun.r')
 ```
 
-<img src="logo.png" width=40%>
+<img src="images/logo.png" width=40%>
 
 ```{mermaid}
 %%| column: screen-inset-right
@@ -15,19 +15,20 @@ rms[Multivariable Model Development] --> est[Estimation] --> pred[Prediction] --
 
 # Preface {.unnumbered}
 
-All standard regression models have assumptions that
-must be verified for the model to have power to test hypotheses and
-for it to be able to estimate and predict accurately. There are four principal types of assumptions of regression models: 
+A _statistical model_ is a set of assumptions or constraints on possible features of the data generating process that permit us to compute estimates that we believe will properly represent or predict phenomena of interest.   A _regression model_ is a statistical model with indentifiable unknown parameters and specific constraints such as additivity allowing one to isolate the effects or predictive contributions of individual features.  All regression models have assumptions or constraints that
+must approximately hold for (1) findings from model-based analyses not to have alternate explanations, (2) statistical power to detect associations be optimized, (3) estimates about unknowns to have optimum precision, and (4) predictions to be accurate.
+
+There are four principal types of assumptions of regression models: 
 
 1. linearity of effects of predictors
 2. additivity of effects of multiple predictors
 3. absolute distributional assumptions
 4. relative distributional assumptions
 
-Absolute distributional assumptions are made for parametric regression models.  These assume a specific distribution for the dependent variable $Y$ given specific predictor $X$ values.  Relative distributional assumptions pertain to how the shape of the $Y$ distribution for one set of $X$ values relates to the shape for other values of $X$.  Semiparametric regression models only make the second kind of distributional assumption.
+Absolute distributional assumptions are made for parametric regression models.  These assume a specific distribution for the dependent variable $Y$ given specific predictor $X$ values.  Relative distributional assumptions pertain to how the shape of the $Y$ distribution for one set of $X$ values relates to the shape for other values of $X$ (sometimes called a proportionality assumption).  Semiparametric regression models only make the second kind of distributional assumption.
 
 This course emphasizes methods for assessing and satisfying assumption types 1, 2, and 4.  Less attention is paid to assumption 3 due to the course's emphasis on semiparametric models.  Practical but
-powerful tools are presented for validating model assumptions and
+powerful tools are presented for validating model assumptions, relaxing assumptions, and
 presenting model results. This course provides methods for estimating
 the shape of the relationship between predictors and response using
 the widely applicable method of augmenting the design matrix using
@@ -38,7 +39,7 @@ with the common case where the number of potential predictors is large
 in comparison with the number of observations. Methods of model
 validation (bootstrap and cross-validation) will be covered, as well
 as quantifying predictive accuracy and predictor importance, modeling interaction surfaces,
-efficiently utilizing partial covariable data by using multiple
+efficiently recovering partial covariable data by using multiple
 imputation, variable selection, overly influential observations, collinearity, and
 shrinkage, and a brief introduction to the `R` `rms` package
 for handling these problems.
@@ -50,12 +51,8 @@ Statistical models will be contrasted with machine learning so that the student 
 
 ## Target Audience
 
-Statisticians and persons from other
-quantitative disciplines who are interested in multivariable
-regression analysis of univariate responses, in developing,
-validating, and graphically describing multivariable predictive models
-and in covariable adjustment in clinical trials.  The
-course will be of particular interest to applied statisticians and
+Those who may benefit include statisticians and persons from other quantitative disciplines who are interested in multivariable regression analysis of univariate and longitudinal responses; in developing, validating, and graphically describing multivariable predictive models; and in covariable adjustment in clinical trials and observational data analyses.
+The course will be of particular interest to applied statisticians and
 developers of applied statistics methodology, graduate students,
 clinical and pre-clinical biostatisticians, health services and
 outcomes researchers, econometricians, psychometricians, and
@@ -96,9 +93,9 @@ Students will
 [The audio narration starts with the third bullet point listed here.]{.aside}
 
 * Modeling is the endeavor to transform data into information and information into either prediction or evidence about the data generating mechanism^[Thanks to Drew Levy for ideas that greatly improved this section.]
-* Models are usually the best descriptive statistics
+* Models are usually the best multivariable descriptive statistics
     + adjust for one variable while displaying the association with $Y$ and another variable
-    + descriptive statistics do not work in higher dimensions
+    + multivariable descriptive statistics usually do not work when relating > 2 variables
 * Satisfaction of model assumptions improves precision and increases
         statistical power
     + Be aware of assumptions, especially those mattering the most
@@ -141,14 +138,15 @@ See the excellent text _Clinical Prediction Models_ [@ste19cli]
 
 ## Key Messages of the Course
 
-1. Consider RMS as practicing a craft, and the RMS text book is the foundational treatise for the craft.  Get, read--and periodically re-read--the textbook. There is a lot in the book not covered in the short course. Reading the text will help by providing students a comprehensive tool set, and reinforce the overall coherence in RMS. And there is also a lot of wisdom throughout the textbook.  [Written by Drew Levy]{.aside}
-1.  A fundamental RMS principle of "methods that enable an analyst to develop models that will make accurate predictions of responses for future observations."  The RMS program (philosophy, methodology, tools) is predicated on this.
+1.  A fundamental RMS principle is to aim for "methods that enable an analyst to develop models that will make accurate predictions of responses for future observations."  The RMS program (philosophy, methodology, tools) is dedicated to this.
 1. **Phantom degrees of freedom** : Information about the relationship between the dependent variable and candidate predictors introduced into model specification or model selection that is not later properly accounted for in the variance estimates and inference that goes into the ultimate report of analysis results.  Put another way: assessments made in model development and then later elided that compromise the fidelity of standard errors, alpha, Type-I assertion probability $\alpha$, etc.  It is 'phantom' not only because it disappears, but also because this information continues to haunt the analysis, typically with overconfidence. 
-1.  **$\chi^{2}$ - df** :  The potential magnitude of signal, penalized for possibility of accident. Or--- the potential magnitude of signal, adjusted for risk of coincidence.
+1.  **$\chi^{2}$ - df** :  The magnitude of predictive signal (which is proportional to $n$), chance-corrected by subtracting the expected amount of apparent explanatory information that occurs when there is no association (which is the degrees of freedom, i.e., effective number of parameters and is constant, i.e., does not depend on $n$).
 1. **Chunk tests** : Simultaneous or aggregate assessment of the importance (e.g., proportion of total variance explained) of collinear or dependent (e.g. related polynomial or interaction) terms or a group of non-collinear candidate predictors. Important for making coherent judgments. 
 1. **Spending df's** : Given a fixed amount of information in the data available for the analysis there is an 'information budget' that should be used judiciously: more important predictors should represented in a richer way (e.g. make the number of knots in splines proportional to the overall importance and complexity in the variable) than predictors that are less important.  "Spending df's with no regrets": to preserve the operating characteristics of formal inference, once assessed in the modeling process even the less important candidate predictors should remain in view and not elided. All candidate predictors get a portion of the 'df budget', but to a varying extent based on their predictive potential.
 1. **Partial plots**: Pay special attention to partial plots.  Partial plots reveal important information about where the information is in predicting the dependent variable. Partial plots elucidate the form and strength of individual predictors (independent of covariate effects) and can reveal the structure in the data and where the information is situated in the model.  
 1. Be aware that cognitive biases --- and an analysts' interests, incentives and ethics --- are all also a latent (often insidious) part of the overall analysis and reporting process. Be honest with others and yourself.
+1. Consider RMS as practicing a craft, and the RMS text book as the foundational treatise for the craft.  Get, read--and periodically re-read--the textbook. There is a lot in the book not covered in the short course. Reading the text will help by providing students a comprehensive tool set, and reinforce the overall coherence in RMS. And there is also a lot of wisdom throughout the textbook.  [Written by Drew Levy]{.aside}
+
 
 ### Annotating the Notes
 
@@ -156,9 +154,9 @@ For information about adding annotations, comments, and questions inside the tex
 
 ### Symbols Used in the Right Margin of the Text
 
-* <img src="movie.png" width="15px"> in the right margin is a
+* <img src="images/movie.png" width="15px"> in the right margin is a
   hyperlink to a YouTube video related to the subject.
-* <img src="discourse.png" width="15px"> is a hyperlink to the
+* <img src="images/discourse.png" width="15px"> is a hyperlink to the
   discussion topic in `datamethods.org` devoted to the specific
   topic.  You can go directly to the discussion
   about chapter `n` by going to `datamethods.org/rmsn`.
@@ -209,6 +207,7 @@ kableExtra, pcaPP, VGAM, MASS, leaps, rpart
 
 | Date | Sections | Changes |
 |:---|:-|:--------|
+| 2025-05-26 | [-@sec-validate-bootcl] | New subsubsection on confidence intervals for bootstrap bias-corrected accuracy measures, added limits in various validation and calibration examples |
 | 2025-03-10 | [-@sec-cony-checkass]  | Added usage of `ordParallel` and `Olinks` |
 | 2025-03-01 | [-@sec-ordsurv]        | New chapter on survival analysis with ordinal regression |
 | 2025-02-23 | [-@sec-parsurv-assess] | Replaced some `survplot()`s with the new `ggplot.npsurv` method |

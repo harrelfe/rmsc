@@ -220,7 +220,7 @@ plot(log(ys), ytrans(ys), type='l')
 abline(lm(ytrans(ys) ~ log(ys)), col=gray(.8))
 ```
 
-* Approximate linearity = estimated transformation $\log$-like.^[Beware that use of a data--derived transformation in an ordinary model, as this will will result in standard errors that are too small.  This is because model selection is not taken into account. [@far92cos]]
+* Approximate linearity = estimated transformation $\log$-like.^[Beware that use of a data--derived transformation in an ordinary model, as this will result in standard errors that are too small.  This is because model selection is not taken into account. [@far92cos]]
 * Obtain approximate tests of effects of each predictor
 * `summary` sets all other predictors to reference values (e.g., medians)
 * Compares predicted responses for a given level of the predictor $X$ with predictions for lowest setting of $X$

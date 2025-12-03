@@ -91,13 +91,24 @@ pdx()
 ```{r}
 g <- ols(fat ~ rcs(age, 4) + log(height) + log(abdomen) + log(weight) + log(neck) +
          log(chest) + log(hip) + log(thigh) + log(knee) + log(ankle) + log(biceps) +
-         log(forearm) + log(wrist), data=d)
+         log(forearm) + log(wrist), data=d, x=TRUE, y=TRUE)
 AIC(g)
 ```
 
 * By AIC the large model is better
 * $R^{2}_\text{adj}$ went from 0.704 to 0.733
-* How does this translate to improvement in median prediction error?
+* Estimate relative explained variation of each variable in this larger model, with bootstrap confidence intervals
+
+```{r}
+#| fig-height: 4
+#| fig-width: 5
+b <- bootcov(g, B=500, coef.reps=TRUE)
+r <- rexVar(b, d)
+plot(r)
+```
+
+* Because of collinearities, the competition between predictors makes interpretation more difficult
+* How does the larger model's increased $R^2$ translate to improvement in median prediction error?
 
 ```{r}
 median(abs(resid(f)))

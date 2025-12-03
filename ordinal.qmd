@@ -270,6 +270,7 @@ distribution of log glycohemoglobin across subjects' body frames.
 
 ```{r glyhb,h=3.25,w=6.5,cap='Transformed empirical cumulative distribution functions stratified by body frame in the `diabetes` dataset.  Left panel: checking all assumptions of the parametric ANOVA.  Right panel: checking all assumptions of the PO model (here, Kruskal--Wallis test).',scap='Checking assumptions of PO and parametric model'}
 #| label: fig-ordinal-glyhb
+require(data.table)
 getHdata(diabetes)
 d <- subset(diabetes, ! is.na(frame))
 setDT(d)  # make it a data table

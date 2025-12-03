@@ -10,7 +10,7 @@ hooktime()
 
 # Missing Data {#sec-missing-data}
 
-`r quoteit("Consider a study of the effectiveness of a cardiac rehabilitation program.  Suppose a sample size of N=300 will result in an acceptable margin of error in estimating the overall treatment effect.  The investigators allows for 20% dropout so multiplies N by 1/0.8 = 1.25.  What serious mistake are they likely making?")`
+`r quoteit("Consider a study of the effectiveness of a cardiac rehabilitation program.  Suppose a sample size of N=300 will result in an acceptable margin of error in estimating the overall treatment effect.  The investigators allow for 20% dropout so multiplies N by 1/0.8 = 1.25.  What serious mistake are they likely making?")`
 
 ## Types of Missing Data
 `r mrg(sound("missing-1"))`
@@ -245,9 +245,8 @@ values as done with multiple imputation (would steal info from $Y$)
     + Tukey's tricube function is a good weighting function (used in
    loess): $w_{i} = (1 - \min(d_{i}/s, 1)^{3})^{3}$, <br>
    $d_{i} = |\hat{y_{i}} - y^{*}|$ <br>
-   $s = 0.2\times\text{mean} |\hat{y_{i}} - y^{*}|$ is a good default
-   scale factor <br>
-   scale so that $\sum w_{i} = 1$
+   $s = 0.2\times\text{mean} |\hat{y_{i}} - y^{*}|$ is a good default scale factor. <br>
+   Scale so that $\sum w_{i} = 1$
 
 <!-- NEW -->
 
@@ -398,7 +397,7 @@ very good performance of imputation based on chained equations
    + Use large $M$ to make the $\chi^2$ approximation better by making the denominator d.f. larger.  E.g., if $k=1$ and $\hat{f}=0.5$, $M=26$ already yields more than 100 denominator d.f. for $F$, making it hard to distinguish from a $\chi_{1}^{2}$ distribution.  If the test statistic is 4.0, the $p$-value $\chi_{1}^{2}$ is 0.0455 and is 0.048 from $F_{1, 100}$.
 * `Hmisc` `fit.mult.impute` function run with `lrt=TRUE` runs and saves all the needed LR tests to allow `rms` `processMI` to compute everything else
 * `processMI` computes $\hat{f}$, the $F$ test denominator d.f., and the $\chi^2$ discount factor and uses these to get the final imputation-adjusted LR tests
-* `fit.mult.impute` computes approximate Wald statistics by multiplying the variance-covariance matrix computed on the stacked data by $M$ if individual completed dataset analyses are not done (not recommended)
+* `fit.mult.impute` computes very approximate Wald statistics by multiplying the variance-covariance matrix computed on the stacked data by $M$ if individual completed dataset analyses are not done
 * Chan and Meng approach uses $\hat{\beta}$ computed once on stacked data as the MLE in the multiple imputation context; `fit.mult.impute` computes the final $\hat{\beta}$ this way if stacking is done; however the variance-covariance matrix is estimated from Rubin's rule as in the Wald approach first used in this chapter
 * Imputation-adjusted LRTs can be a large computational burden for large datasets---for $M$ imputations, $j$ effects being tested requires $(M+1) j$ model fits.  For each imputation, the `rms` `anova` function has very litle overhead though, due to it only computing the design matrix once, and calling low-level fitting functions for all LRTs once the overall model is fitted with a high-level function.
 
@@ -478,7 +477,7 @@ prmiInfo(as)
 * @bon16gra present a variety of
   useful diagnostics on the reasonableness of imputed values.
 
-<img src="missing-diagnostic.png" width="60%">
+<img src="images/missing-diagnostic.png" width="60%">
 
 
 ## Summary and Rough Guidelines

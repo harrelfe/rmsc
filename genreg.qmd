@@ -62,7 +62,7 @@ Regression modeling meets many analytic needs:
 * Many claims about improved predictive discrimination from ML are exaggerated - see @kap23lea
 
 ::: {.column-screen-left}
-<img src="kap23lea.jpg" width="100%">
+<img src="images/kap23lea.jpg" width="100%">
 :::
 
 ## Notation for Multivariable Regression Models
@@ -230,7 +230,7 @@ More useful hypotheses follow.  For any hypothesis need to
 * Write what is being tested `r ipacue()`
 * Translate to parameters tested
 * List the alternative hypothesis
-* Not forget what the test is powered to detect
+* Don't forget what the test is powered to detect
     + Test against nonzero slope has maximum power when linearity holds
     + If true relationship is monotonic, test for non-flatness will
     have some but not optimal power
@@ -258,7 +258,7 @@ $C(Y)$, powered to detect a _linear_ relationship"
 | Either age or sex is associated with $Y$    | $H_{a}: \beta_{1} \neq 0 \textrm{~or~} \beta_{2} \neq 0 \textrm{~or~} \beta_{3} \neq 0$|
 
 **Note**: The last test is called the global test of no
-association.  If an interaction effect present, there is
+association.  If an interaction effect is present, there is
 both an age and a sex effect.  There can also be age or sex
 effects when the lines are parallel.  The global test of
 association (test of total association) has 3 d.f. instead of 2
@@ -291,7 +291,7 @@ measurements and response, holding `age` and `sex` constant.
 `r mrg(sound("genreg-3"))` 
 `r quoteit("Natura non facit saltus<br>(Nature does not make jumps)", "Gottfried Wilhelm Leibniz")`
 
-<img src="lucy.png" width="45%"> &nbsp;&nbsp;&nbsp;  Lucy D'Agostino McGowan
+<img src="images/lucy.png" width="45%"> &nbsp;&nbsp;&nbsp;  Lucy D'Agostino McGowan
 
 * Relationships seldom linear except when predicting one variable `r ipacue()`
   from itself measured earlier
@@ -321,7 +321,7 @@ measurements and response, holding `age` and `sex` constant.
   as interval boundaries are crossed.  Other than the effect of time
   (e.g., an instant stock price drop after bad news), there are very
   few examples in which such discontinuities have been shown to exist.
-1. Categorization only seems to yield interpretable estimates.
+1. Categorization only appears to yield interpretable estimates.
     E.g. odds ratio for stroke for persons with a systolic blood
     pressure $> 160$ mmHg compared to persons with a blood pressure
     $\leq 160$ mmHg $\rightarrow$ interpretation of OR depends on
@@ -396,16 +396,17 @@ nonlinearity and noise added to $X$ (must run in `RStudio`)
 
 `r mrg(movie("https://youtu.be/Q6snkhhTPnQM"))`
 
-[Interactive demonstration](https://apps.biostat.au.dk/stefan/splines/) of lack of fit after categorization of a continuosu predictor, and comparison with spline fits, by Stefan Hansen
+[Interactive demonstration](https://apps.biostat.au.dk/stefan/splines/) of lack of fit after categorization of a continuous predictor, and comparison with spline fits, by Stefan Hansen
 
 ```{r eval=FALSE}
 require(Hmisc)
+# Install the manipulate package to make catgNoise work
 getRs('catgNoise.r')
 ```
 
 Example^[From NHANES III; Diabetes Care 32:1327-34; 2009 adapted from Diabetes Care 20:1183-1197; 1997.] of misleading results from creating intervals (here, deciles) of a continuous predictor.  Final interval is extremely heterogeneous and is greatly influenced by very large glycohemoglobin values, creating the false impression of an inflection point at 5.9.
 
-<img src="nhanesIIIretinopathy.png" width="90%">
+<img src="images/nhanesIIIretinopathy.png" width="90%">
 
 See [this](https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/1471-2288-12-21) for excellent graphical examples of the harm of categorizing predictors, especially when using quantile groups.
 
@@ -646,7 +647,7 @@ getRs('demoSpline.r')                 # to just run the code
 Paul Lambert's excellent self-contained interactive demonstrations of
 continuity restrictions, cubic polynomial, linear spline, cubic
 spline, and restricted cubic spline fitting is at
-[pclambert.net/interactivegraphs](https://pclambert.net/interactivegraphs).
+[pclambert.net/interactive_graphs](https://pclambert.net/interactive_graphs.html).
 Jordan Gauthier
 has another nice interactive demonstration at [drjgauthier.shinyapps.io/spliny](https://drjgauthier.shinyapps.io/spliny). [See also the excellent resources from Michael Clark [here](https://m-clark.github.io/workshops/stars/building-up-to-gams.html) and [here](https://m-clark.github.io/workshops/stars/technical-details.html#technical-details).]{.aside}
 
@@ -677,7 +678,7 @@ $$H_{0} : \beta_{2} = \beta_{3} = \ldots = \beta_{k-1} = 0.$$
 
 Example: @sel10gly
 
-<img src="sel10gly.png" width="100%">
+<img src="images/sel10gly.png" width="100%">
 
 
 ### Choosing Number and Position of Knots {#sec-knots}
@@ -1183,7 +1184,7 @@ General spline surface:
 #| label: fig-gen-image-stroke
 #| fig-cap: "Logistic regression estimate of probability of a hemorrhagic stroke for patients in the GUSTO-I trial given $t$-PA, using a tensor spline of two restricted cubic splines and penalization (shrinkage).  Dark (cold color) regions are low risk, and bright (hot) regions are higher risk."
 #| fig-scap: "Probability of hemorrhagic stroke vs. blood pressures"
-knitr::include_graphics('image-stroke.png')
+knitr::include_graphics('images/image-stroke.png')
 ```
 
  @fig-gen-image-stroke is particularly interesting
@@ -1508,7 +1509,7 @@ There are many advantages to fitting models with a Bayesian approach when compar
 * getting exact inference using ordinary Bayesian procedures when penalization/shrinkage/regularization is used to limit overfitting
 * allowing one to fit [distributional models](http://paul-buerkner.github.io/brms/articles/brms_distreg.html), e.g., using a regression model for the log standard deviation in addition to one for the mean, and getting exact inference for the joint models
 * obtaining automatic inference about any interval of possible parameter values instead of just using $p$-values to bring evidence against a null value[It is just as easy to compute the Bayesian probability that an odds ratio exceeds 2.0 as it is to calculate the probability that the odds ratio exceeds 1.0.]{.aside}
-* obtaining exact inference about unions and intersections of various assertions about parameters, e.g., the probability that a treatment reduces mortality by any amount or reduces blood pressure by $\geq 5$ mmHg
+* obtaining exact inference about unions and intersections of various assertions about parameters, e.g., the probability that a treatment reduces mortality by any amount or reduces blood pressure by $\geq5$ mmHg
 * getting exact uncertainty intervals for complex derived parameters such as the $c$-index or Somers' $D_{xy}$ that quantify the model's predictive discrimination
 
 ::: {.callout-note collapse="true"}
@@ -1715,9 +1716,9 @@ ggplot(Predict(f, x1, x2))
 1. In a model with main effects and two-way interactions, which regression parameter is the most "universal" by virtue of being most independent of coding?
 1. When a predictor is involved in an interaction, which test of association involving that predictor is preferred?
 1. What are two ways of doing chunk (composite) tests?
-1. Analysts intends to use least squares multiple regression to
+1. Analysts want to use least squares multiple regression to
   predict follow-up blood pressure from baseline blood pressure, age,
-  and sex.  They wants to use this model for estimation, prediction,
+  and sex.  They want to use this model for estimation, prediction,
   and inference (statistical tests and confidence limits).  List all
   of the assumptions they make by fitting the model $Y = \beta_{0} +
   \beta_{1} \text{bp} + \beta_{2} \text{age} + \beta_{3} [\text{sex=female}]$.
