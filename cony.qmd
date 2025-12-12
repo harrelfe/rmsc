@@ -226,7 +226,7 @@ Oddly, the logit link had the smallest deviance.  More study of comparing devian
 `r mrg(sound("ord-cont-4"))`
 
 * Ruled out OLS and semiparametric proportional odds model `r ipacue()`
-* Quantile regression [@koeqr; @koe78reg] is a
+* Quantile regression [@koe05qua; @koe78reg] is a
   different approach to modeling $Y$
 * No distributional assumptions other than continuity of $Y$
 * All the usual right hand side assumptions
@@ -614,7 +614,7 @@ hazards model.
 The Cox model uses a conditioning argument to obtain a partial
 likelihood free of the intercepts $\alpha$ (and requires a second
 step to estimate these log discrete hazard components) whereas we are
-using a full marginal likelihood of the ranks of $Y$ [@kal73].
+using a full marginal likelihood of the ranks of $Y$ [@kal73mar].
 
 ```{r coxhtwtcoef}
 cph(Surv(gh) ~ rcs(age,5) + log(ht) + log(wt), data=w)

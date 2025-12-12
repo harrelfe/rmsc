@@ -298,9 +298,9 @@ measurements and response, holding `age` and `sex` constant.
 * Categorizing continuous predictors into intervals is a
   disaster; see
   @roy06dic, @alt91cat, @hil96pra, @lau96eva, @alt94dan, 
-  @bec92con, @far96sim, @rag92dic, @sui94bin, @bue97pro, 
+  @bel92con, @far96sim, @rag92dic, @sui95bin, @bue97pro, 
   @max93biv, @sch94out, @alt98sub, @hol04con, @mos04odd,
-  @wai06fin, @fed09con, @gia14opt, @col16qua, @ben12aga 
+  @wai06fin, @fed09con, @gia14opt, @col16qua, @ben12qua 
   and [Biostatistics for Biomedical Research](https://hbiostat.org/bbr), Chapter 18.
 `r mrg(movie("https://youtu.be/-GEgR71KtwI"))`
 
@@ -561,9 +561,9 @@ text(0, -400, 'Third Derivative: Jolt\nRate of Change of Acceleration',
 ### Restricted Cubic Splines {#sec-rcspline}
 `r mrg(sound("genreg-5"))`
  `r ipacue()` 
-@sto85: cubic splines poorly behaved in tails.
+@sto85add: cubic splines poorly behaved in tails.
 Constrain function to be linear in tails. <br>
-$k+3 \rightarrow k-1$ parameters @dev86.
+$k+3 \rightarrow k-1$ parameters @dev86spl.
 
 To force linearity when $X < a$: $X^2$ and $X^3$ terms must be omitted
 <br>
@@ -571,7 +571,7 @@ To force linearity when $X$ is beyond the last knot: last two $\beta$ s are
 redundant, i.e., are just combinations of the other $\beta$ s.
 
 The restricted spline function with $k$ knots $t_{1}, \ldots, t_{k}$
-is given by @dev86
+is given by @dev86spl
 $$f(X) = \beta_{0}+\beta_{1} X_{1}+\beta_{2} X_{2}+\ldots+\beta_{k-1} X_{k-1},$$
 where $X_{1} = X$ and for $j=1, \ldots, k-2$,
 
@@ -686,7 +686,7 @@ Example: @sel10gly
 
 * Knots are specified in advance in regression splines `r ipacue()`
 * Locations not important in most situations---
-  @sto86, @dur89
+  @sto86com, @dur89fle
 * Place knots where
 data exist --- fixed quantiles of predictor's marginal distribution
 * Fit depends more on choice of $k$
@@ -719,7 +719,7 @@ kable(w, booktabs=TRUE, col.names=NULL) %>%
 -->
 
 $n<100$ -- replace outer quantiles with 5th smallest and 5th largest $X$
-(@sto85).
+(@sto85add).
 
 Choice of $k$:
 
@@ -727,7 +727,7 @@ Choice of $k$:
 * Usually $k=3,4,5$.  Often $k=4$
 * Large $n$ (e.g. $n\geq 100$) -- $k=5$
 * Small $n$ ($<30$, say) -- $k=3$
-* Can use Akaike's information criterion (AIC) (@atk80, @hou90pre) to choose $k$
+* Can use Akaike's information criterion (AIC) (@atk80not, @hou90pre) to choose $k$
 * This chooses $k$ to maximize model likelihood ratio $\chi^{2} - 2k$.
 
 See @gov07com for a comparison of restricted cubic splines,
@@ -757,7 +757,7 @@ fractional polynomials, and penalized splines.
 * estimates very sensitive to bin width
 * Moving linear regression far superior to moving avg. (moving
   flat line) `r ipacue()` 
-* @cle79 moving linear regression smoother _loess_ (locally weighted least squares) is the most popular
+* @cle79rob moving linear regression smoother _loess_ (locally weighted least squares) is the most popular
   smoother.  To estimate central tendency of $Y$ at $X=x$:
     + take all the data having $X$ values within a suitable interval
    about $x$ (default is $\frac{2}{3}$ of the data)
@@ -781,7 +781,7 @@ fractional polynomials, and penalized splines.
 
 ### Advantages of Regression Splines over Other Methods
 `r mrg(sound("genreg-8"))`
-Regression splines have several advantages (@har88):
+Regression splines have several advantages (@har88reg):
 
 * Parametric splines can be fitted using any existing `r ipacue()`
 regression program
@@ -865,11 +865,11 @@ predictors well, unlike recursive partitioning.
 * sparse-group lasso using L1 and L2 norms to achieve spareness on
   groups and within groups of variables (@sim13spa)
 * adaptive group lasso (Wang \& Leng)
-* Breiman's nonnegative garrote (@xio10som)
+* Breiman's nonnegative garrote (@xio10not)
 * "preconditioning", i.e., model simplification after developing
   a "black box" predictive model - @pau08pre,@not10bay
 * sparse principal components analysis to achieve
-  parsimony in data reduction @wit08tes,@zou06spa,@len09gen,@lee10spa
+  parsimony in data reduction @wit08tes,@zho06spa,@len09gen,@lee10spa
 * bagging, boosting, and random forests @has08ele
 
 One problem prevents most of these methods from being ready for everyday use: `r ipacue()` 
@@ -968,7 +968,7 @@ $H_{0}: \beta_{1}=\ldots=\beta_{4}=0$
     linearity insig., 1 d.f. test sig. after delete nonlinear
     terms?
 
-@gra91 elegantly described the hazards of
+@gra91eff elegantly described the hazards of
 pretesting
 
 * Studied quadratic regression `r ipacue()`
@@ -1261,7 +1261,7 @@ The `B` $\times$ `sampleAge` interaction effects have 6 d.f. and tests whether t
 * Parametric models make an absolute distributional assumption
    + E.g. linear regression: $Y \sim X\beta + \epsilon, \epsilon \sim n(0,\sigma^{2})$
    + Examine distribution of residuals
-* Some models (Weibull, @cox72): <br>
+* Some models (Weibull, @cox72reg): <br>
     $C(Y|X) = C(Y=y|X) = d(y) + X\beta$ <br>
     $C =$ log hazard
 * Check form of $d(y)$ for parametric models such as Weibull

@@ -61,7 +61,7 @@ $$
 
 ### Model
 
-* @wal67 --- most popular ordinal response `r ipacue()`
+* @wal67est --- most popular ordinal response `r ipacue()`
   model
 * For convenience $Y=0, 1, 2, \ldots, k$
 $$
@@ -106,7 +106,7 @@ $$
   against $Y$
 * Score residuals are not as useful in general semiparametric models for continuous $Y$ as they are in the Cox proportional hazards model
 * Partial residuals may be more useful as they can also estimate
-  covariable transformations[@lan84gra; @colBookbin]:
+  covariable transformations[@lan84gra; @col02mod]:
 
 $$
 r_{im} = \hat{\beta}_{m}X_{im} + \frac{Y_{i} - \hat{P}_{i}}{\hat{P}_{i}
@@ -365,7 +365,7 @@ predicted means.
 ### Model
 Unlike the PO model, which is based on _cumulative_ probabilities, the
 continuation ratio (CR) model is based on _conditional_ probabilities.
-The (forward) CR model[@fieBookana; @arm89; @ber91ana] is stated as follows
+The (forward) CR model[@fie07ana; @arm89ord; @ber91ana] is stated as follows
 for $Y=0,\ldots,k$:
 
 

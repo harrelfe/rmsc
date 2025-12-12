@@ -17,7 +17,7 @@ Note that all the analyses presented here may be done in a more general context 
 
 * Clinical trial of estrogen for prostate cancer
 * Response is time to death, all causes
-* Base analysis on Cox proportional hazards model [@cox72]
+* Base analysis on Cox proportional hazards model [@cox72reg]
 * $S(t | X)$ = probability of surviving at least to time $t$ given set of predictor values $X$
 * $S(t | X) = S_{0}(t)^{\exp(X\beta)}$
 * Censor time to death at time of last follow-up for patients

@@ -40,7 +40,7 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
   examining tables or graphs that utilize $Y$ to tell you how to
   model variables
 * If wish to preserve statistical properties, can't retrieve d.f.
-  once they are "spent" (see @gra91)
+  once they are "spent" (see @gra91eff)
 * If a scatterplot suggests linearity and you fit a linear model,
   how many d.f. did you actually spend (i.e., the d.f. that when put
   into a formula results in accurate confidence limits or $P$-values)?
@@ -223,7 +223,7 @@ one can move from simpler to more complex models but not the other
         "significant" $) \neq \beta$ [@cha95mod]
 * Biased $R^2$, $\hat{\beta}$, standard errors, $P$-values too small
 * $F$ and $\chi^2$ statistics do not have the claimed
-        distribution^[@loc13sig provide an example with $n=100$ and 10 orthogonal predictors where all true $\beta$s are zero. The test statistic for the first variable to enter has type I assertion probability of 0.39 when the nominal $\alpha$ is set to 0.05.] [@gra91]
+        distribution^[@loc13sig provide an example with $n=100$ and 10 orthogonal predictors where all true $\beta$s are zero. The test statistic for the first variable to enter has type I assertion probability of 0.39 when the nominal $\alpha$ is set to 0.05.] [@gra91eff]
 * Will result in residual confounding if use variable selection
   to find confounders [@gre00whe]
 * @der92bac found that in stepwise analyses the final model represented noise 0.20-0.74 of time, final model usually contained $< \frac{1}{2}$ actual number of authentic predictors.  Also: `r ipacue()`
@@ -366,14 +366,14 @@ to the true $X\beta$.
 
 If the simulations are re-run allowing for collinearities (`uncorrelated=FALSE`) one can expect variable selection to be even more problematic.
 
-Variable selection methods [@har86log]:
+Variable selection methods [@logist]:
 `r mrg(sound("mv-5"))`
 
 * Forward selection, backward elimination `r ipacue()`
 * Stopping rule: "residual $\chi^{2}$" with d.f. = no.
         candidates remaining at current step
 * Test for significance or use Akaike's information criterion
-        (AIC [@atk80]), here $\chi^{2}-2 \times d.f.$
+        (AIC [@atk80not]), here $\chi^{2}-2 \times d.f.$
 * Better to use subject matter knowledge!
 * No currently available stopping rule was developed for
         stepwise, only for comparing a limited number of pre-specified
@@ -385,13 +385,13 @@ Variable selection methods [@har86log]:
   candidate variables redundant or unnecessary
 * Step-down is usually better than forward [@man70why] and can
         be used efficiently with maximum likelihood
-        estimation [@law78]
+        estimation [@law78eff]
 * Fruitless to try different stepwise methods to look for
   agreement  [@wie10per]
 * Bootstrap can help decide between full and reduced model  `r ipacue()`
 * Full model fits gives meaningful confidence intervals with
         standard formulas, C.I. after stepwise does
-        not [@alt89; @hur90; @bre92lit]
+        not [@alt89boo; @hur90imp; @bre92lit]
 * Data reduction (grouping variables) can help
 * Using the bootstrap to select important variables
         for inclusion in the final model [@sau92boo] is
@@ -442,7 +442,7 @@ discussed here but applied to time series modeling.
 * Assume typical problem in medicine, epidemiology, and the
   social sciences in which the signal:noise ratio is small (higher
   ratios allow for more aggressive modeling)
-* $p$ should be $< \frac{m}{15}$ [@har84;  @har85reg; @smi92pro; @ped95imp; @ped96sim; @vit06rel; @plo14mod]
+* $p$ should be $< \frac{m}{15}$ [@har84reg;  @har85reg; @smi92pro; @ped95imp; @ped96sim; @vit06rel; @plo14mod]
 * $p$ is number of parameters in full model or number of _candidate_
     parameters in a stepwise analysis, and $m$ is the effective sample size
    + See @sec-ordsurv for how to estimate the effective sample size coming from censored observations
@@ -524,7 +524,7 @@ for(j in 1:20) axis(1, at=j, labels=names(ybar)[j])
 ```
 
 * Prevent shrinkage by using pre-shrinkage  `r ipacue()`
-* @spi86: var. selection arbitrary, better
+* @spi86pro: var. selection arbitrary, better
         prediction usually results from fitting all candidate
         variables and using shrinkage
 * Shrinkage closer to that expected from full model fit than based on
@@ -549,14 +549,14 @@ $\hat{\gamma} = \frac{n-p-1}{n-1} R^{2}_{\rm adj} / R^{2}$ <br>
 * Can be a blessing (data reduction, transformations)
 * $\uparrow$ s.e. of $\hat{\beta}$, $\downarrow$ power
 * This is appropriate $\rightarrow$ asking too much of the
-  data [@chaBookreg, Chap. 9]
+  data [@cha12reg, Chap. 9]
 * Variables compete in variable selection, chosen one
         arbitrary
 * Does not affect joint influence of a set of highly correlated
         variables (use multiple d.f. tests)
 * Does not harm predictions on model construction
   sample  `r ipacue()` 
-* Does not affect predictions on new data [@mye90, pp. 379-381] if
+* Does not affect predictions on new data [@mye90cla, pp. 379-381] if
   + Extreme extrapolation not attempted
   + New data have same type of collinearities as original data
 
@@ -567,7 +567,7 @@ $\hat{\gamma} = \frac{n-p-1}{n-1} R^{2}_{\rm adj} / R^{2}$ <br>
         variance inflation factors (VIF)
 * General approach (maximum likelihood) --- transform information
         matrix to correlation form, VIF=diagonal of
-        inverse [@dav86; @wax92col]
+        inverse [@dav86exa; @wax92col]
 * See @bel91con, pp. 28-30 for problems with VIF
 * Easy approach: SAS `VARCLUS` procedure [@varclus],  `r ipacue()`
         `R` `varclus` function,
@@ -663,7 +663,7 @@ Example:  @fig-cony-redun
     principal components
 
 * Maximum total variance (MTV) of Young, Takane, de
-  Leeuw [@you78; @mic98gif]
+  Leeuw [@you78pri; @mic98gif]
    1. Compute $PC_1$ of variables using correlation matrix
    1. Use regression (with splines, dummies, etc.) to predict
         $PC_1$ from each $X$ --- expand each $X_j$ and regress
@@ -780,7 +780,7 @@ plot(t[,'heart.rate'], t[,'blood.pressure'],
 
 ACE (Alternating Conditional Expectation) of @bre85est
     
-1. Uses nonparametric "super smoother" [@fri84] `r ipacue()`
+1. Uses nonparametric "super smoother" [@fri84var] `r ipacue()`
 1. Allows monotonicity constraints, categorical vars.
 1. Does not handle missing data
 
@@ -899,17 +899,17 @@ Statistical Measures:
 
 * Leverage: capacity to be influential (not necessarily infl.) <br> `r ipacue()`
     Diagonals of "hat matrix" $H = X(X'X)^{-1}X'$ --- measures how
-    an obs. predicts its own response [@bel80]
+    an obs. predicts its own response [@bel80reg]
 * $h_{ii}>2(p+1)/n$ may signal a high leverage
-    point [@bel80]
+    point [@bel80reg]
 * DFBETAS: change in $\hat{\beta}$ upon deletion of each obs,
     scaled by s.e.
 * DFFIT: change in $X\hat{\beta}$ upon deletion of each obs
 * DFFITS: DFFIT standardized by s.e. of $\hat{\beta}$
 * Some classify obs as overly influential when
-    $|{\rm DFFITS}|>2\sqrt{(p+1)/(n-p-1)}$ [@bel80]
+    $|{\rm DFFITS}|>2\sqrt{(p+1)/(n-p-1)}$ [@bel80reg]
 * Others examine entire distribution for "outliers"
-* No substitute for careful examination of data [@cha91; @spe93rem]
+* No substitute for careful examination of data [@cha91avo; @spe93rem]
 * Maximum likelihood estimation requires 1-step approximations
 
 
@@ -1052,7 +1052,7 @@ For an excellent tutorial covering many strategical aspects of developing and va
 1. Check distributional assumptions and choose a different model
         if needed.
 1. Do limited backwards step-down variable selection if parsimony
-        is more important that accuracy [@spi86].  But confidence
+        is more important that accuracy [@spi86pro].  But confidence
         limits, etc., must account for variable selection (e.g., bootstrap).
 1. This is the "final" model.
 1. Interpret the model graphically and by computing predicted

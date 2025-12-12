@@ -40,7 +40,7 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 
 ## Generalized Additive Models
 
-* @has90 developed GAMs for a variety of $Y$ distributions
+* @has90gen developed GAMs for a variety of $Y$ distributions
 * Most GAMs are highly parametric, just relaxing assumptions about $X$
 * Nonparametrically estimate all $X$ transformations
 * GAMs assume $Y$ is already well transformed
@@ -124,7 +124,7 @@ estimated from the data
 * If assume residuals from $\hat{g}(Y)$ assumed to be symmetrically distributed,
 their population median is zero
 * Then can estimate the median on the untransformed scale by computing $\hat{g}^{-1}(X\hat{\beta})$ ^[To be safe, `areg.boot` adds the median residual to $X\hat{\beta}$ when estimating the population median (the median residual can be ignored by specifying `statistic='fitted'` to functions that operate on objects created by `areg.boot`)].
-* For estimating quantiles of $Y$, quantile regression [@koe78reg] is more direct; see @aus05use for a case study
+* For estimating quantiles of $Y$, quantile regression [@koe78reg] is more direct; see @aus05tut for a case study
 
 ## `R` Functions
 

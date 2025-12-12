@@ -379,7 +379,7 @@ knitr::include_graphics('images/parsurv-aft-assumption-x.png')
 |         |344$^{+}$ |||||||||   |
 
 
-```{r h=6, w=7.5, scap='Examples of checking parametric survival model assumptions',cap='Altschuler-Nelson-Fleming-Harrington nonparametric survival estimates for rats treated with DMBA [@pik66], along with various transformations of the estimates for checking distributional assumptions of 3 parametric survival models.'}
+```{r h=6, w=7.5, scap='Examples of checking parametric survival model assumptions',cap='Altschuler-Nelson-Fleming-Harrington nonparametric survival estimates for rats treated with DMBA [@pik66met], along with various transformations of the estimates for checking distributional assumptions of 3 parametric survival models.'}
 #| label: fig-parsurv-kprats-check
 spar(mfrow=c(2,2), top=1, bot=2, mgp=c(2.75, .365, 0))
 getHdata(kprats)

@@ -67,7 +67,7 @@ $$
 
 ### Example
 
-```{r kprats-cph-np,w=4.75,h=4,cap='Altschuler--Nelson--Fleming--Harrington nonparametric survival estimates and Cox-Breslow estimates for rat data [@pik66]',scap='Nonparametric and Cox--Breslow survival estimates'}
+```{r kprats-cph-np,w=4.75,h=4,cap='Altschuler--Nelson--Fleming--Harrington nonparametric survival estimates and Cox-Breslow estimates for rat data [@pik66met]',scap='Nonparametric and Cox--Breslow survival estimates'}
 #| label: fig-cox-kprats-cph-np
 require(rms)
 options(prType='html')
@@ -176,7 +176,7 @@ $$\hat{S}(t|X) = \hat{S}(t)^{\exp(X\hat{\beta})}$$
 ```{r echo=FALSE, w=6.5, h=2.75}
 #| label: fig-cox-cabg-adj
 #| fig-scap: "Unadjusted (Kaplan--Meier) and adjusted survival estimates"
-#| fig-cap: "Unadjusted (Kaplan--Meier) and adjusted (Cox--Kalbfleisch--Prentice) estimates of survival.  Left, Kaplan--Meier estimates for patients treated medically and surgically at Duke University Medical Center from November $1969$ through December $1984$.  These survival curves are not adjusted for baseline prognostic factors.  Right, survival curves for patients treated medically or surgically after adjusting for all known important baseline prognostic characteristics [@cal89]."
+#| fig-cap: "Unadjusted (Kaplan--Meier) and adjusted (Cox--Kalbfleisch--Prentice) estimates of survival.  Left, Kaplan--Meier estimates for patients treated medically and surgically at Duke University Medical Center from November $1969$ through December $1984$.  These survival curves are not adjusted for baseline prognostic factors.  Right, survival curves for patients treated medically or surgically after adjusting for all known important baseline prognostic characteristics [@cal89evo]."
 require(ggplot2)
 d <- readRDS('cox-cabg-adj.rds')
 
@@ -370,7 +370,7 @@ Smoothed residual plot: Martingale residuals, loess smoother
 ```{r echo=FALSE,h=3.5}
 #| label: fig-cox-ef-martingale
 #| fig-scap: "Smoothed martingale residuals vs. LVEF"
-#| fig-cap: "Three smoothed estimates relating martingale residuals [@the90] to LVEF."
+#| fig-cap: "Three smoothed estimates relating martingale residuals [@the90mar] to LVEF."
 knitr::include_graphics('cox-ef-martingale.svg')
 ```
 
@@ -465,7 +465,7 @@ $$\hat{\beta} + dR\hat{V}$$
 ```{r echo=FALSE,h=3.5}
 #| label: fig-cox-pi-schoenfeld
 #| fig-scap: "Smoothed Schoenfeld residuals"
-#| fig-cap: "Smoothed weighted [@gra94pro] @sch82 residuals for the same data in @fig-cox-pi-hazard-ratio. Test for PH based on the correlation ($\\rho$) between the individual weighted Schoenfeld residuals and the rank of failure time yielded $\\rho=-0.23, z=-6.73, P=2\\times 10^{-11}$."
+#| fig-cap: "Smoothed weighted [@gra94pro] @sch82par residuals for the same data in @fig-cox-pi-hazard-ratio. Test for PH based on the correlation ($\\rho$) between the individual weighted Schoenfeld residuals and the rank of failure time yielded $\\rho=-0.23, z=-6.73, P=2\\times 10^{-11}$."
 knitr::include_graphics('cox-pi-schoenfeld.svg')
 ```
 
@@ -501,7 +501,7 @@ ve1 <- 'Shape of $S_{\\rm KM}(t)$'
 
 v2  <- 'Interaction between $X$ and $T$'
 a2  <- 'Proportional hazards -- effect of $X$ does not depend on $T$, e.g. treatment effect is constant over time.'
-ve2 <- '• Categorical $X$: check parallelism of stratified $\\log[-\\log S(t)]$ plots as $t \\uparrow$<br>• @mue83com cum. hazard ratio plots<br>@arj88 cum. hazard plots<br>• Check agreement of stratified and modeled estimates<br>• Hazard ratio plots<br>• Smoothed Schoenfeld residual plots and correlation test (time vs. residual)<br>• Test time-dependent covariable such as $X \\times \\log(t+1)$<br>• Ratio of parametrically estimated $\\lambda(t)$'
+ve2 <- '• Categorical $X$: check parallelism of stratified $\\log[-\\log S(t)]$ plots as $t \\uparrow$<br>• @mue83com cum. hazard ratio plots<br>@arj88gra cum. hazard plots<br>• Check agreement of stratified and modeled estimates<br>• Hazard ratio plots<br>• Smoothed Schoenfeld residual plots and correlation test (time vs. residual)<br>• Test time-dependent covariable such as $X \\times \\log(t+1)$<br>• Ratio of parametrically estimated $\\lambda(t)$'
 
 v3  <- 'Individual Predictors $X$'
 a3  <- 'Shape of $\\lambda(t|X)$ for fixed $t$ as $X \\uparrow$<br>Linear: $\\log \\lambda(t|X)=\\log \\lambda(t)+\\beta X$<br>Nonlinear: $\\log \\lambda(t|X)=\\log \\lambda(t)+f(X)$'
@@ -638,7 +638,7 @@ print(validate(f, B=200), digits=3,
 ```{r echo=FALSE,out.width='80%'}
 #| label: fig-cox-cabg-hazard-ratio
 #| fig-scap: "Display of an interactions among treatment, extent of disease, and year"
-#| fig-cap: "A display of an interaction between treatment and extent of disease, and between treatment and calendar year of start of treatment.  Comparison of medical and surgical average hazard ratios for patients treated in 1970, 1977, and 1984 according to coronary artery disease severity.  Circles represent point estimates; bars represent 0.95 confidence limits for hazard ratios.  Hazard ratios <1 indicate that surgery is more effective [@cal89]."
+#| fig-cap: "A display of an interaction between treatment and extent of disease, and between treatment and calendar year of start of treatment.  Comparison of medical and surgical average hazard ratios for patients treated in 1970, 1977, and 1984 according to coronary artery disease severity.  Circles represent point estimates; bars represent 0.95 confidence limits for hazard ratios.  Hazard ratios <1 indicate that surgery is more effective [@cal89evo]."
 d <- expand.grid(Disease=c('1-Vessel Disease','2-Vessel Disease',
                    '3-Vessel Disease', '75% Left Main', '95% Left Main'),
                  Year=c(1970, 1977, 1984))
@@ -657,7 +657,7 @@ ggplot(d, aes(x=hr, y=Disease)) + geom_point() + facet_grid(Year ~ .) +
 ```{r echo=FALSE, w=6, h=4}
 #| label: fig-cox-cabg-ef
 #| fig-scap: "Cox--Kalbfleisch--Prentice survival estimates stratifying on treatment and adjusting for several predictors"
-#| fig-cap: "Cox--Kalbfleisch--Prentice survival estimates stratifying on treatment and adjusting for several predictors, showing a secular trend in the efficacy of coronary artery bypass surgery. Estimates are for patients with left main disease and normal (LVEF=0.6) or impaired (LVEF=0.4) ventricular function [@pry87]."
+#| fig-cap: "Cox--Kalbfleisch--Prentice survival estimates stratifying on treatment and adjusting for several predictors, showing a secular trend in the efficacy of coronary artery bypass surgery. Estimates are for patients with left main disease and normal (LVEF=0.6) or impaired (LVEF=0.4) ventricular function [@pry87cha]."
 d <- readRDS('cox-cabg-ef.rds')
 for(tr in levels(d$Treatment)) {
   for(ef in c(.4, .6)) {
@@ -678,7 +678,7 @@ ggplot(d, aes(x=t, y=surv, color=Treatment)) + geom_line() +
 ```{r echo=FALSE,h=2.75}
 #| label: fig-cox-tmscore
 #| fig-scap: "Cox model predictions with respect to a continuous variable"
-#| fig-cap: "Cox model predictions with respect to a continuous variable.  $X$-axis shows the range of the treadmill score seen in clinical practice and $Y$-axis shows the corresponding 5-year survival probability predicted by the Cox regression model for the 2842 study patients [@mar87]."
+#| fig-cap: "Cox model predictions with respect to a continuous variable.  $X$-axis shows the range of the treadmill score seen in clinical practice and $Y$-axis shows the corresponding 5-year survival probability predicted by the Cox regression model for the 2842 study patients [@mar87exe]."
 knitr::include_graphics('cox-tmscore.svg')
 ```
 

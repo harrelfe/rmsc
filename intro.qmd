@@ -264,7 +264,7 @@ What else can go wrong in modeling?
   changes that make future predictions inaccurate.
 
 
-@iez94ris lists these dimensions to capture, for patient
+@iez94dim lists these dimensions to capture, for patient
 outcome studies:
 
 

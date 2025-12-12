@@ -50,7 +50,7 @@ Deletion of records---
 
 * Badly biases parameter estimates when the probability of a `r ipacue()`
   case being incomplete is related to $Y$ and not just
-  $X$ [@littlerubin].
+  $X$ [@lit02sta].
 * Deletion because of a subset of $X$ being missing
         always results in inefficient estimates
 * Deletion of records with missing $Y$ can result in
@@ -222,7 +222,7 @@ values as done with multiple imputation (would steal info from $Y$)
 
 ## Predictive Mean Matching
 
-* Developed by @littlerubin
+* Developed by @lit02sta
 * Replace missing value with observed value of subject having closest predicted
         value to the predicted value of the subject with the `NA`.
         Key considerations are how to
@@ -464,7 +464,7 @@ prmiInfo(as)
 
 * MCAR can be partially assessed by comparing distribution of `r ipacue()`
   non-missing $Y$ for those subjects with complete $X$ vs. those
-  subjects having incomplete $X$ [@littlerubin]
+  subjects having incomplete $X$ [@lit02sta]
 * Yucel and Zaslavsky [@yuc08usi; see also @he12dia]
 * Interested in reasonableness of imputed values for a
   sometimes-missing predictor $X_{j}$

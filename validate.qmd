@@ -576,7 +576,7 @@ needed for externally validating a time-to-event model is 200 events.  @ril24eva
 * Conditional estimates would require assuming the model one is trying
     to validate
 * Efron's "$.632$" method may perform better (reduce bias further)
-    for small $n$ [@efr83est], [@boot, p. 253], @efr97imp
+    for small $n$ [@efr83est], [@efr93int, p. 253], @efr97imp
 
 
 
@@ -591,7 +591,7 @@ Bootstrap useful for assessing calibration in addition to discrimination:
 * $\hat{\gamma}_{1}<1$ if overfit,
     $\hat{\gamma}_{0} > 0$  to compensate
 * $\hat{\gamma}_{1}$ quantifies overfitting and useful for improving
-    calibration [@spi86]
+    calibration [@spi86pro]
 * Use Efron's method to estimate optimism in $(0,1)$, estimate
     $(\gamma_{0}, \gamma_{1})$ by subtracting optimism from $(0,1)$
 * See also @cop87cro and @hou90pre, p. 1318
@@ -605,7 +605,7 @@ Use bootstrap to choose between full and reduced models:
 
 * Bootstrap estimate of accuracy for full model `r ipacue()`
 * Repeat, using chosen stopping rule for each re-sample
-* Full fit usually outperforms reduced model[@spi86]
+* Full fit usually outperforms reduced model[@spi86pro]
 * Stepwise modeling often reduces optimism but this is not
     offset by loss of information from deleting marginal var.
 

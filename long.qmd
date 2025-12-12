@@ -11,7 +11,7 @@ knitr::read_chunk('long.R')
 
 # Modeling Longitudinal Responses using Generalized Least Squares {#sec-long}
 
-Some good general references on longitudinal data analysis are @davis-repmeas, @pinheiro-bates, @diggle-longit, @VR, @hand-crowder, @ver00lin, @lin97mod
+Some good general references on longitudinal data analysis are @davis-repmeas, @pin00mix, @dig02ana, @VR, @han96pra, @ver00lin, @lin97mod
 
 
 ## Notation
@@ -257,8 +257,8 @@ follow-up measurements unnecessary.
   estimating parameters
 * For small number of subjects, advantages in using REML
   (restricted maximum likelihood) instead of ordinary
-  MLE [@diggle-longit, Section~5.3],
-  [@pinheiro-bates, Chapter~5], @gol89res (esp. to get more
+  MLE [@dig02ana, Section~5.3],
+  [@pin00mix, Chapter~5], @gol89res (esp. to get more
   unbiased estimate of the covariance matrix)
 * When imbalances are not severe, OLS fitted ignoring subject  `r ipacue()`
   identifiers may be efficient
@@ -292,7 +292,7 @@ individual times
   $\rho$ is a vector (usually a scalar) set of fundamental correlation
   parameters
 * Some commonly used structures when times are continuous and are  `r ipacue()`
-  not equally spaced [@pinheiro-bates, Section 5.3.3] (`nlme`
+  not equally spaced [@pin00mix, Section 5.3.3] (`nlme`
   correlation function names are at the right if the structure is
   implemented in `nlme`):
   
