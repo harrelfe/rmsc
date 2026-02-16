@@ -747,7 +747,7 @@ cal <- processMI(f, 'calibrate', nind=3)
 
 * Run `plot(cal)` if you want to see a full size final average calibration
 
-For related information see @mi25com and @awo25com.
+For related information see @mi25com and @awo25com and [de Mul et al 2026](https://www.jclinepi.com/article/S0895-4356(26)00034-X/fulltext).
 
 <!-- NEW -->
 

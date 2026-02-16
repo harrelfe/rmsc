@@ -34,6 +34,7 @@ Even when only testing $H_{0}$ a model based approach has advantages:
     + Wilcoxon, Kruskal-Wallis, Spearman $\rightarrow$ <br> proportional odds (PO) ordinal logistic model
     + Wilcoxon signed-rank test $\rightarrow$ <br> replace with [rank-difference test](https://hbiostat.org/bbr/nonpar.html#sec-nonpar-rd) $\rightarrow$ <br> PO model blocking on subject; ordinal mixed model
     + log-rank $\rightarrow$ Cox 
+    + See [Common statistical tests are linear models](https://lindeloev.github.io/tests-as-linear) by JK Lindeløv
 
 * Models not only allow for multiplicity adjustment but for
         shrinkage of estimates

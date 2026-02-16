@@ -104,7 +104,7 @@ makegvflow('
 Special Cases of Ordinal CPMs
   Binary
     binary logistic regression
-    Pearson $\\chi^2$ test
+    Pearson χ² test
   Ordinal
     proportional odds model
     Wilcoxon test
@@ -112,7 +112,7 @@ Special Cases of Ordinal CPMs
     Kruskal-Wallis test
   Parametric
     linear model
-    $t$-test
+    t-test
     ANOVA
   Time-to-event
     Kaplan-Meier estimator
@@ -122,9 +122,26 @@ Special Cases of Ordinal CPMs
     accelerated failure time models', direction='LR', file='flow3.dot')
 ```
 
-```{dot}
-//| file: flow3.dot 
+`r system("dot -Tsvg flow3.dot -o flow3.svg")`
+
+```{r echo=FALSE}
+#| label: fig-ordsurv-rels
+#| fig-cap: Commonly used parametric models/tests are special cases of semiparametric models
+knitr::include_graphics("flow3.svg")
 ```
+
+<!-- Neither of the following two methods adds to table of figures 
+
+![Commonly used parametric models/tests are special cases of semiparametric models](flow3.svg){#fig-ordsurv-rels}
+
+3colons {.figure #fig-ordsurv-rels}
+3back{dot}
+//| file: flow3.dot
+3back
+
+Commonly used parametric models/tests are special cases of semiparametric models
+3colons
+-->
 
 There are important implications of the generality, robustness, and efficiency of ordinal regression for censored data just as there are for uncensored data.  The generality of cumulative probability models (CPMs) allows them to bridge binary, discrete, and continuous ordinal regression to survival analysis and simple statistical tests, and would present major didactic simplifications for statistics courses.  Ordinal regression covers all the following special cases:
 
@@ -210,6 +227,7 @@ $\hat{\beta}$ from the ordinal model is indistinguishable from $\hat{\beta}$ fro
 ## The Continuum of Links
 
 CPMs exist for an array of link functions representing distribution families, each link function giving rise to a different way that changes in covariate values change the distribution of Y.  But the likelihood function used as an objective function against which to estimate intercepts $\alpha$ and regression coefficients $\beta$ has the same form for all links, and all links involve the same number of $\alpha$ and $\beta$.  With CPMs with different links we find that
+
 
 * When there are no covariates or $\hat{\beta} = 0$, the estimated probabilities that $Y\geq y$ or that $Y=y$ are the same for all links.
 * Thus the deviance (-2 log likelihood) for the null model (no $\beta$) is the same for all links.
