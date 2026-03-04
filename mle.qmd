@@ -455,6 +455,7 @@ The R `madness` package may help with vector calculus.
 ## Further Reading
 
 * [Quadratic approximation and normal asymptotics](https://strimmerlab.github.io/publications/lecture-notes/MATH20802/quadratic-approximation-and-normal-asymptotics.html) by Korbinian Strimmer
+* [Understanding Maximum Likelihood: An Interactive Visualization](https://rpsychologist.com/likelihood) by Kristoffer Magnusson
 
 ## Study Questions
 
