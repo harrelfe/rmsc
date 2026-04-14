@@ -16,6 +16,8 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 
 ### Interpreting Effects
 
+<!-- NEW: predictions plot below -->
+
 * Regression coefficients if 1 d.f. per factor, no interaction `r ipacue()`
 * **Not** standardized regression coefficients
 * Many programs print meaningless estimates such as effect of
@@ -29,8 +31,12 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
         odds or hazards ratios.  Base C.L. on s.e. of difference. See  @fig-coxcase-summary.
 * Partial effect plot: Plot effect of each predictor on $X\beta$ or some transformation.  See  @fig-coxcase-shapes.
         See also @kar09vis.  Fox and Weisberg have [other excellent approaches](https://cran.r-project.org/web/packages/effects/vignettes/predictor-effects-gallery.pdf) to displaying predictor effects
+* [Predictions plot](https://www.tandfonline.com/doi/full/10.1080/00031305.2025.2539235) of Peter Rousseeuw
 * Nomogram.  See  @fig-coxcase-nomogram
 * Use regression tree to approximate the full model
+
+<img src="images/predictions_plot.jpg" width="100%">
+Predictions plot from Rousseeuw (2026)
 
 #### Contrasts {#sec-val-contrast}
 
