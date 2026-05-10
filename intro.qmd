@@ -33,7 +33,7 @@ Even when only testing $H_{0}$ a model based approach has advantages:
     + paired $t$-test $\rightarrow$ <br> linear regression with fixed effects for subjects (block on subjects); linear mixed model with random per-subject intercepts
     + Wilcoxon, Kruskal-Wallis, Spearman $\rightarrow$ <br> proportional odds (PO) ordinal logistic model
     + Wilcoxon signed-rank test $\rightarrow$ <br> replace with [rank-difference test](https://hbiostat.org/bbr/nonpar.html#sec-nonpar-rd) $\rightarrow$ <br> PO model blocking on subject; ordinal mixed model
-    + log-rank $\rightarrow$ Cox 
+    + log-rank $\rightarrow$ Cox
     + See [Common statistical tests are linear models](https://lindeloev.github.io/tests-as-linear) by JK Lindeløv
 
 * Models not only allow for multiplicity adjustment but for
@@ -50,7 +50,23 @@ Statistical estimation is usually model-based
 * Usually interested in adjusted (partial) effects, not unadjusted
   (marginal or crude) effects
 
+<!-- NEW -->
 
+### Quality of Estimates
+
+* Point estimates in the non-Bayesian context
+  + Bayesian inference does not normally use point estimates but rather entire uncertainty distributions
+* Parameter being estimated: $\theta$
+* Estimate: $\hat{\theta}$
+* Long-term average of $\hat{\theta} : \theta^*$
+* Bias: $\theta^{*} - \theta$
+* Variance: long-term average of $(\hat{\theta} - \theta^{*}) ^ 2$
+* Care most about mean squared error = bias$^{2}$ + variance = long term average of $(\hat{\theta} - \theta) ^ 2$
+* Other important measures
+  + Mean absolute error: average $|\hat{\theta} - \theta|$
+  + Median absolute error: median $|\hat{\theta} - \theta|$
+* Also of interested: integrated (over diverse observations) MSE etc.
+* Example: including all possible interactions in a model will minimize bias but have awful MSE
 
 ## Examples of Uses of Predictive Multivariable Modeling
 
@@ -98,7 +114,7 @@ classif --> whatclass[Categorical output<br><br>Hides close calls<br><br>Makes p
   classification represents a premature decision
 * See [this blog](http://fharrell.com/post/classification) for details
 * Suppose that
- 
+
 1. response variable is binary
 1. the two levels represent a sharp dichotomy with no gray zone
    (e.g., complete success vs. total failure with no possibility of a
@@ -352,7 +368,7 @@ ms --> ml[Machine learning] --> mluns[May be highly<br>unstable<br>unless N huge
     + Confidence interval will not have the claimed coverage
     + Get proper coverage by adding parameters for what you
       don't know
-      
+
        - Bayesian $t$-test: parameters for variance ratio and for
         d.f. of a $t$-distribution for the raw data (allows heavy
         tails)

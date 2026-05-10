@@ -11,7 +11,7 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 
 
 Regression modeling meets many analytic needs:
-`r mrg(sound("genreg-0"))` 
+`r mrg(sound("genreg-0"))`
 
 * Prediction, capitalizing on efficient estimation methods such as maximum likelihood and the predominant additivity in a variety of problems
     + E.g.: effects of age, smoking, and air quality add to predict lung capacity
@@ -22,20 +22,20 @@ Regression modeling meets many analytic needs:
 * Deep understanding of uncertainties associated with all model components
     + Simplest example: confidence interval for the slope of a predictor
     + Confidence intervals for predicted values; simultaneous confidence intervals for a series of predicted values
-         
+
        - E.g.: confidence band for $Y$ over a series of values of $X$
 
 
 
 **Alternative: Stratification**
-   
+
 * Cross-classify subjects on the basis of the $X$s, estimate a property of $Y$ for each stratum
 * Only handles a small number of $X$s
 * Does not handle continuous $X$
 
 
 **Alternative: Single Trees (recursive partitioning/CART)**
-   
+
 * Interpretable because they are over-simplified and usually wrong
 * Cannot separate effects
 * Finds spurious interactions
@@ -45,7 +45,7 @@ Regression modeling meets many analytic needs:
 
 
 **Alternative: Machine Learning**
-   
+
 * E.g. random forests, bagging, boosting, support vector
      machines, neural networks, deep learning
 * Allows for high-order interactions and does not require pre-specification of interaction terms
@@ -107,7 +107,7 @@ C(Y|X) =& \Pr(Y=1|X) =& (1+\exp(-X\beta))^{-1} \\
 
 Linearize: $h(C(Y|X))=X\beta,
 h(u)=g^{-1}(u)$ <br>
-Example:  `r ipacue()` 
+Example:  `r ipacue()`
 
 \begin{array}{ccc}
 C(Y|X)=\Pr(Y=1|X)&=&(1+\exp(-X\beta))^{-1} \\
@@ -118,7 +118,7 @@ h(C(Y|X)) &=& C'(Y|X)\ {\rm (link)}
 General linear regression model: <br> $C'(Y|X)=X\beta$.
 
 
-## Interpreting Model Parameters 
+## Interpreting Model Parameters
 Suppose that $X_{j}$ is linear and doesn't interact with other
 $X$'s^[Note that it is not necessary to "hold constant" all other variables to be able to interpret the effect of one predictor.  It is sufficient to hold constant the weighted sum of all the variables other than $X_{j}$.  And in many cases it is not physically possible to hold other variables constant while varying one, e.g., when a model contains $X$ and $X^{2}$ (David Hoaglin, personal communication).].
  `r ipacue()`
@@ -161,7 +161,7 @@ treatments is $H_{0}:\beta_{1}=\beta_{2}=\beta_{3}=0$.
 
 ### Interactions
 
-`r ipacue()`  
+`r ipacue()`
 $X_{1}$ and $X_{2}$, effect of $X_{1}$ on $Y$ depends on level of $X_{2}$.
 _One_ way to describe interaction is to add $X_{3}=X_{1}X_{2}$ to model:
 $$C(Y|X) = \beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2}+\beta_{3}X_{1}X_{2} .$$
@@ -200,7 +200,7 @@ Model assumes
 1. whatever distribution, variance, and independence assumptions are
         appropriate for the model being considered.
 
-Interpretations of parameters: `r ipacue()` 
+Interpretations of parameters: `r ipacue()`
 
 | Parameter | Meaning |
 |-----|-----|
@@ -244,7 +244,7 @@ $C(Y)$, powered to detect a _linear_ relationship"
 
 
 **Most Useful Tests for Linear age $\times$ sex Model**
-   `r ipacue()` 
+   `r ipacue()`
 
 | Null or Alternative Hypothesis | Mathematical Statement |
 |-----|-----|
@@ -265,7 +265,7 @@ association (test of total association) has 3 d.f. instead of 2
 (age + sex) because it allows for unequal slopes.
 
 
-### Review of Composite (Chunk) Tests 
+### Review of Composite (Chunk) Tests
 
 * In the model `r ipacue()`
 
@@ -285,10 +285,10 @@ measurements and response, holding `age` and `sex` constant.
 
 
 
-## Relaxing Linearity Assumption for Continuous Predictors {#sec-relax.linear} 
+## Relaxing Linearity Assumption for Continuous Predictors {#sec-relax.linear}
 
 ### Avoiding Categorization
-`r mrg(sound("genreg-3"))` 
+`r mrg(sound("genreg-3"))`
 `r quoteit("Natura non facit saltus<br>(Nature does not make jumps)", "Gottfried Wilhelm Leibniz")`
 
 <img src="images/lucy.png" width="45%"> &nbsp;&nbsp;&nbsp;  Lucy D'Agostino McGowan
@@ -297,15 +297,15 @@ measurements and response, holding `age` and `sex` constant.
   from itself measured earlier
 * Categorizing continuous predictors into intervals is a
   disaster; see
-  @roy06dic, @alt91cat, @hil96pra, @lau96eva, @alt94dan, 
-  @bel92con, @far96sim, @rag92dic, @sui95bin, @bue97pro, 
+  @roy06dic, @alt91cat, @hil96pra, @lau96eva, @alt94dan,
+  @bel92con, @far96sim, @rag92dic, @sui95bin, @bue97pro,
   @max93biv, @sch94out, @alt98sub, @hol04con, @mos04odd,
-  @wai06fin, @fed09con, @gia14opt, @col16qua, @ben12qua 
+  @wai06fin, @fed09con, @gia14opt, @col16qua, @ben12qua
   and [Biostatistics for Biomedical Research](https://hbiostat.org/bbr), Chapter 18.
 `r mrg(movie("https://youtu.be/-GEgR71KtwI"))`
 
 * Some problems caused by this approach:
-  
+
 1. Estimated values have reduced
         precision, and associated tests have reduced power
 1. Categorization assumes relationship between predictor and
@@ -380,8 +380,8 @@ measurements and response, holding `age` and `sex` constant.
   categories.
 
 * To summarize: The use of a (single) cutpoint $c$ makes many
-  assumptions, including:  `r ipacue()` 
-  
+  assumptions, including:  `r ipacue()`
+
 1. Relationship between $X$ and $Y$ is discontinuous at $X=c$ and
     only $X=c$
 1. $c$ is correctly found as _the_ cutpoint
@@ -428,7 +428,7 @@ $$C(Y|X_{1}) = \beta_{0}+\beta_{1} X_{1}+\beta_{2} X_{1}^{2} .$$
 
 
 
-### Splines for Estimating Shape of Regression Function and Determining Predictor Transformations 
+### Splines for Estimating Shape of Regression Function and Determining Predictor Transformations
 
 * <b>Draftsman's _spline_</b>: flexible strip of metal or rubber used to `r ipacue()`
 trace curves.
@@ -460,7 +460,7 @@ where
 
 
  `r ipacue()`
- 
+
 \begin{array}{ccc}
 f(X) & = \beta_{0}+\beta_{1}X, & X\leq a \nonumber \\
 & = \beta_{0}+\beta_{1}X+\beta_{2}(X-a) & a<X\leq b \\
@@ -491,7 +491,7 @@ Overall linearity in $X$ can
 be tested by testing $H_{0} : \beta_{2} = \beta_{3} = \beta_{4} = 0$.
 
 
-### Cubic Spline Functions 
+### Cubic Spline Functions
 Cubic splines are smooth at knots (function, first and second derivatives
 agree) --- can't see joins.
  `r ipacue()`
@@ -560,7 +560,7 @@ text(0, -400, 'Third Derivative: Jolt\nRate of Change of Acceleration',
 
 ### Restricted Cubic Splines {#sec-rcspline}
 `r mrg(sound("genreg-5"))`
- `r ipacue()` 
+ `r ipacue()`
 @sto85add: cubic splines poorly behaved in tails.
 Constrain function to be linear in tails. <br>
 $k+3 \rightarrow k-1$ parameters @dev86spl.
@@ -630,7 +630,7 @@ for(nk in 3:6) {
     else lines(x, xbeta, col=i)
   }
 }
-``` 
+```
 
 Interactive demonstration of linear and cubic spline fitting, plus
 ordinary $4^{th}$ order polynomial.  This can be run with
@@ -649,7 +649,7 @@ continuity restrictions, cubic polynomial, linear spline, cubic
 spline, and restricted cubic spline fitting is at
 [pclambert.net/interactive_graphs](https://pclambert.net/interactive_graphs.html).
 Jordan Gauthier
-has another nice interactive demonstration at [drjgauthier.shinyapps.io/spliny](https://drjgauthier.shinyapps.io/spliny). [See also the excellent resources from Michael Clark [here](https://m-clark.github.io/workshops/stars/building-up-to-gams.html) and [here](https://m-clark.github.io/workshops/stars/technical-details.html#technical-details).]{.aside}
+has another nice interactive demonstration at [drjgauthier.shinyapps.io/spliny](https://drjgauthier.shinyapps.io/spliny). [See also the excellent resources from Michael Clark [here](https://m-clark.github.io/workshops/stars/building-up-to-gams.html) and [here](https://m-clark.github.io/workshops/stars/technical-details.html#technical-details) and the excellent tutorial by Danielle Navarro [here](https://blog.djnavarro.net/posts/2025-09-06_p-splines).]{.aside}
 
 
 Once $\beta_{0}, \ldots, \beta_{k-1}$ are estimated, the restricted
@@ -756,7 +756,7 @@ fractional polynomials, and penalized splines.
 * problem in estimating $E(Y)$ at outer $X$-values
 * estimates very sensitive to bin width
 * Moving linear regression far superior to moving avg. (moving
-  flat line) `r ipacue()` 
+  flat line) `r ipacue()`
 * @cle79rob moving linear regression smoother _loess_ (locally weighted least squares) is the most popular
   smoother.  To estimate central tendency of $Y$ at $X=x$:
     + take all the data having $X$ values within a suitable interval
@@ -799,7 +799,7 @@ nonparametric estimators often require burdensome computations.
 
 
 
-## Recursive Partitioning: Tree-Based Models {#sec-tree.models} 
+## Recursive Partitioning: Tree-Based Models {#sec-tree.models}
 @bre84cla: CART (Classification and Regression Trees) --- essentially model-free
 
 Method:
@@ -872,7 +872,7 @@ predictors well, unlike recursive partitioning.
   parsimony in data reduction @wit08tes,@zho06spa,@len09gen,@lee10spa
 * bagging, boosting, and random forests @has08ele
 
-One problem prevents most of these methods from being ready for everyday use: `r ipacue()` 
+One problem prevents most of these methods from being ready for everyday use: `r ipacue()`
 they require scaling predictors before fitting the model.  When a
 predictor is represented by nonlinear basis functions, the scaling
 recommendations in the literature are not sensible.  There are also
@@ -923,7 +923,7 @@ A statistical model may be the better choice if
 
 Machine learning may be the better choice if
 
-* The signal:noise ratio is large and the outcome being predicted 
+* The signal:noise ratio is large and the outcome being predicted
   doesn't have a strong component of
   randomness; e.g., in visual pattern recognition an object must be an "E"
   or not an "E"
@@ -952,7 +952,7 @@ But see [this](https://bsky.app/profile/gscollins.bsky.social/post/3laufggkuxc2u
 * Non-open science
 
 ## Multiple Degree of Freedom Tests of Association  {#sec-multiple.df}
-`r mrg(sound("genreg-10"))` 
+`r mrg(sound("genreg-10"))`
  `r ipacue()`
 $$C(Y|X) = \beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2}+\beta_{3}X_{2}^{2} ,$$
 $H_{0}: \beta_{2}=\beta_{3}=0$ with 2 d.f. to assess association
@@ -997,10 +997,10 @@ $E(Y|X) =\beta_{0}+\beta_{1}X+\beta_{2}X^{2}$
 
 
 ## Assessment of Model Fit
-`r mrg(sound("genreg-11"))` 
+`r mrg(sound("genreg-11"))`
 
 ### Regression Assumptions
-The general linear regression model is `r ipacue()` 
+The general linear regression model is `r ipacue()`
 $$C(Y|X) = X\beta =\beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2}+\ldots+\beta_{k}X_{k} .$$
 Verify linearity and additivity.  Special case:
 $$C(Y|X) = \beta_{0}+\beta_{1}X_{1}+\beta_{2}X_{2},$$
@@ -1023,7 +1023,7 @@ Methods for checking fit:
 
 **1. Fit simple linear additive model and check examine residual plots for patterns**
 `r ipacue()`
- 
+
 * For OLS: box plots of $e$ stratified by $X_{1}$,
   scatterplots of $e$ vs. $X_{2}$ and $\hat{Y}$, with trend
   curves (want flat central tendency, constant variability)
@@ -1033,7 +1033,7 @@ Methods for checking fit:
 **Advantage**: Simplicity
 
 **Disadvantages**:
- 
+
 * Can only compute standard residuals for uncensored continuous
    response
 * Subjective judgment of non-randomness
@@ -1047,7 +1047,7 @@ Methods for checking fit:
 **Advantages**: Simplicity, can see interaction
 
 **Disadvantages**:
- 
+
 * Scatterplots cannot be drawn for binary, categorical, or
    censored $Y$
 * Patterns difficult to see if relationships are weak or $n$
@@ -1058,7 +1058,7 @@ Methods for checking fit:
 **Advantages**: Simplicity, can see interactions, handles censored $Y$ (if you are careful)
 
 **Disadvantages**:
- 
+
 * Requires large $n$
 * Does not use continuous var. effectively (no interpolation)
 * Subgroup estimates have low precision
@@ -1070,27 +1070,27 @@ Methods for checking fit:
 **Advantages**: All regression aspects of the model can be summarized efficiently with minimal assumptions
 
 **Disadvantages**:
- 
+
 * Does not apply to censored $Y$
 * Hard to deal with multiple predictors
 
 **5. Fit flexible nonlinear parametric model**
 
 **Advantages**:
- 
+
 * One framework for examining the model assumptions, fitting the
    model, drawing formal inference
 * d.f. defined and all aspects of statistical
   inference "work as advertised"
 
 **Disadvantages**:
- 
+
 * Complexity
 * Generally difficult to allow for interactions when assessing
    patterns of effects
 
 
-Confidence limits, formal inference can be problematic for methods 1-4. `r ipacue()` 
+Confidence limits, formal inference can be problematic for methods 1-4. `r ipacue()`
 
 Restricted cubic spline works well for method 5.
 
@@ -1129,7 +1129,7 @@ Overall test of linearity $H_{0}: \beta_{3}=\beta_{4}=\beta_{6}=\beta_{7}=0$, wi
 
 
 ### Modeling and Testing Complex Interactions {#sec-interaction.surface}
-`r mrg(sound("genreg-12"))`  
+`r mrg(sound("genreg-12"))`
 **Note**: Interactions will be misleading if main effects are not properly modeled (@zha20int).
 
 Suppose $X_1$ binary or linear, $X_2$ continuous:
@@ -1417,7 +1417,7 @@ v
 
 The coefficients of $x_1$ and $x_2$ in `v` are the same, so the second parameter is associated with the sum of $x_1$ and $x_2$, with an arbitrary scaling constant.
 
-Now consider a more interested case.  A model has a predictor $x$ that is modeled with an ordinary cubic polynomial plus a discontinuity at $x=3$ and includes another covariate $z$: 
+Now consider a more interested case.  A model has a predictor $x$ that is modeled with an ordinary cubic polynomial plus a discontinuity at $x=3$ and includes another covariate $z$:
 
 $$
 \begin{aligned}
@@ -1471,7 +1471,7 @@ orm(y ~ Z)
 xc <- rep(0, n)
 for(i in 1 : length(D))
   if(D[i] != 0) xc <- xc + X[, i] / D[i]
-# Divide by number of non-zero D's so that when adding all these xc components we get 0-1 scale for 
+# Divide by number of non-zero D's so that when adding all these xc components we get 0-1 scale for
 # contrast of interest
 xc <- xc / sum(D != 0)
 
@@ -1562,7 +1562,7 @@ The `rms` [`contrast` function](https://www.rdocumentation.org/packages/rms/vers
    + interaction effect (e.g., age slope for females minus age slope for males)
 * triple difference
    + amount of nonlinearity in an interaction effect
-   
+
 For predictors modeled linearly, the slope is the regression coefficient.  For nonlinear effects where $x$ is transformed by $f(x)$, the slope at $x=\frac{a+b}{2}$ is proportionally approximated by $f(b) - f(a)$, and the slope at $x=\frac{b+c}{2}$ by $f(c) - f(b)$.  The amount of nonlinearity is reflected by the difference in the two slopes, or $f(c) - f(b) -[f(b) - f(a)] = f(a) + f(c) - 2f(b)$. [This is a numerical approximation to the second derivative (slope of the slope; acceleration). It would be easy to use more accurate Lagrange interpolation derivative approximators here.]{.aside}  You'll see this form specified in the `contrast` part of the `pcontrast` argument to `blrm` below.
 
 ### Examples of Priors on Contrasts {#sec-genreg-pcontrast}
@@ -1594,7 +1594,7 @@ Start with a simple hypothetical example:
 * age interacts with treatment
 * sex is also in the model, not interacting with anything
 
-We wish to specify a prior on the treatment effect at age 50 so that there is only a 0.05 chance that the $\text{OR} < 0.5$.  `r psigma(0.5, 0.05, inline=TRUE)`.  The covariate settings specified in `pcontrast` below do not mention sex, so predictions are evaluated at the default sex (the mode).  Since sex does not interact with anything, the treatment difference of interest makes the sex setting irrelevant anyway. 
+We wish to specify a prior on the treatment effect at age 50 so that there is only a 0.05 chance that the $\text{OR} < 0.5$.  `r psigma(0.5, 0.05, inline=TRUE)`.  The covariate settings specified in `pcontrast` below do not mention sex, so predictions are evaluated at the default sex (the mode).  Since sex does not interact with anything, the treatment difference of interest makes the sex setting irrelevant anyway.
 
 ```{r eval=FALSE}
 require(rmsb)
@@ -1699,7 +1699,7 @@ f <- blrm(y ~ rcs(x1, 4) * x2, pcontrast=con)
 f
 f$Contrast
 ggplot(Predict(f, x1, x2))
-```                   
+```
 
 
 ## Study Questions
@@ -1752,7 +1752,7 @@ ggplot(Predict(f, x1, x2))
 1. What is a major tradeoff between the modeling strategy we will largely use and ML?
 1. What are some determinants of the best choice between SM and ML?
 
-**Section 2.6** 
+**Section 2.6**
 
 1. What is the main message of the Grambsch and O'Brien paper?
 1. What notational error do many analysts make that lead them to ignore model uncertainty?
