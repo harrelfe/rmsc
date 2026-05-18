@@ -77,8 +77,9 @@ options(datadist='dd')
 # Generate right-censored survival time variable
 ac <- upData(ac, print=FALSE,
   years = d.time/365.25,
-  units = c(years = 'Year'),
-  S     = Surv(years, death))
+  labels = c(years = 'Follow-up Time'),
+  units = c(years = 'Year'))
+ac$S <- with(ac,  Surv(years, death))
 
 # Show normal inverse Kaplan-Meier estimates
 # stratified by dzgroup
@@ -409,8 +410,8 @@ f.approx <- Newlabels(f.approx, c('Disease Group','Mean Arterial BP',
 nom <-
   nomogram(f.approx,
            pafi.i=c(0, 50, 100, 200, 300, 500, 600, 700, 800, 900),
-           fun=list('Median Survival Time'=median.surv,
-                    'Mean Survival Time'  =expected.surv),
+           fun=list('Median Survival Time, y'=median.surv,
+                    'Mean Survival Time, y'  =expected.surv),
            fun.at=c(.1,.25,.5,1,2,5,10,20,40))
 plot(nom, cex.var=1, cex.axis=.75, lmgp=.25)
 ```
