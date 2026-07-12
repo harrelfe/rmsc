@@ -4,7 +4,7 @@ options(qproject='rms')
 getRs('qbookfun.r')
 ```
 
-<img src="images/logo.png" width=40%>
+<img src="https://hbiostat.org/rmsc/images/logo.png" width=40%>
 
 ```{mermaid}
 %%| column: screen-inset-right
@@ -138,7 +138,7 @@ See the excellent text _Clinical Prediction Models_ [@ste19cli]
 
 ## Key Messages of the Course
 
-1.  A fundamental RMS principle is to aim for "methods that enable an analyst to develop models that will make accurate predictions of responses for future observations."  The RMS program (philosophy, methodology, tools) is dedicated to this.
+1.  A fundamental RMS principle is to aim for "methods that enable an analyst to develop models that will make accurate predictions of responses for future observations."  The RMS program (philosophy, methodology, tools) is dedicated to this, as well as to estimating shapes of predictor effects while adjusting for other predictors.
 1. **Phantom degrees of freedom** : Information about the relationship between the dependent variable and candidate predictors introduced into model specification or model selection that is not later properly accounted for in the variance estimates and inference that goes into the ultimate report of analysis results.  Put another way: assessments made in model development and then later elided that compromise the fidelity of standard errors, alpha, Type-I assertion probability $\alpha$, etc.  It is 'phantom' not only because it disappears, but also because this information continues to haunt the analysis, typically with overconfidence.
 1.  **$\chi^{2}$ - df** :  The magnitude of predictive signal (which is proportional to $n$), chance-corrected by subtracting the expected amount of apparent explanatory information that occurs when there is no association (which is the degrees of freedom, i.e., effective number of parameters and is constant, i.e., does not depend on $n$).
 1. **Chunk tests** : Simultaneous or aggregate assessment of the importance (e.g., proportion of total variance explained) of collinear or dependent (e.g. related polynomial or interaction) terms or a group of non-collinear candidate predictors. Important for making coherent judgments.
@@ -169,21 +169,24 @@ that further discusses the topic.
 
 ## Other Information
 
-* [Discussion board for the overall course](http://datamethods.org/rms) and [hints for registering](https://hbiostat.org/datamethods)
+* 4-day course notes: `hbiostat.org/course/rms`
+* 4-day course syllabus and daily schedules: `hbiostat.org/doc/rms/desc.html`
+* Master RMS notes: `hbiostat.org/rmsc`
+* `Instats` participants: use the Forum for the course on `Instats.org`
+* `Datamethods` [Long-term Discussion board](http://datamethods.org/rms) and [hints for registering](https://hbiostat.org/datamethods)
 * How to [annotate and pose questions on web pages](https://hbiostat.org/comment)
-* [RMS main web site](https://hbiostat.org/rms)
-* Twitter: `#rmscourse`
+  + Do this only on the master RMS notes
+* `X` and `BlueSky`: `#rmscourse`
 * Publicly available videos of the short course
    + [Four hour short course](https://youtu.be/UPcpkIJXlvY) from useR!2022
 * [BBR course](https://hbiostat.org/bbrc)
 * Go directly to a YouTube video for RMS Session `n` by going to `bit.ly/yt-rmsn`
 * Study questions at the end of selected chapters
-* [Datamethods discussion board](http://datamethods.org)
 * [Statistical papers written for clinical researchers](https://hbiostat.org/bib)
 * [RMS overview and template for statistical analysis plan](https://fharrell.com/post/modplan)
-* [Statistical Thinking blog](https://fharrell.com)
-* [Glossary of statistical terms](https://hbiostat.org/glossary)
-* [R Workflow](https://hbiostat.org/rflow)
+* [Statistical Thinking blog](https://fharrell.com): `fharrell.com`
+* [Glossary of statistical terms](https://hbiostat.org/glossary): `hbiostat.org/glossary`
+* [R Workflow](https://hbiostat.org/rflow): `hbiostat.org/rflow`
 
 ## Acknowledgements
 
@@ -207,6 +210,8 @@ kableExtra, pcaPP, VGAM, MASS, leaps, rpart
 
 | Date | Sections | Changes |
 |:---|:-|:--------|
+| 2026-05-19 | [-@sec-genreg-repar]   | Added general material on MLE |
+| 2026-05-16 | [-@sec-markov-robust]  | New subsection of robustness of model |
 | 2026-05-07 | [-@sec-intro-tep] | New subsection on estimation qualities |
 | 2025-05-26 | [-@sec-validate-bootcl] | New subsubsection on confidence intervals for bootstrap bias-corrected accuracy measures, added limits in various validation and calibration examples |
 | 2025-03-10 | [-@sec-cony-checkass]  | Added usage of `ordParallel` and `Olinks` |
