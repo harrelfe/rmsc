@@ -1392,7 +1392,42 @@ lrtest(f, g)
 
 ## Contrasts and Model Reparameterization {#sec-genreg-repar}
 
-Contrasts allow one to estimate and test any kind of effects that are napped to the model's regression parameters.  Examples in @sec-genreg-prior show how far you can take this idea, including double difference contrasts for estimating interaction effects or degree of nonlinearity.  The `rms` package `contrast.rms` function makes it easy to estimate contrasts to get estimates such as the effect of age changing from 30 to 50 for males.  Contrasts are just differences in predicted values, so all that's needed is to specify the design matrices for one condition vs. another and to subtract these two matrices and multiply this difference by $\hat{\beta}$.  A standard formula is used to compute standard errors of such contrasts which leads to Wald confidence intervals.
+* See @sec-mle for an introduction to maximum likelihood estimation and the 3 types of test statistics
+* log likelihood is the gold standard optimality criterion
+* Maximum likelihood estimates (MLEs)
+  + Find $\hat{\beta}$ maximizing the probability of observing the observed data
+  + MLEs are consistent, efficient, and flexible
+  + Ordinary linear models: log likelihood $\propto$ SSE
+
+* SEs and covariances of $\hat{\beta}$ computed from matrix of second derivatives of log-likelihood
+* Wald tests - like $\hat{\beta}$/SE - easiest to compute
+  + Very easy to do for contrasts using simple matrix operations to get variance matrix
+* Score - e.g. Pearson $\chi^2$ and log-rank statistic - not used in general
+* Likelihood ratio (LR) $\chi^2$ - more closely follows true $\chi^2$ distribution and doesn't break down
+* Wald stats can break down - Hauck-Donner effect
+* Very large $\hat{\beta}$ $\rightarrow$ SE gets larger faster
+* $\rightarrow$ Wald statistic $\rightarrow 0$
+* LR has no problem
+
+Relationship to interval estimation:
+
+* 0.95 onfidence interval $[L, U]$ = set of values of $\beta$ that if hypothesized to be true would not be rejected at 0.05 level
+* Wald confidence intervals (inversion of Wald test) are often not accurate enough
+* Besides Hauck-Donner effect, if the sampling distribution of $\hat{\beta}$ is very asymmetric, a confidence interval for $\beta$ must also be asymmetric to be accurate
+* Wald intervals are symmetric
+* Wald assumes log likelihood is quadratic-like to be accurate (Gaussian)
+* LR-based intervals are as asymmetric as needed and allow log-likelihood to be very non-quadratic
+* Provides accurate converage in both tails
+
+Profile likelihood confidence intervals
+
+* Invert LR Test
+* Set $\beta$ of interest to an array of values
+* For each set of $\beta$ of interest must solve for MLEs of remaining $\beta$ (and intercepts) under the restriction on the $\beta$ being tested
+* Solve for boundaries of $\beta$ of interest that yield LR chunk test p-value of 0.025
+* Tricky when testing or computing uncertainty intervals for general contrasts $C\beta$
+
+Contrasts allow one to estimate and test any kind of effects that are mapped to the model's regression parameters.  Examples in @sec-genreg-prior show how far you can take this idea, including double difference contrasts for estimating interaction effects or degree of nonlinearity.  The `rms` package `contrast.rms` function makes it easy to estimate contrasts to get estimates such as the effect of age changing from 30 to 50 for males.  Contrasts are just differences in predicted values, so all that's needed is to specify the design matrices for one condition vs. another and to subtract these two matrices and multiply this difference by $\hat{\beta}$.  A standard formula is used to compute standard errors of such contrasts which leads to Wald confidence intervals.
 
 Since Wald confidence intervals for contrasts are so easy to compute, it is tempting to always compute contrasts in an after-fitting step.  This is optimal for bootstrapping, or for Bayesian models where the contrast is computed separately for each posterior draw, leading to posterior samples of the contrasts, which are summarized exactly as basic parameters are summarized (posterior median, highest posterior density uncertainty interval, etc.).  But in a frequentist setting outside of a standard Gaussian linear model, Wald confidence intervals are not ideal.  For example the sampling distribution of the contrast may be asymmetric, so symmetric confidence intervals may have poor coverage on at least one side.  In addition, Wald confidence intervals may inconsistent with gold-standard likelihood ratio $\chi^2$ tests, whereas profile likelihood confidence intervals are consistent with them.
 
