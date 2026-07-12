@@ -2,6 +2,7 @@ rmsc.Rproj
 .Rproj.user
 .quarto
 _book
+_freeze
 stan-progress.txt
 convertchapter.r
 .Rhistory
