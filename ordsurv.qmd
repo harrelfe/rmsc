@@ -25,7 +25,7 @@ Regression Model Assumptions
 ```
 
 ```{dot}
-//| file: flow1.dot 
+//| file: flow1.dot
 ```
 
 ```{r echo=FALSE}
@@ -46,7 +46,7 @@ Types of Y Allowed in Semiparametric Models
 ```
 
 ```{dot}
-//| file: flow2.dot 
+//| file: flow2.dot
 ```
 
 
@@ -93,7 +93,7 @@ Consider any semiparametric regression model in the class of cumulative probabil
 
 The `rms` `orm` function takes a user-specified `Ocens` object and runs it through the `Ocens2ord` function to do the recoding into a discrete ordinal variable.  If there is no censoring, the response variable `Y` is simply recoded to an integer vector based on the unique (to within $10^{-7}$ by default) values occurring in the data.  For left- or right- censoring, censored values are recoded to the next inward uncensored value and considered censored at that open-interval value.  All censored values that are beyond the outermost uncensored values are coded at the innermost censored value that is beyond the most extreme uncensored value, and a new uncensored category is created at this value.  For right censoring, this process makes the maximum likelihood estimates (MLE) of the model intercepts, when there no covariates, exactly equal to the link function of Kaplan-Meier estimates.  When the highest coded value is right-censored at say a value $y$, the predicted value of $P(Y \geq y)$ will be greater than 0, so the resulting survival curve will not be observed to drop to zero.  If the highest observation is uncensored, the estimated survival curve will drop to zero at that point.
 
-For interval censoring, the process of converting general intervals to ordered categories is a complex one involving _Turnbull intervals_ which requires one to iterate to remove intervals that do not contribute to the likelihood function.  `Ocens2ord` has two algorithms for interval consolidation, one based on consolidating parameters and one on consolidating data.  Except in rare situations such as having certain patterns of tied times in the data, the MLEs are exactly the Turnbull nonparametric interval-censored survival probability estimates transformed by the link function.
+For interval censoring, the process of converting general intervals to ordered categories is a complex one involving _Turnbull intervals_ (maximal intersections of the censoring intervals).  Some Turnbull intervals may carry no estimable probability, which would otherwise cause `orm` to compute an invalid likelihood; `Ocens2ord` detects and consolidates these using the Kuhn-Tucker (self-consistency) condition of the nonparametric maximum likelihood estimate, computed by an internal Turnbull self-consistency algorithm implemented in base R.  `Ocens2ord` has two algorithms for interval consolidation: the default, `cons='intervals'`, remaps interval definitions without changing the data; a deprecated legacy alternative, `cons='data'`, instead iteratively widens the raw data values and requires the `icenReg` package. Except in rare situations such as having certain patterns of tied times in the data, the MLEs are exactly the Turnbull nonparametric interval-censored survival probability estimates transformed by the link function.
 
 Related resources and important background publications by several authors may be found [here](https://hbiostat.org/papers#ordcens).
 
@@ -130,7 +130,7 @@ Special Cases of Ordinal CPMs
 knitr::include_graphics("flow3.svg")
 ```
 
-<!-- Neither of the following two methods adds to table of figures 
+<!-- Neither of the following two methods adds to table of figures
 
 ![Commonly used parametric models/tests are special cases of semiparametric models](flow3.svg){#fig-ordsurv-rels}
 
@@ -153,7 +153,7 @@ There are important implications of the generality, robustness, and efficiency o
 * When there is only right censoring and no covariates, the estimated survival curve from ordinal regression is exactly the Kaplan-Meier estimate
    + The link function is irrelevant for the survival point estimates
    + Different link functions will give rise to different confidence intervals
-   + Example: A log-log link gives identical confidence intervals to Kaplan-Meier intervals using the standard error of log-log survival 
+   + Example: A log-log link gives identical confidence intervals to Kaplan-Meier intervals using the standard error of log-log survival
 * For interval-censored data, survival estimates with no covariates are almost exactly Turnbull estimates
 * Parametric accelerated failure time models are special cases of ordinal models with probit or logit links
    + they are special cases because they assume that time is correctly transformed (it is usually logged) to make the residuals have a specific distribution
@@ -263,7 +263,7 @@ The `rms` `orm` function has been generalized in version 8.0 to handle general c
    + Each observation must be associated with one or two ordinal model intercepts
    + Censored observations must use existing intercept parameters that are defined by distinct uncensored values
       - E.g. an observation right-censored at 4 years considers the point to be right-censored at 3.9 years if the last uncensored value before 4y was 3.9
-   + Observations censored after the last uncensored time point are very informative and cause creation of a new final uncensored category at the lowest of such censoring times, plus a small time increment to indicate the open interval involved
+   + Observations censored after the last uncensored time point are very informative and cause creation of a new final uncensored category at the lowest of such censoring times (or, in the rare case that this value ties exactly with the last uncensored time, one grid unit above it, to keep the category distinct)
    + Interval-censored observations create Turnbull intervals and are given a lot of attention by `Ocens` so that unique likelihood contributions result
    + The nonparametric survival curve estimates are saved so that the link function of them can be used as started values for MLE, with starting values for $\beta$ equal to zero
 * `survest`: estimate survival probabilities and confidence intervals for subjects described in a data frame
@@ -307,7 +307,7 @@ Ordinal semiparametric CPM models ---
    + equivalent to judging model likelihood ratio $\chi^2$, AIC, and pseudo $R^2$
    + easy to do with `rms` `Olinks` function (new in 8.0)
    + several examples follow
-   
+
 ### Qualitative/Graphical GOF Assessments
 
 * Stratify by a key predictor or by predicted values from a tentative model, and for each stratum compute a nonparametric cumulative distribution estimate (ECDF or Kaplan-Meier), link-transform it, and assess parallelism
@@ -333,7 +333,7 @@ So in non-huge datasets **some GOF assessments are noisy and hard to use for dec
 ::: {.callout-note collapse="true"}
 ## Sample Size Requirements for Discriminating Links Using Deviance
 
-What sample sizes are needed for deviances from various links to be able to discern the correct link?  Let's simulate multiple datasets with varying $N$, with no censoring, replicating each $N$ 50 times and averaging the 50 deviances.  Data are generated using a logit link.  The deviance from the ideal logit link is subtracted from each non-logit link's deviance. 
+What sample sizes are needed for deviances from various links to be able to discern the correct link?  Let's simulate multiple datasets with varying $N$, with no censoring, replicating each $N$ 50 times and averaging the 50 deviances.  Data are generated using a logit link.  The deviance from the ideal logit link is subtracted from each non-logit link's deviance.
 
 ```{r}
 sim <- function(n) {
@@ -363,7 +363,7 @@ ggplot(m, aes(x=n, y=dif, col=link)) + geom_line() +
   geom_hline(yintercept=3.84, alpha=0.4)
 ```
 
-A reference line is drawn at the $\chi^{2}_{1}$ 0.95 critical value of 3.84 to give a rough idea of a noise reference level.  Distinguishing between the logit and probit links requires $N > 250$ whereas the log-log and complementary log-link links are distinguishable from the logit link by $N=60$. 
+A reference line is drawn at the $\chi^{2}_{1}$ 0.95 critical value of 3.84 to give a rough idea of a noise reference level.  Distinguishing between the logit and probit links requires $N > 250$ whereas the log-log and complementary log-link links are distinguishable from the logit link by $N=60$.
 
 But these are on the average.  There is a lot of sample-to-sample variability in deviances and deviance orderings.  Instead of showing mean differences, plot the 0.1 quantiles of differences within each 50-run batch.
 
@@ -385,7 +385,7 @@ g <- function(dev, link) {
                    min(dev[k]) < min(dev[! k]) ) )
 }
 cr <-  w[, g(deviance, link), by=.(n, i)]
-m  <- cr[, .(prop = mean(correct)), by=.(n, glink)] 
+m  <- cr[, .(prop = mean(correct)), by=.(n, glink)]
 ggplot(m, aes(x=n, y=prop, col=glink)) + geom_line() +
   xlab(expression(N)) + ylab('Proportion Correct') +
   guides(color=guide_legend(title='')) +
@@ -455,7 +455,7 @@ An ordinal model link function specifies the transformation of cumulative probab
 * Exponential distribution with proportional hazards (PH) for the covariate effects
   + covariate effects are constant over time on the hazard ratio scale
   + the AFT class and PH intersect for exponential and Weibull models when covariate effects operate multiplicatively on the hazard
-  + $T$ has an AFT model (e.g., $\log(T)$ has a normal, logistic distribution)  
+  + $T$ has an AFT model (e.g., $\log(T)$ has a normal, logistic distribution)
 * An accelerated failure time model -- additive covariate effects with logistic distribution residuals
   + covariates have decreasing effects over time on hazard ratios
 * For each simulated dataset fit the right model and a wrong model
@@ -470,7 +470,7 @@ An ordinal model link function specifies the transformation of cumulative probab
    + g21: logistic distribution data fitted with log-log ordinal model
    + g22: logistic distribution data fitted with logistic AFT ordinal model
 * Censoring distribution is $U(2, 15)$ and only right censoring is present
-   
+
 ```{r}
 require(rms)
 require(survival)
@@ -498,9 +498,11 @@ l    <- 13:15
 cbind(t1, cens)[l, ]
 S1[l, ]
 Y1[l, ]
-# Right-censored values beyond the last censored time are very
-# informative, and for them Ocens creates a final uncensored level
-# at the minimum of such censoring times + a tiny increment
+# Right-censored values beyond the last uncensored time are very
+# informative, and for them Ocens2ord (called internally by orm) creates
+# a final uncensored level at the minimum of such censoring times (or,
+# if that value ties exactly with the last uncensored time, one grid
+# unit above it, to keep the category distinct)
 max.uncens <- max(t1[e1])
 min.cens.after.last.uncens <- min(t1[! e1 & (t1 > max.uncens)])
 c(max.uncens, min.cens.after.last.uncens)
@@ -575,7 +577,7 @@ cbetas <- function(fits) {
   # Compute correlation matrix of linear predictors
   cat('\nCorrelations of linear predictors:\n\n')
   print(round(cor(sapply(fits, function(x) x$linear.predictors)), 5))
-  
+
   # Compute SEs from information matrix and from sandwich estimator
   u <- function(f, nam) {
     k <- num.intercepts(f)
@@ -826,7 +828,7 @@ d <- upData(d, print=FALSE,
        t = d.time/365.25,
        labels = c(t = 'Survival Time'),
   units = c(t = 'year'))
-d <- upData(d, 
+d <- upData(d,
         Y = Ocens(t, ifelse(death == 1, t, Inf)))
 maxuc <- with(d, max(t[death == 1]))
 round(maxuc, 3)
@@ -891,7 +893,7 @@ There are two other ways to check model assumptions, one of which is to estimate
 ordParallel(f)
 ```
 
-The curves are fairly flat.  But it is difficult to interpret trends in individual $\beta$ that make up one predictor's effect.  Use an option to compute the partial linear predictor for each of the model's predictors. Each weighted sum term gives rise to an effect that now has $\beta=1$.  The terms are scaled so that they are in units of inter-quartile range of the part of linear predictor involving a predictor.  In this way a weak variable will have a smaller effect.  See how the overall multiplier varies as a function of time.  This does not allow for shape changes over time but does allow change in overall importance (steepness).  
+The curves are fairly flat.  But it is difficult to interpret trends in individual $\beta$ that make up one predictor's effect.  Use an option to compute the partial linear predictor for each of the model's predictors. Each weighted sum term gives rise to an effect that now has $\beta=1$.  The terms are scaled so that they are in units of inter-quartile range of the part of linear predictor involving a predictor.  In this way a weak variable will have a smaller effect.  See how the overall multiplier varies as a function of time.  This does not allow for shape changes over time but does allow change in overall importance (steepness).
 
 ```{r}
 ordParallel(f, terms=TRUE)
@@ -932,7 +934,7 @@ testpar <- function(form, link) {
   h  <- robcov(g, do$obs)
   anova(h)
 }
-form <- Y ~ dzgroup + rcs(meanbp, 5) + rcs(crea, 4) + rcs(age, 5) + rcs(hrt, 3) + 
+form <- Y ~ dzgroup + rcs(meanbp, 5) + rcs(crea, 4) + rcs(age, 5) + rcs(hrt, 3) +
   scoma + rcs(pafi, 4) + pol(adlsc, 2) + rcs(resp, 3)
 fams <- .q(probit, logistic, loglog)
 w <- lapply(fams, function(x) testpar(form, x))
