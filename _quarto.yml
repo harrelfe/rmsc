@@ -17,7 +17,7 @@ book:
   twitter-card:
     creator: "f2harrell"
     site: "f2harrell"
-		
+
   chapters:
     - index.qmd
     - intro.qmd
@@ -51,7 +51,7 @@ book:
   page-footer:
     background: light
     left:
-      - text: "Copyright 2025, Frank E Harrell Jr"
+      - text: "Copyright 2026, Frank E Harrell Jr"
     right:
       - text: "License"
         href: http://creativecommons.org/licenses/by-nc-sa/4.0
@@ -84,3 +84,4 @@ comments:
 execute:
   warning: false
   message: false
+  freeze: auto
