@@ -9,7 +9,12 @@ knitr::set_alias(w = 'fig.width', h = 'fig.height', cap = 'fig.cap', scap ='fig.
 
 # Semiparametric Ordinal Longitudinal Models
 
-Key reference: @roh24bay; 2024 Statistics in Medicine tutorial
+**MOST**: Markov Ordinal State Transition model
+
+**Key references**
+
+* @roh24bay; 2024 Statistics in Medicine tutorial
+* [Navigating the landscape of hierarchical multi-component strategies: GPC, DOOR, and MOST](https://doi.org/10.48550/arXiv.2604.12662) by De Backer, Verbeeck, Lanius, Vandemeulebroecke, Evans, Hamasaki, Buyse, Harrell 2026
 
 ## Longitudinal Ordinal Models as Unifying Concepts
 This material in this section is taken from [hbiostat.org/talks/rcteff.html](https://hbiostat.org/talks/rcteff.html).
@@ -79,7 +84,26 @@ See also [hbiostat.org/proj/covid19/ordmarkov.html](http://hbiostat.org/proj/cov
 * No assumption about Y distribution for a given patient type
 * Does not use the numeric Y codes
 
+### Model Robustness {#sec-markov-robust}
 
+* If $Y$ consists of different event types, model will not fit well unless non-PO is allowed for time
+* Model has a high chance of finding the best treatment even if PO is assumed for treatment and it is strongly violated
+* Probabiliity estimates for being in specific states may be inaccurate for some levels of $X$ if PO is falsely assumed for $X$
+* State occupancy probabilities and expected time in states are relatively robust
+* Uncertainties in $\hat{\beta}$ may be very inaccurate if correlation structure is badly misspecified
+  + Frequentist: SEs too small and $\alpha$ inflated; Bayesian: posteriors too narrow, posterior probs miscalibrated
+* Example: ORBITA <small>(Personal communication, Matthew Shun-Shin, Imperial College, London)</small>
+  + Daily angina frequency with huge within-person variability
+  + May lead a Markov model to think that prior states are irrelevant
+  + $\rightarrow$ multiple observations on a subject have the same information as new subjects
+  + $\rightarrow$ inflates apparent effective sample size
+  + Need to incorporate each subject's latent angina tendencies to account for this
+  + Most easily done with random intercepts
+* Include random intercepts to protect against deflation of uncertainties in $\beta$
+  + Serial correlation dominant structure $\rightarrow$ variance of random effects small and including them unnecessarily will not harm the analysis
+  + Compound symmetry dominant structure $\rightarrow$ inclusion of lags in the model will not harm the analysis, and effects of lags may be small
+  + Bayesian modeling handles random effects much more naturally
+    - Automatic marginalization over random effects when examining posterior draws for $\beta$
 
 ## Case Studies
 
@@ -164,7 +188,7 @@ ICUs to study the effectiveness of vitamin D vs. placebo
     + Time trend: linear spline with knot at day 2 (handles exception at
     day 1 when almost no one was sent home)
     + Changing mix of outcomes over time
-    
+
        - effect of time on transition ORs for different cutoffs of Y
        - 2 time components (one slope change) $\times$ 3 Y cutoffs =
       6 parameters related to `day`
@@ -176,7 +200,7 @@ ICUs to study the effectiveness of vitamin D vs. placebo
 
 ### Descriptives
 
-  
+
 * all state transitions from one day to the next
 * SOPs estimated by proportions (need to carry death forward)
 
@@ -418,8 +442,11 @@ options(prType='html')
 # Use all but one core
 options(mc.cores = parallel::detectCores() - 1, rmsb.backend='cmdstan')
 seed <- 2   # The following took 15m using 4 cores
+# Specify adapt_delta since the default of 0.8 resulted in divergent samples
 b <- blrm(y ~ yprev + lsp(day, 2) + age + sofa + tx + cluster(id),
-          ~ lsp(day, 2), data=d, file='markov-bppo.rds')
+          ~ lsp(day, 2), data=d, 
+          sampling.args=list(adapt_delta = 0.95),
+          file='markov-bppo.rds')
 stanDx(b)
 ```
 
@@ -636,4 +663,3 @@ data.frame(Quantity=c('OR', 'Difference in mean days unwell'),
 ```{r echo=FALSE}
 saveCap('22')
 ```
-
