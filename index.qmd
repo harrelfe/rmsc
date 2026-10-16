@@ -210,6 +210,7 @@ kableExtra, pcaPP, VGAM, MASS, leaps, rpart
 
 | Date | Sections | Changes |
 |:---|:-|:--------|
+| 2026-10-15 | [-@sec-long]           | Added two types of random effect ordinal models |
 | 2026-05-19 | [-@sec-genreg-repar]   | Added general material on MLE |
 | 2026-05-16 | [-@sec-markov-robust]  | New subsection of robustness of model |
 | 2026-05-07 | [-@sec-intro-tep] | New subsection on estimation qualities |

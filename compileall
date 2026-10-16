@@ -5,5 +5,8 @@ echo "tar cvf /tmp/rds.tar fmival.rds fmi.rds fig-lrm-simerr.rds bacteremia-tran
 echo "rm fmival.rds fmi.rds fig-lrm-simerr.rds bacteremia-transace.rds cfmissmeth.rds sanova.rds aregi.rds valbworm.rds bt.rds bacteremia-spc.rds bacteremia-aregimpute.rds markov-boot.rds"
 # Be sure to keep other .rds files such as markov-vcorr.rds
 
-rm -rf .quarto/_freeze
+rm -rf _freeze .quarto/_freeze
 quarto render
+
+# quarto render --cache-refresh
+

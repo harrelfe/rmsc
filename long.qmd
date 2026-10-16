@@ -9,7 +9,7 @@ knitr::read_chunk('long.R')
 ```
 
 
-# Modeling Longitudinal Responses using Generalized Least Squares {#sec-long}
+# Modeling Longitudinal Responses using Generalized Least Squares and Semiparametric Models {#sec-long}
 
 Some good general references on longitudinal data analysis are @davis-repmeas, @pin00mix, @dig02ana, @VR, @han96pra, @ver00lin, @lin97mod
 
@@ -281,7 +281,7 @@ follow-up measurements unnecessary.
 * Usually restrict ourselves to _isotropic_ correlation structures `r ipacue()`
 --- correlation between responses within subject at two times depends
 only on a measure of distance between the two times, not the
-individual times
+individual times (this will be relaxed in the last structure covered below)
 * We simplify further and assume depends on $|t_{1} - t_{2}|$
 * Can speak interchangeably of correlations of residuals within subjects or
   correlations between responses measured at different times on the
@@ -306,12 +306,15 @@ individual times
 | **Rational quadratic**: $h = 1 - (s/\rho)^{2}/[1+(s/\rho)^{2}]$ | `corRatio` |
 | **Spherical**: $h = [1-1.5(s/\rho)+0.5(s/\rho)^{3}][s < \rho]$ | `corSpher` |
 | **Linear exponent AR(1)**: $h = \rho^{d_{min} + \delta\frac{s  - d_{min}}{d_{max} - d_{min}}}$, 1 if $t_{1}=t_{2}$ | @sim10lin |
+| **Exponential decline with floor and non-isotropy**: $h = k + (1-k) \exp(-\exp(a+b\frac{t_{1}+t_{2}}{2})|t_{1}-t_{2}|)$ | `corFloorExp` |
 
 : Some longitudinal data correlation structures {#tbl-long-structures}
 
 The structures 3-7 use $\rho$ as a scaling parameter, not as
 something restricted to be in $[0,1]$
 
+<!-- NEW NN-->
+The last structure is implemented in the rms package.  The $k$ parameter is restricted to be in $[0,1]$ by modeling it as $\text{expit}(k^{*})$ where $k^{*}$ has an unrestricted range and $\text{expit}(x) = \frac{1}{1 + \exp(-x)}$.  This structure allows for non-isotropy and for a nonzero limiting correlation as the time lag $\rightarrow \infty$.  It is a shared random effect plus serial decay mixture (a continuous-time analog of a random intercept superimposed on an Ornstein-Uhlenbeck exponential-decay process).  $k$ is the correlation contributed by a persistent, subject-level component that never fades; $1 - k$ is the share of correlation carried by a component that decays with lag at rate $\exp(a + b\frac{t_{1}+t_{2}}{2})$.  $b$ is the non-isotropy term, letting the rate grow or shrink with the time pair's midpoint.
 
 
 ## Checking Model Fit
@@ -326,7 +329,7 @@ something restricted to be in $[0,1]$
     + Variogram is a plot with $y = 1 - \hat{h}(s, \rho)$ vs. $s$ on
    the $x$-axis
     + Superimpose the theoretical variogram assumed by the model
-
+    + This does not allow for non-isotropy
 
 
 
@@ -449,17 +452,39 @@ values of `week`.
 ```{r k}
 ```
 
+<!-- NEW NN -->
 
-AIC computed above is set up so that smaller values are best.  From
-this the continuous-time AR1 and exponential structures are tied for
-the best.  For the remainder of the analysis use `corCAR1`,
+AIC computed above is set up so that smaller values are better.  From
+this the 3-parameter correlation structure is the best fitting.  For the remainder of the analysis use `corFloorExp`,
 using `Gls`. [ @kes98com did a simulation study to study the reliability of AIC for selecting the correct covariance structure in repeated measurement models.  In choosing from among 11 structures, AIC selected the correct structure 47% of the time.  @gur11avo demonstrated that fixed effects in a mixed effects model can be biased, independent of sample size, when the specified covariate matrix is more restricted than the true one.]{.aside}
 
 ```{r l}
 ```
-$\hat{\rho} = 0.8672$, the estimate of the correlation between two  `r ipacue()` 
+
+Plot the estimated correlation function for all observed pairs of times.
+
+```{r fig-long-corFloorExp, fig.cap='Fitted 3-parameter correlation $\\hat{\\rho}$ as a function of time lag ($x$) and time midpoint (numbers)',h=3.75,w=4.25}
+co <- coef(cs)
+g <- function(t1, t2) {
+  k <- plogis(co["k"])
+  a <- co["a"]
+  b <- co["b"]
+  k + (1 - k) * exp(-exp(a + b * (t1 + t2) / 2) * abs(t1 - t2))
+}
+times <- sort(unique(both$week))
+w <- setDT(expand.grid(t1 = times, t2 = times))
+w <- w[t2 > t1]
+w[, lag := t2 - t1]
+w[, mid := (t1 + t2) / 2]
+w[, rho := g(t1, t2)]
+ggplot(w, aes(x = lag, y = rho, label=mid)) +
+  geom_text(size=2.5) +
+  xlab(expression(t[2] - t[1])) + ylab(expression(hat(rho)))
+```
+
+The numbers drawn for each point are the values of $\frac{t_{1} + t_{2}}{2}$.  The degree to which points for the same time lag have different vertical values is the degree to which time midpoints figure into the correlation structure in addition to time lags, i.e., the degree of non-isotropy.  We see a moderate degree of non-isotropy.  We also see the possibility of greater-than-zero long-term correlation, i.e., a need for a compound symmetric correlation term and slight inadequacy of AR(1). [$\hat{\rho} = 0.8672$ from an AR(1) fit, the estimate of the correlation between two  `r ipacue()` 
 measurements taken one week apart on the same subject.  The estimated
-correlation for measurements 10 weeks apart is $0.8672^{10} = 0.24$.
+correlation for measurements 10 weeks apart is $0.8672^{10} = 0.24$.]{.aside}
 
 
 ```{r fig-long-variogram,fig.cap='Variogram, with assumed correlation pattern superimposed',h=3.75,w=4.25}
@@ -516,6 +541,45 @@ dropout times) when a smooth time trend is assumed.
 n <- nomogram(a, age=c(seq(20, 80, by=10), 85))
 plot(n, cex.axis=.55, cex.var=.8, lmgp=.25)  # Figure (*\ref{fig:longit-nomogram}*)
 ```
+
+### Semiparametric Random Effects Models {#sec-long-orm-re}
+
+* Ordinal semiparametric model does away with distributional assumptions
+* Within-subject dependence can be accounted for with a Markov structure, (see later), GEE, or random effects
+* Semiparametric models' coefficient estimates don't change if $Y$ is monotonically transformed
+* Start with a proportional odds (PO) model
+* Add random subject-specific intercepts to the model
+* Would have been a good fit to the correlation pattern had it been compound symmetric
+* Compare deviance of PO model to deviances of all available link functions to see which link fits best
+
+```{r}
+f <- orm(twstrs ~ treat * rcs(week, 3) + rcs(twstrs0, 3) +
+         rcs(age, 4) * sex + cluster(uid), data=both,
+         x=TRUE, y=TRUE, maxit.outer=300)
+f
+Olinks(f)
+```
+
+* Stay with the PO model
+* SD of random effects $\sigma_\gamma$ is fairly large on the logit scale, indicating within-person correlation
+* `orm` function also fits a random effects structure with two $\sigma$ parameters
+* $u$ is a $N(0,1)$ random effect
+* Within-subject time weighting function $w(t)$
+* Random effect contribution is $(1 - w(t))\sigma_{1}\times u + w(t)\sigma_{2}\times u$
+* Take $w(t)$ to be the fraction of elapsed time between the first and last follow-up visits
+
+```{r}
+both[, mix := (week - 2) / 14]
+f <- orm(twstrs ~ treat * rcs(week, 3) + rcs(twstrs0, 3) +
+         rcs(age, 4) * sex + cluster(uid) + mix_re(mix), data=both,
+         maxit.outer=300)
+f
+deviance(f)
+```
+
+* Deviance did not improve since $\sigma_1$ and $\sigma_2$ are close
+* If random effects are used, they can be the single-$\sigma$ variety.
+
 
 ### Bayesian Proportional Odds Random Effects Model {#sec-long-bayes-re}
 
@@ -699,6 +763,23 @@ mean TWSTRS between high and low dose
 
 ```{r mark9}
 ```
+
+### Frequentist Markov Semiparametric Model {#sec-long-freq-markov}
+
+Fitting a frequentist MOST model will allow us to take advantage of the `orm` functions 2-parameter random effects contribution, which was designed to improve fit to correlation structure for Markov-1 models.  The improvement comes from canceling out a buildup of variances of $Y$ due to using lagged raw $Y$ instead of lag residuals as used in linear models.  For this purpose, a good choice of weighting functions $w(t)$ is an indicator function for being at the first follow-up time.
+
+```{r}
+both[, mix2 := ifelse(week == 2, 0, 1)]
+f <- orm(twstrs ~  treat * rcs(week, 3) + rcs(ptwstrs, 4) +
+                    rcs(age, 4) * sex + cluster(uid) + mix_re(mix2),
+         data=both, x=TRUE)
+f
+deviance(f)
+```
+
+$\sigma_{1}$ is large; there is substantial subject-level correlation at baseline (before ptwstrs is contributing anything), consistent with a real, non-trivial random effect there.
+
+$\sigma_{2} ≈ -0.2$ is small and negative, but not collapsed to the boundary the way the single-$\sigma$ model did. That's exactly the pattern the additive design was meant to reveal — once the lag term is active, a plain constant-weight random effect would be adding back in some of the same correlation the lag term already explains, and a small negative $\sigma_2$ is the model's way of trimming that slight over-induction rather than needing to zero the whole random effect out just to compensate.
 
 ## Study Questions
 

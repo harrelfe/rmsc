@@ -598,7 +598,7 @@ aic <- NULL
 for(mod in list(gh ~ rcs(age,5) + rcs(log(bmi),5),
                 gh ~ rcs(age,5) + rcs(log(ht),5) + rcs(log(wt),5),
                 gh ~ rcs(age,5) + rcs(log(ht),4) * rcs(log(wt),4)))
-  aic <- c(aic, AIC(orm(mod, family='loglog', data=w)))
+  aic <- c(aic, AIC(orm(mod, family='loglog', data=w, maxit=80)))
 print(aic)
 ```
 

@@ -28,7 +28,7 @@ cdys <- upData(cdys, rename=c('25%'='Q1', '50%'='Q2', '75%'='Q3'), print=FALSE)
 ggplot(cdys, aes(x=week, y=Q2)) + xl + yl + ylim(0, 70) +
   geom_line() + facet_wrap(~ treat, nrow=2) +
   geom_ribbon(aes(ymin=Q1, ymax=Q3), alpha=0.2)
-  
+
 ## ---- bootcls --------
 
 # Show means with bootstrap nonparametric CLs
@@ -56,22 +56,27 @@ options(datadist='dd')
 ## ---- k --------
 
 require(nlme)
-cp <- list(corCAR1,corExp,corCompSymm,corLin,corGaus,corSpher)
-z  <- vector('list',length(cp))
-for(k in 1:length(cp)) {
-  z[[k]] <- gls(twstrs ~ treat * rcs(week, 3) +
-                rcs(twstrs0, 3) + rcs(age, 4) * sex, data=both,
-                correlation=cp[[k]](form = ~week | uid))
+cp <- list(corCAR1,corExp,corCompSymm,corLin,corGaus,corSpher,corFloorExp)
+z  <- vector('list', length(cp))
+for (k in 1:length(cp)) {
+  z[[k]] <- gls(
+    twstrs ~ treat * rcs(week, 3) +
+      rcs(twstrs0, 3) + rcs(age, 4) * sex,
+    data = both,
+    correlation = cp[[k]](form = ~ week | uid)
+  )
 }
-anova(z[[1]],z[[2]],z[[3]],z[[4]],z[[5]],z[[6]])
+anova(z[[1]],z[[2]],z[[3]],z[[4]],z[[5]],z[[6]],z[[7]], test=FALSE)
 
 
 ## ---- l --------
 
 a <- Gls(twstrs ~ treat * rcs(week, 3) + rcs(twstrs0, 3) +
          rcs(age, 4) * sex, data=both,
-         correlation=corCAR1(form=~week | uid))
+         correlation=corFloorExp(form=~week | uid))
 a
+cs <- a$modelStruct$corStruct
+cs
 
 ## ---- fig-long-variogram --------
 
@@ -364,4 +369,3 @@ p <- R$`10000U`[, '12', ]   # 4000 x 62
 pmean <- apply(p, 2, mean)
 yvals <- as.numeric(names(pmean))
 plot(yvals, pmean, type='l', xlab='TWSTRS', ylab='')
-
